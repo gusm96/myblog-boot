@@ -1,6 +1,6 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.BoardDTO;
+import com.moya.myblogboot.domain.Board;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -8,19 +8,19 @@ import java.util.List;
 @Service
 public class BoardService {
 
-    public List<BoardDTO> getBoardList(String type, int page){
-        List<BoardDTO> list = null;
+    public List<Board> getBoardList(String type, int page){
+        List<Board> list = null;
 
         return list;
     }
 
-    public BoardDTO getBoard(int bidx){
-        BoardDTO board = null;
+    public Board getBoard(int bidx){
+        Board board = null;
 
         return board;
     }
 
-    public int editBoard(BoardDTO board) {
+    public int editBoard(Board board) {
         int result = 0;
 
         return result;
@@ -32,7 +32,7 @@ public class BoardService {
         return result;
     }
 
-    public String newPost(BoardDTO board) {
+    public String newPost(Board board) {
         String result = "";
 
         return result;

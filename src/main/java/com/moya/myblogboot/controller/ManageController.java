@@ -1,26 +1,30 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.BoardDTO;
+import com.moya.myblogboot.domain.Board;
 import com.moya.myblogboot.service.BoardService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
-@RequestMapping("/manage")
+@RequiredArgsConstructor
 public class ManageController {
 
-    @Autowired
-    BoardService service;
+    private final BoardService service;
 
-    @GetMapping("/{type}")
-    public String getManagement(
+    @GetMapping("/manage")
+    public String getManagement(){
+        return "manage/manageHome";
+    }
+    @GetMapping("/manage/board/{type}")
+    public String getManagementBoard(
             @PathVariable("type") String type,
             @RequestParam(name = "page", defaultValue = "1") int page,
             Model model) {
         model.addAttribute("list", "Board - list");
-        return "manage/manageHome";
+        return "manage/test";
     }
 
     @GetMapping("/newpost")
@@ -29,7 +33,7 @@ public class ManageController {
     }
 
     @PostMapping("/newpost")
-    public String postNewPostPage(BoardDTO board){
+    public String postNewPostPage(Board board){
         return service.newPost(board);
     }
 }
