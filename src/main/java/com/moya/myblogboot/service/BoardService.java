@@ -1,12 +1,18 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.Board;
+import com.moya.myblogboot.repository.BoardRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class BoardService {
+
+    private final BoardRepository boardRepository;
 
     public List<Board> getBoardList(String type, int page){
         List<Board> list = null;
@@ -32,9 +38,10 @@ public class BoardService {
         return result;
     }
 
-    public String newPost(Board board) {
-        String result = "";
-
-        return result;
+    @Transactional
+    public long newPost(Board board) {
+        long bidx = 0;
+        bidx = boardRepository.upload(board);
+        return bidx;
     }
 }

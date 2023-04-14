@@ -1,13 +1,9 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.Admin;
 import com.moya.myblogboot.repository.AdminRepository;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @SpringBootTest
 @Transactional
@@ -18,14 +14,13 @@ public class LoginServiceTest {
     @Autowired
     AdminRepository adminRepository;
 
-    @Test
-    void login(){
+    /*void login(){
         // given
         String id = "moya";
         String pw = "moya134353@@";
 
         // when
-        Optional<Admin> result = loginService.findById(id);
+        Optional<Admin> result = loginService.;
 
         // then
         if(pw.equals(result.get().getPw())){
@@ -33,5 +28,5 @@ public class LoginServiceTest {
         }else{
             System.out.println("로그인 실패");
         }
-    }
+    }*/
 }

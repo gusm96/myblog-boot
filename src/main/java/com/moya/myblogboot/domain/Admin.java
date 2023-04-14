@@ -3,6 +3,7 @@ package com.moya.myblogboot.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jdk.jfr.Name;
 import lombok.*;
 
@@ -11,6 +12,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@Table(name = "admin")
 public class Admin {
     @Id
     @Column(name = "aidx")
@@ -21,9 +23,4 @@ public class Admin {
     private String pw;
     @Column(name = "admin_name")
     private String name;
-
-    public Admin(String id, String pw){
-        this.id = id;
-        this.pw = pw;
-    }
 }

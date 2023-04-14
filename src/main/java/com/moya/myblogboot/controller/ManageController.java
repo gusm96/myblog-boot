@@ -3,7 +3,6 @@ package com.moya.myblogboot.controller;
 import com.moya.myblogboot.domain.Board;
 import com.moya.myblogboot.service.BoardService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +32,8 @@ public class ManageController {
     }
 
     @PostMapping("/newpost")
-    public String postNewPostPage(Board board){
-        return service.newPost(board);
+    public String postNewPostPage(Board board, Model model){
+        model.addAttribute("result", service.newPost(board));
+        return "board/newpostSuccess";
     }
 }
