@@ -3,14 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <title>관리자 로그인</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script>
+    $(document).ready(function (){
+      $("#submitBtn").click(function (){
+        fetch("/login/admin", {
+          method: "post",
+          headers: {
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: $("#admin_id").val(),
+            pw: $("#admin_pw").val()
+          })
+        }).then(res => res.json())
+                .then(token => {
+                  localStorage.setItem("jwt", token.access_token)
+                  alert("로그인 되었습니다.")
+                });
+      })
+    })
+  </script>
 </head>
 <body>
   <div class="container">
     <form method="post">
       <label for="admin_id">아이디<input type="text" name="id" id="admin_id" placeholder="아이디를 입력해주세요." required ></label>
       <label for="admin_pw">비밀번호<input type="password" name="pw" id="admin_pw" placeholder="비밀번호를 입력해주세요." required ></label>
-        <button type="submit">로그인</button>
+        <div th:if="${error}"><p th:text="${exception}"></p></div>
     </form>
+    <button id="submitBtn">로그인</button>
   </div>
 </body>
 </html>

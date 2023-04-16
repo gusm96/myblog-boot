@@ -17,10 +17,17 @@ public class Admin {
     @Id
     @Column(name = "aidx")
     private Long idx;
+    @Setter
     @Column(name = "admin_id")
     private String id;
+    @Setter
     @Column(name = "admin_pw")
     private String pw;
     @Column(name = "admin_name")
     private String name;
+
+    public Admin(String id, String pw){
+        this.id = id;
+        this.pw = pw;
+    }
 }
