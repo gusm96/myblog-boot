@@ -8,18 +8,19 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import java.util.Date;
 
 public class JwtUtil {
-    public static String getAdminName(String token, String secretKey) {
+
+    public static String getAdminId(String token, String secretKey) {
         return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token)
-                .getBody().get("adminName", String.class);
+                .getBody().get("adminId", String.class);
     }
     public static boolean isExpired(String token, String secretKey) {
         return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token)
                 .getBody().getExpiration().before(new Date());
     }
     // Token 생성
-    public static String createToken(String adminName, String secretKey, long expiredMs){
+    public static String createToken(String adminId, String secretKey, long expiredMs){
         Claims claims = Jwts.claims();
-        claims.put("adminName", adminName);
+        claims.put("adminId", adminId);
 
         return Jwts.builder()
                 .setClaims(claims)

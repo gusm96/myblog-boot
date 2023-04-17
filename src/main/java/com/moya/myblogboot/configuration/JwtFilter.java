@@ -30,7 +30,7 @@ public class JwtFilter extends OncePerRequestFilter {
         final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
         log.info("Authorization : {}", authorization);
 
-        // Token이 없을 시 Blog
+        // Token이 없을 시 Block
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             log.error("Authorization is null.");
             filterChain.doFilter(request,response);
@@ -49,12 +49,12 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        String adminName = JwtUtil.getAdminName(token, secretKey);
-        log.info("AdminName : {}", adminName);
+        String adminId = JwtUtil.getAdminId(token, secretKey);
+        log.info("AdminId : {}", adminId);
 
         // 권한을 부여한다.
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(adminName, null, List.of(new SimpleGrantedAuthority("ADMIN")));
+                new UsernamePasswordAuthenticationToken(adminId, null, List.of(new SimpleGrantedAuthority("ADMIN")));
         // Detail을 넣어준다.
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);

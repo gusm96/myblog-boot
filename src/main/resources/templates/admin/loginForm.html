@@ -7,7 +7,7 @@
   <script>
     $(document).ready(function (){
       $("#submitBtn").click(function (){
-        fetch("/login/admin", {
+        fetch("/avi/v1/login/admin", {
           method: "post",
           headers: {
             'content-type': 'application/json'
@@ -19,8 +19,13 @@
         }).then(res => res.json())
                 .then(token => {
                   localStorage.setItem("jwt", token.access_token)
-                  alert("로그인 되었습니다.")
                 });
+        fetch("/login/admin",{
+          method:"post",
+          headers:{
+            'Authorization' : localStorage.getItem("jwt")
+          }
+        })
       })
     })
   </script>

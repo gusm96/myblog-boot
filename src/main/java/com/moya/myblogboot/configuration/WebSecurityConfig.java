@@ -1,6 +1,5 @@
 package com.moya.myblogboot.configuration;
 
-import com.moya.myblogboot.handler.AdminLoginFailHandler;
 import com.moya.myblogboot.service.LoginService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +18,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig {
 
     private final LoginService loginService;
-    private final AdminLoginFailHandler adminLoginFailHandler;
 
     @Value("${jwt.secret}")
     private String secretKey;

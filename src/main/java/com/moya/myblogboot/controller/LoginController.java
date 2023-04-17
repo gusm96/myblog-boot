@@ -27,11 +27,10 @@ public class LoginController {
     }
 
 
-    @GetMapping("/logout/admin")
-    public String adminLogout(){
-        // Token을 만료 시킨다.
-
-
-        return "redirect:/";
+    @PostMapping("/login/admin")
+    public String adminLogout(Authentication authentication){
+        String name = authentication.getName();
+        System.out.println(name);
+        return "redirect:/manage";
     }
 }
