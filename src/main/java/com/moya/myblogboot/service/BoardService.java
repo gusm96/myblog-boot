@@ -44,4 +44,12 @@ public class BoardService {
         bidx = boardRepository.upload(board);
         return bidx;
     }
+
+    @Transactional
+    public List<Board> getRecentPosts() {
+        List<Board> list = null;
+        // 최근 게시글 20개를 return 한다.
+
+        return list;
+    }
 }

@@ -2,11 +2,13 @@ package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.Board;
 import com.moya.myblogboot.repository.BoardRepository;
-import org.assertj.core.api.Assertions;
+import static org.assertj.core.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,7 +18,10 @@ class BoardServiceTest {
     @Autowired
     BoardRepository boardRepository;
     @Test
-    void getBoardList() {
+    void getRecentPosts() {
+        List<Board> result = boardRepository.findRecentPosts();
+
+        assertThat(result).isNotEmpty();
     }
 
     @Test
@@ -45,6 +50,6 @@ class BoardServiceTest {
 
         long result = boardRepository.upload(board);
 
-        Assertions.assertThat(result).isNotZero();
+        assertThat(result).isNotZero();
     }
 }

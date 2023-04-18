@@ -12,6 +12,9 @@ public interface BoardRepositoryInf {
     // 하나의 게시글
     Optional<Board> findOne(long idx);
 
+    // 최근 게시글
+    List<Board> findRecentPosts();
+
     // 선택한 게시판의 모든 게시글
     List<Board> findAll(int board_type);
 }

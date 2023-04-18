@@ -1,3 +1,4 @@
+/*
 package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.service.LoginService;
@@ -37,3 +38,4 @@ public class WebSecurityConfig {
     }
 
 }
+*/

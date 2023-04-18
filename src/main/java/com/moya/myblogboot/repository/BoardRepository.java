@@ -3,7 +3,6 @@ package com.moya.myblogboot.repository;
 import com.moya.myblogboot.domain.Board;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -29,12 +28,20 @@ public class BoardRepository implements BoardRepositoryInf {
 
     @Override
     public List<Board> findAll(int board_type) {
-        List<Board> board = em.createQuery(
+        List<Board> boards = em.createQuery(
                 "select b.id, b.title, b.upload_date from Board b where b.board_type=:idx"
                         , Board.class)
                 .setParameter("idx", board_type)
                 .getResultList();
-        return board;
+        return boards;
     }
 
+    @Override
+    public List<Board> findRecentPosts() {
+        List<Board> boards = em.createQuery(
+                "select b.id, b.title, b.upload_date from Board b order by b.upload_date desc limit 20"
+                , Board.class
+        ).getResultList();
+        return boards;
+    }
 }
