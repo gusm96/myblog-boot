@@ -1,6 +1,7 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.Board;
+import com.moya.myblogboot.domain.BoardReq;
 import com.moya.myblogboot.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,14 +15,17 @@ public class BoardService {
 
     private final BoardRepository boardRepository;
 
-    public List<Board> getBoardList(String type, int page){
-        List<Board> list = null;
+    public static final int LIMIT = 3;
+
+    public List<Board> getAllPostsOfThatType(int type, int page){
+        List<Board> list = boardRepository.findAllPostsOfThatType(type, pagination(page), LIMIT);
 
         return list;
     }
 
-    public Board getBoard(int bidx){
-        Board board = null;
+    public Board getBoard(Long idx){
+
+        Board board = boardRepository.findOne(idx).orElseThrow();
 
         return board;
     }
@@ -39,17 +43,28 @@ public class BoardService {
     }
 
     @Transactional
-    public long newPost(Board board) {
+    public long newPost(BoardReq boardReq) {
         long bidx = 0;
+        Board board = Board.builder()
+                // Token으로 Admin idx값 추출
+                // .aidx(boardReq.getAidx())
+                .board_type(boardReq.getBoard_type())
+                .title(boardReq.getTitle())
+                .content(boardReq.getContent())
+                .build();
         bidx = boardRepository.upload(board);
         return bidx;
     }
 
     @Transactional
-    public List<Board> getRecentPosts() {
+    public List<Board> getAllPost(int page) {
         List<Board> list = null;
-        // 최근 게시글 20개를 return 한다.
-
+        list = boardRepository.findAllPosts(pagination(page), LIMIT);
         return list;
+    }
+
+    private int pagination (int page){
+        if (page == 1) return 0;
+        return (page - 1) * LIMIT;
     }
 }

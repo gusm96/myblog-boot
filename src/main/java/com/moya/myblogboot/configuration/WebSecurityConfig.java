@@ -1,4 +1,3 @@
-/*
 package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.service.LoginService;
@@ -12,25 +11,29 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class WebSecurityConfig {
+public class WebSecurityConfig{
 
     private final LoginService loginService;
 
     @Value("${jwt.secret}")
     private String secretKey;
+
     @Bean
     public SecurityFilterChain filterChain (HttpSecurity http) throws Exception {
         return http.httpBasic().disable()
                 .csrf().disable()
                 .cors().and()
                 .authorizeHttpRequests()
-                .requestMatchers(HttpMethod.GET, "/manage/**").authenticated()
-                .requestMatchers(HttpMethod.POST, "/manage/**").authenticated()
-                .requestMatchers("/**").permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/**")).permitAll()
+                .requestMatchers(HttpMethod.GET,"/api/v1/management/**").authenticated()
+                .requestMatchers(HttpMethod.POST,"/api/v1/management/**").authenticated()
+                .requestMatchers(HttpMethod.PUT,"/api/v1/management/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE,"/api/v1/management/**").authenticated()
                 .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -38,4 +41,3 @@ public class WebSecurityConfig {
     }
 
 }
-*/

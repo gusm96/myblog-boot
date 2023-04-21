@@ -27,21 +27,25 @@ public class BoardRepository implements BoardRepositoryInf {
     }
 
     @Override
-    public List<Board> findAll(int board_type) {
+    public List<Board> findAllPostsOfThatType(int board_type,int offset, int limit) {
         List<Board> boards = em.createQuery(
-                "select b.id, b.title, b.upload_date from Board b where b.board_type=:idx"
+                        "select b from Board b where b.board_type=:idx order by b.upload_date desc "
                         , Board.class)
                 .setParameter("idx", board_type)
+                .setFirstResult(offset)
+                .setMaxResults(limit)
                 .getResultList();
+
         return boards;
     }
 
     @Override
-    public List<Board> findRecentPosts() {
-        List<Board> boards = em.createQuery(
-                "select b.id, b.title, b.upload_date from Board b order by b.upload_date desc limit 20"
-                , Board.class
-        ).getResultList();
+    public List<Board> findAllPosts(int offset, int limit) {
+        List<Board> boards = em.createQuery("select b from Board b order by b.upload_date desc "
+                        , Board.class)
+                .setFirstResult(offset)
+                .setMaxResults(limit)
+                .getResultList();
         return boards;
     }
 }

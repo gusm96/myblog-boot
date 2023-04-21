@@ -1,6 +1,7 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.Board;
+import com.moya.myblogboot.domain.BoardInfo;
 import com.moya.myblogboot.repository.BoardRepository;
 import static org.assertj.core.api.Assertions.*;
 import org.junit.jupiter.api.Test;
@@ -10,18 +11,22 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest
 @Transactional
 class BoardServiceTest {
     @Autowired
     BoardRepository boardRepository;
+    @Autowired
+    BoardService boardService;
     @Test
-    void getRecentPosts() {
-        List<Board> result = boardRepository.findRecentPosts();
+    void findAllPosts() {
+        int offset = 0;
+        int limit = 5;
+        List<Board> result = boardRepository.findAllPosts(offset, limit);
 
-        assertThat(result).isNotEmpty();
+        for (Board val : result) {
+            System.out.println(val.toString());
+        }
     }
 
     @Test
@@ -38,15 +43,12 @@ class BoardServiceTest {
 
     @Test
     void newPost() {
-        Board board = new Board();
-        int aidx = 0;
-        int board_type = 0;
-        String title = "제목";
-        String content = "내용";
-        board.setBoard_type(board_type);
-        board.setAidx(aidx);
-        board.setTitle(title);
-        board.setContent(content);
+        Board board = Board.builder()
+                .aidx(0)
+                .board_type(0)
+                .title("제목")
+                .content("내용")
+                .build();
 
         long result = boardRepository.upload(board);
 
