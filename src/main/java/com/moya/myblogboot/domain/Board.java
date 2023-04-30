@@ -15,13 +15,18 @@ public class Board {
     private Long bidx;
     private int aidx;
     @Column(name = "btidx")
+    @Setter
     private int board_type;
+    @Setter
     private String title;
+    @Setter
     private String content;
     private int hits;
     private String upload_date;
+    @Setter
     private String edit_date;
     private String delete_date;
+    @Setter
     private boolean board_status;
 
     @Builder
@@ -31,10 +36,4 @@ public class Board {
         this.title = title;
         this.content = content;
     }
-    public Board(long bidx, String title, String upload_date) {
-        this.bidx = bidx;
-        this.title = title;
-        this.upload_date = upload_date;
-    }
-
 }

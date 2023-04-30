@@ -29,8 +29,8 @@ public class BoardController {
         return ResponseEntity.ok().body(list);
     }
     // 게시글 작성 Post
-    @GetMapping("/api/v1/management/posts")
-    public ResponseEntity<Board> getPost(@RequestParam("idx") Long idx) {
+    @GetMapping("/api/v1/management/posts/{idx}")
+    public ResponseEntity<Board> getPost(@PathVariable("idx") long idx) {
         // idx 값으로 해당 게시글 찾아서 return
         Board board = service.getBoard(idx);
         return ResponseEntity.ok().body(board);
@@ -40,11 +40,9 @@ public class BoardController {
         Long idx = service.newPost(board);
         return ResponseEntity.ok().body(idx);
     }
-    @PutMapping("/api/v1/management/posts")
-    public ResponseEntity<Long> editPost (){
-        // RequestBody로 수정 값
-        Long idx = 0L;
-        return ResponseEntity.ok().body(idx);
+    @PutMapping("/api/v1/management/posts/{idx}")
+    public ResponseEntity<Long> editPost (@PathVariable("idx") long idx, @RequestBody BoardReq boardReq){
+        return ResponseEntity.ok().body(service.editBoard(idx, boardReq));
     }
     @DeleteMapping("/api/v1/management/posts")
     public ResponseEntity<String> deletePost(@RequestParam("idx") Long idx){

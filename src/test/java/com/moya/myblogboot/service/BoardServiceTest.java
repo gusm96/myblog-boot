@@ -35,6 +35,10 @@ class BoardServiceTest {
 
     @Test
     void editBoard() {
+        Board board = boardRepository.findOne(10).orElseThrow();
+
+
+
     }
 
     @Test

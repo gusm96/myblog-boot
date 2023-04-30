@@ -1,10 +1,12 @@
 package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.Board;
+import com.moya.myblogboot.domain.BoardReq;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,4 +50,5 @@ public class BoardRepository implements BoardRepositoryInf {
                 .getResultList();
         return boards;
     }
+
 }

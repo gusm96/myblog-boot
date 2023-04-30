@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -25,15 +26,24 @@ public class BoardService {
 
     public Board getBoard(Long idx){
 
-        Board board = boardRepository.findOne(idx).orElseThrow();
+        Board board = boardRepository.findOne(idx).orElseThrow(
+                () -> new IllegalStateException("해당 게시글이 존재하지 않습니다.")
+        );
 
         return board;
     }
-
-    public int editBoard(Board board) {
-        int result = 0;
-
-        return result;
+    @Transactional
+    public Long editBoard(long idx, BoardReq boardReq) {
+        Date editDate = new Date();
+        System.out.println(editDate.toString());
+        Board board = boardRepository.findOne(idx).orElseThrow(
+                () -> new IllegalStateException("해당 게시글이 존재하지 않습니다.")
+        );
+        // 변경감지
+        board.setBoard_type(boardReq.getBoard_type());
+        board.setTitle(boardReq.getTitle());
+        board.setContent(boardReq.getContent());
+        return board.getBidx();
     }
 
     public int deleteBoard(int bidx){
