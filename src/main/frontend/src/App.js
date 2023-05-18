@@ -1,19 +1,35 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import axios from "axios";
-export default App
+import Home from "./screens/Home";
+import NavBarElements from "./components/Navbar/NavBarElements";
 
-function App(){
-  const [hello, setHello] = useState('');
+export default App;
+
+function App() {
+  // Gets the list of Posts from the Server
+  /*const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    axios.get('/api/v1/posts')
-        .then(response => setHello(response.data))
-        .catch(error => console.log(error))
+    axios
+      .get("/api/v1/posts")
+      .then((response) => response.data)
+      .then((data) => setPosts(data))
+      .catch((error) => console.log(error));
   }, []);
-
   return (
-      <div>
-        안녕하세요 : {hello}
-      </div>
-  )
+    <div>
+      <h1>Welcome Moya's Tech Blog</h1>
+      <hr />
+      <PostList posts={posts} />
+    </div>
+  );*/
+  return (
+    <Router>
+      <NavBarElements />
+      <Routes>
+        <Route path="/" element={<Home />} />
+      </Routes>
+    </Router>
+  );
 }
