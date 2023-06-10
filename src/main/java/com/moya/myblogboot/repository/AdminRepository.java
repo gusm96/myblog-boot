@@ -2,22 +2,21 @@ package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.Admin;
 import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 public class AdminRepository implements AdminRepositoryInf{
 
     private final EntityManager em;
 
-    public AdminRepository(EntityManager em){
-        this.em = em;
-    }
     @Override
-    public Optional<Admin> findById(String id) {
-        Admin admin = em.createQuery("select a from Admin a where a.id= :id", Admin.class)
-                .setParameter("id", id)
+    public Optional<Admin> findById(String adminName) {
+        Admin admin = em.createQuery("select a from Admin a where a.admin_name= :name", Admin.class)
+                .setParameter("name", adminName)
                 .getSingleResult();
         return Optional.ofNullable(admin);
     }

@@ -1,7 +1,6 @@
 package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.Board;
-import com.moya.myblogboot.domain.BoardReq;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -19,21 +18,23 @@ public class BoardRepository implements BoardRepositoryInf {
     @Override
     public Long upload(Board board) {
         em.persist(board);
-        return board.getBidx();
+        return board.getId();
     }
 
     @Override
-    public Optional<Board> findOne(long idx) {
-       Board board =  em.find(Board.class, idx);
+    public Optional<Board> findOne(Long id) {
+       Board board =  em.find(Board.class, id);
         return Optional.ofNullable(board);
     }
 
     @Override
-    public List<Board> findAllPostsOfThatType(int board_type,int offset, int limit) {
+    public List<Board> findAllBoardsInThatCategory(String categoryName,int offset, int limit) {
         List<Board> boards = em.createQuery(
-                        "select b from Board b where b.board_type=:idx order by b.upload_date desc "
+                        "select b from Board b " +
+                                "where b.category.name=:categoryName " +
+                                "order by b.upload_date desc "
                         , Board.class)
-                .setParameter("idx", board_type)
+                .setParameter("categoryName", categoryName)
                 .setFirstResult(offset)
                 .setMaxResults(limit)
                 .getResultList();
@@ -42,7 +43,7 @@ public class BoardRepository implements BoardRepositoryInf {
     }
 
     @Override
-    public List<Board> findAllPosts(int offset, int limit) {
+    public List<Board> findAll(int offset, int limit) {
         List<Board> boards = em.createQuery("select b from Board b order by b.upload_date desc "
                         , Board.class)
                 .setFirstResult(offset)

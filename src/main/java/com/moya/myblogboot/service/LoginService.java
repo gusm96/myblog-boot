@@ -22,13 +22,13 @@ public class LoginService {
     private Long expiredMs = 1000 * 60 * 60L;
     @Transactional
     public String adminLogin(String admin_id, String admin_pw) throws UsernameNotFoundException {
-        Admin result = adminRepository.findById(admin_id).orElseThrow(() ->
+        Admin admin = adminRepository.findById(admin_id).orElseThrow(() ->
                 new UsernameNotFoundException("등록된 관리자 계정이 아닙니다.")
         );
         String token ="";
-        if (admin_pw.equals(result.getPw())){
+        if (admin_pw.equals(admin.getAdmin_pw())){
             // 비밀번호가 같다면 토큰을 받아온다.
-            token = JwtUtil.createToken(result.getId(), secretKey, expiredMs);
+            token = JwtUtil.createToken(admin.getAdmin_name(), secretKey, expiredMs);
         }
         return token;
     }
