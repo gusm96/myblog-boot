@@ -12,14 +12,15 @@ import org.springframework.web.bind.annotation.*;
 public class LoginController {
 
     private final LoginService loginService;
-
+    @GetMapping("/create/admin")
+    public ResponseEntity<String> createAdmin(){
+        loginService.createAdmin();
+        return ResponseEntity.ok().body("어드민 계정 생성 완료.");
+    }
     @PostMapping("/login/admin")
-    public ResponseEntity<TokenResponse> adminLogin (@RequestBody LoginReq loginReq){
+    public ResponseEntity<TokenResponse> adminLogin(@RequestBody LoginReq loginReq) {
         // Token 발급
-        String token = loginService.adminLogin(loginReq.getAdmin_id(), loginReq.getAdmin_pw());
+        String token = loginService.adminLogin(loginReq.getAdmin_name(), loginReq.getAdmin_pw());
         return ResponseEntity.ok().body(new TokenResponse(token, "bearer"));
     }
-    // @GetMapping("/api/v1/logout")
-    // Token 만료 시키기 Front 에선 localStorage 에서 Token 삭제
-
 }

@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -24,26 +25,14 @@ public class WebSecurityConfig{
     @Value("${jwt.secret}")
     private String secretKey;
 
-    // Spring security Filter ignore url
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer () {
-        return web -> {
-            web.ignoring()
-                    .requestMatchers("/");
-        };
-    }
-
     @Bean
     public SecurityFilterChain filterChain (HttpSecurity http) throws Exception {
         return http.httpBasic().disable()
-                //.csrf().disable() // Cross Site Request Forgery Disable => Because, we use RestAPI (stateless)
+                .csrf().disable() // Cross Site Request Forgery Disable => Because, we use RestAPI (stateless)
                 .cors().and() // Cross Origin Resource Sharing
                 .authorizeHttpRequests()
-                //.requestMatchers(new AntPathRequestMatcher("/")).permitAll() // Home page permit
-                .requestMatchers(HttpMethod.GET,"/api/v1/management/**").authenticated()
-                .requestMatchers(HttpMethod.POST,"/api/v1/management/**").authenticated()
-                .requestMatchers(HttpMethod.PUT,"/api/v1/management/**").authenticated()
-                .requestMatchers(HttpMethod.DELETE,"/api/v1/management/**").authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/management/**")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/management/**")).authenticated()
                 .anyRequest().permitAll()
                 .and()
                 .sessionManagement()

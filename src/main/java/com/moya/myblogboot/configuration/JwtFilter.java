@@ -49,12 +49,12 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        String adminId = JwtUtil.getAdminId(token, secretKey);
-        log.info("AdminId : {}", adminId);
+        String adminName = JwtUtil.getAdminName(token, secretKey);
+        log.info("admin_name : {}", adminName);
 
         // 권한을 부여한다.
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(adminId, null, List.of(new SimpleGrantedAuthority("ADMIN")));
+                new UsernamePasswordAuthenticationToken(adminName, null, List.of(new SimpleGrantedAuthority("ADMIN")));
         // Detail을 넣어준다.
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);

@@ -4,40 +4,36 @@ import com.moya.myblogboot.domain.Admin;
 import com.moya.myblogboot.domain.Board;
 import com.moya.myblogboot.domain.BoardDto;
 import com.moya.myblogboot.service.BoardService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class BoardController {
 
-    private BoardService service;
-    @Autowired
-    public BoardController(BoardService service) {
-        this.service = service;
-    }
-    // 모든 게시글
+    private final BoardService service;
+    // 모든 게시글 리스트
     @GetMapping("/api/v1/boards")
     public ResponseEntity<List> getAllBoards (@RequestParam(name = "page", defaultValue = "1") int page){
         List<Board> list = service.getBoardList(page);
         return ResponseEntity.ok().body(list);
     }
+    // 카테고리별 게시글 리스트
     @GetMapping("/api/v1/boards/{category}")
     public ResponseEntity<List> thisTypeOfPosts (@PathVariable("category") String category, @RequestParam(name = "page", defaultValue = "1") int page) {
         List<Board> list = service.getAllBoardsInThatCategory(category, page);
         return ResponseEntity.ok().body(list);
     }
-
-
+    // 선택한 게시글
     @GetMapping("/api/v1/management/board/{boardId}")
     public ResponseEntity<Board> getPost(@PathVariable("boardId") long boardId) {
         // boardId 값으로 해당 게시글 찾아서 return
         Board board = service.getBoard(boardId);
         return ResponseEntity.ok().body(board);
     }
-
     // 게시글 작성 Post
     @PostMapping("/api/v1/management/board")
     public ResponseEntity<Long> newPost (@RequestBody BoardDto boardDto) {
@@ -46,13 +42,15 @@ public class BoardController {
         // Admin 정보와 함께 Board persist();
         Admin admin = null;
         // 게시글 업로드를 성공하면 해당 식별값 response
-        Long boardId = service.newPost(boardDto, admin);
+        Long boardId = service.uploadBoard(boardDto, admin);
         return ResponseEntity.ok().body(boardId);
     }
+    // 게시글 수정
     @PostMapping("/api/v1/management/board/{boardId}")
     public ResponseEntity<Long> editPost (@PathVariable("boardId") Long boardId, @RequestBody BoardDto boardDto){
         return ResponseEntity.ok().body(service.editBoard(boardId, boardDto));
     }
+    // 게시글 삭제
     @DeleteMapping("/api/v1/management/board/{boardId}")
     public ResponseEntity<String> deletePost(@PathVariable("boardId") Long boardId){
         // boardId 로 삭제 Service Logic 처리 후 결과 return

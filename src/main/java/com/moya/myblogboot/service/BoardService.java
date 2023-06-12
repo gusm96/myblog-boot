@@ -47,7 +47,7 @@ public class BoardService {
     }
 
     @Transactional
-    public long newPost(BoardDto boardDto, Admin admin) {
+    public long uploadBoard(BoardDto boardDto, Admin admin) {
         Board board= Board.builder()
                 .admin(admin)
                 .title(boardDto.getTitle())

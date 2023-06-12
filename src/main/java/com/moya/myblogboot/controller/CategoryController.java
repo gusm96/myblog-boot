@@ -5,9 +5,9 @@ import com.moya.myblogboot.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -15,12 +15,27 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
+    // 카테고리 리스트
     @GetMapping("/api/v1/management/categories")
-    public ResponseEntity getCategoryList(){
+    public ResponseEntity<List> getCategoryList() {
         return ResponseEntity.ok(categoryService.categoryList());
     }
-    @PostMapping("/api/v1/management/new-category")
-    public ResponseEntity newCategory(@RequestBody String categoryName) {
+
+    // 카테고리 작성
+    @PostMapping("/api/v1/management/category")
+    public ResponseEntity<String> newCategory(@RequestBody String categoryName) {
         return ResponseEntity.ok(categoryService.createCategory(categoryName));
+    }
+
+    // 카테고리 수정
+    @PostMapping("/api/v1/management/category/{categoryId}")
+    public ResponseEntity<Long> editCategory(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(0L);
+    }
+
+    // 카테고리 삭제
+    @DeleteMapping("/api/v1/management/category/{categoryId}")
+    public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId) {
+        return ResponseEntity.ok("delete");
     }
 }

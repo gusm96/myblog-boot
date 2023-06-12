@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import static jakarta.persistence.FetchType.*;
 
 @Entity
@@ -27,4 +30,7 @@ public class Reply {
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "board_id")
     private Board board;
+
+    @OneToMany(mappedBy = "reply")
+    private List<ReReply> reReplies = new ArrayList<>();
 }

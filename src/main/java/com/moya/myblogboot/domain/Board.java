@@ -2,6 +2,7 @@ package com.moya.myblogboot.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,10 +17,11 @@ public class Board {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "board_id")
     private Long id;
+    @Column(nullable = false)
     private String title;
     @Lob
+    @Column(nullable = false)
     private String content;
-    private Long hits;
     private LocalDateTime upload_date;
     private LocalDateTime edit_date;
     private LocalDateTime delete_date;
@@ -30,6 +32,7 @@ public class Board {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_id")
     private Admin admin;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
@@ -45,23 +48,20 @@ public class Board {
         this.content = content;
         this.admin = admin;
         this.category = category;
-        category.getBoards().add(this); // 양방향 연관관계를 위한 메서드
         this.upload_date = LocalDateTime.now();
+        this.boardStatus = BoardStatus.VIEW;
     }
     /*비즈니스 로직*/
-    // Update Board
+    // 게시글 수정
     public void updateBoard(Category category, String title, String content) {
-        category.getBoards().remove(this);
         this.category = category;
-        category.getBoards().add(this);
         this.title = title;
         this.content = content;
         this.edit_date = LocalDateTime.now();
     }
-    // 좋아요 증가
-    public void hitsCount(){
-        // 우선 단순로직으로...
-        this.hits++;
-    }
 
+    // 게시글 숨김 상태 수정
+    public void updateBoardStatus(BoardStatus boardStatus) {
+        this.boardStatus = boardStatus;
+    }
 }

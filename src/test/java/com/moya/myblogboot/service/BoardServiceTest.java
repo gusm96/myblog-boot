@@ -1,17 +1,16 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.Admin;
-import com.moya.myblogboot.domain.Board;
-import com.moya.myblogboot.domain.BoardDto;
-import com.moya.myblogboot.domain.Category;
+import com.moya.myblogboot.domain.*;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
-import jakarta.persistence.EntityManager;
-import org.assertj.core.api.Assertions;
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -31,59 +30,107 @@ class BoardServiceTest {
     AdminRepository adminRepository;
 
     public Admin createAdmin(){
-        return Admin.builder()
+        Admin admin = Admin.builder()
                 .admin_name("moya")
                 .admin_pw("moya1343")
                 .nickname("Moyada")
                 .build();
+        adminRepository.save(admin);
+        return admin;
     }
-    @Test
-    void findBoardList() {
-        int offset = 0;
-        int limit = 5;
-        List<Board> result = boardRepository.findAll(offset, limit);
-
-        for (Board val : result) {
-            System.out.println(val.toString());
-        }
+    public Category createCategory(String name) {
+        Category category = Category.builder().name(name).build();
+        categoryRepository.create(category);
+        return category;
     }
 
-    @Test
-    void getBoard() {
+    public Board createBoard(Admin admin, Category category, String title, String content) {
+        Board board = Board.builder()
+                .admin(admin)
+                .category(category)
+                .title(title)
+                .content(content)
+                .build();
+        boardRepository.upload(board);
+        return board;
     }
-
+    @DisplayName("게시글 작성")
     @Test
-    void editBoard() {
+    void 게시글_작성() {
         // given
-        Board board = boardRepository.findOne(10L).orElseThrow();
-        // when
-        // then
-
-    }
-
-    @Test
-    void deleteBoard() {
-    }
-
-    @Test
-    void newPost() {
-        Admin admin = adminRepository.findById("moya").orElseThrow(() -> new IllegalStateException("해당 계정은 존재하지 않습니다."));
-        Category category = Category.builder().name("Java").build(); // 비영속
-        categoryRepository.create(category); // 영속
-
         BoardDto boardDto = new BoardDto();
-        boardDto.setCategory(category);
+        boardDto.setCategory(createCategory("Java"));
         boardDto.setTitle("제목");
         boardDto.setContent("내용");
 
-        Board board= Board.builder()
-                .admin(admin)
+        Board board = Board.builder()
+                .admin(createAdmin())
+                .category(boardDto.getCategory())
                 .title(boardDto.getTitle())
-                .content(boardDto.getContent())
-                .category(boardDto.getCategory()).build();
-
+                .content(boardDto.getTitle())
+                .build();
+        // when
         Long result = boardRepository.upload(board);
+        // then
+        assertThat(result).isEqualTo(board.getId());
+    }
+    @DisplayName("게시글 리스트")
+    @Test
+    void 게시글_리스트() {
+        // given
+        Admin admin = createAdmin();
+        Category category = createCategory("Java");
+        Board board1 = createBoard(admin, category, "제목1", "내용1");
+        Board board2 = createBoard(admin, category, "제목2", "내용2");
+        Board board3 = createBoard(admin, category, "제목3", "내용3");
+        int offset = 0;
+        int limit = 5;
+        // when
+        List<Board> boards = boardRepository.findAll(offset,limit);
+        // then
+        assertThat(boards.size()).isEqualTo(3);
+    }
 
-        Assertions.assertThat(result > 0L);
+   @DisplayName("해당 게시글 상세정보")
+   @Test
+   void 게시글_상세보기() {
+       // given
+       Admin admin = createAdmin();
+       Category category = createCategory("java");
+       Board board = createBoard(admin,category,"제목", "내용");
+       // when
+       Board result = boardRepository.findOne(board.getId())
+               .orElseThrow(() -> new IllegalStateException("해당 게시글이 존재하지 않습니다"));
+       // then
+       assertThat(result.getId()).isEqualTo(board.getId());
+   }
+    @DisplayName("게시글 수정")
+    @Test
+    @Rollback(value = false)
+    void 게시글_수정() {
+        // given
+        Admin admin = createAdmin(); // 영속
+        Category category = createCategory("Java"); // 영속
+        Board board = createBoard(admin, category, "제목", "내용"); // 영속
+        // when
+        Category newCategory = createCategory("Python");
+        board.updateBoard(newCategory, "파이썬", "웹크롤링");
+
+        // then
+        assertThat(board.getTitle()).isEqualTo("파이썬");
+
+    }
+    @DisplayName("게시글 숨김")
+    @Test
+    @Rollback(value = false)
+    void 게시글_숨김() {
+        // given
+        Admin admin = createAdmin();
+        Category category = createCategory("Java");
+        Board board = createBoard(admin, category, "제목", "내용");
+        // when
+        board.updateBoardStatus(BoardStatus.HIDE);
+        // then
+        assertThat(board.getBoardStatus()).isEqualTo(BoardStatus.HIDE);
     }
 }

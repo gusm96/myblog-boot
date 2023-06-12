@@ -3,6 +3,8 @@ package com.moya.myblogboot.domain;
 import jakarta.persistence.*;
 import jdk.jfr.Name;
 import lombok.*;
+import org.springframework.context.annotation.Role;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,17 +19,20 @@ public class Admin {
     @Column(name = "admin_id")
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String admin_name;
     @Column(nullable = false)
     private String admin_pw;
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String nickname;
+    private String role = "ADMIN";
 
     @OneToMany(mappedBy = "admin")
     private List<Board> boards = new ArrayList<>();
     @OneToMany(mappedBy = "admin")
     private List<Reply> replies = new ArrayList<>();
+    @OneToMany(mappedBy = "admin")
+    private List<ReReply> reReplies = new ArrayList<>();
 
     @Builder
     public Admin(String admin_name, String admin_pw, String nickname){

@@ -19,4 +19,6 @@ public class Guest {
     @OneToMany(mappedBy = "guest")
     private List<Reply> replies = new ArrayList<>();
 
+    @OneToMany(mappedBy = "guest")
+    private List<ReReply> reReplies = new ArrayList<>();
 }

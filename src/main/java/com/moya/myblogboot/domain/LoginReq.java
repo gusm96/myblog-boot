@@ -1,13 +1,12 @@
 package com.moya.myblogboot.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginReq {
-    private String admin_id;
+    private String admin_name;
     private String admin_pw;
 }

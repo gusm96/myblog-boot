@@ -1,6 +1,5 @@
 package com.moya.myblogboot.utils;
 
-import com.moya.myblogboot.domain.Admin;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -9,18 +8,20 @@ import java.util.Date;
 
 public class JwtUtil {
 
-    public static String getAdminId(String token, String secretKey) {
+    public static String getAdminName(String token, String secretKey) {
         return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token)
-                .getBody().get("adminId", String.class);
+                .getBody().get("admin_name", String.class);
     }
+
+    // Token 만료
     public static boolean isExpired(String token, String secretKey) {
         return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token)
                 .getBody().getExpiration().before(new Date());
     }
     // Token 생성
-    public static String createToken(String adminId, String secretKey, long expiredMs){
+    public static String createToken(String admin_name, String secretKey, long expiredMs){
         Claims claims = Jwts.claims();
-        claims.put("adminId", adminId);
+        claims.put("admin_name", admin_name);
 
         return Jwts.builder()
                 .setClaims(claims)
