@@ -17,6 +17,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ public class JwtFilter extends OncePerRequestFilter {
         log.info("Authorization : {}", authorization);
 
         // Token이 없을 시 Block
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
+        if (authorization == null || !authorization.startsWith("bearer ")) {
             log.error("Authorization is null.");
             filterChain.doFilter(request,response);
             return;
@@ -59,5 +60,12 @@ public class JwtFilter extends OncePerRequestFilter {
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         filterChain.doFilter(request,response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String[] excludePath = {"/login/admin","/api/v1/boards", "/api/v1/categories"}; // 필터에서 제외시킬 url
+        String path = request.getRequestURI();
+        return (Arrays.stream(excludePath).anyMatch(path::startsWith));
     }
 }

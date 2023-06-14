@@ -4,7 +4,10 @@ import com.moya.myblogboot.domain.Admin;
 import com.moya.myblogboot.domain.Board;
 import com.moya.myblogboot.domain.BoardDto;
 import com.moya.myblogboot.service.BoardService;
+import com.moya.myblogboot.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,12 +40,7 @@ public class BoardController {
     // 게시글 작성 Post
     @PostMapping("/api/v1/management/board")
     public ResponseEntity<Long> newPost (@RequestBody BoardDto boardDto) {
-        // 받아온 Token으로 권한 검증
-        // Token으로 Admin 정보 찾아온다.
-        // Admin 정보와 함께 Board persist();
-        Admin admin = null;
-        // 게시글 업로드를 성공하면 해당 식별값 response
-        Long boardId = service.uploadBoard(boardDto, admin);
+        Long boardId = service.uploadBoard(boardDto);
         return ResponseEntity.ok().body(boardId);
     }
     // 게시글 수정

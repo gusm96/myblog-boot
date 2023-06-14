@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -23,8 +24,8 @@ public class CategoryController {
 
     // 카테고리 작성
     @PostMapping("/api/v1/management/category")
-    public ResponseEntity<String> newCategory(@RequestBody String categoryName) {
-        return ResponseEntity.ok(categoryService.createCategory(categoryName));
+    public ResponseEntity<String> newCategory(@RequestBody Map<String,String> categortMap) {
+        return ResponseEntity.ok(categoryService.createCategory(categortMap.get("category")));
     }
 
     // 카테고리 수정

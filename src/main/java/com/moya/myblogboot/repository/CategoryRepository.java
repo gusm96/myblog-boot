@@ -20,8 +20,11 @@ public class CategoryRepository implements CategoryRepositoryInf {
     }
 
     @Override
-    public Optional<Category> findOne(Long categoryId) {
-        Category category = em.find(Category.class, categoryId);
+    public Optional<Category> findOne(String categoryName) {
+        Category category = em.createQuery("select c from Category c where c.name=:name", Category.class)
+                .setParameter("name", categoryName)
+                .getSingleResult();
+
         return Optional.ofNullable(category);
     }
 

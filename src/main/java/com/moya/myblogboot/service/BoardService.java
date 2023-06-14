@@ -3,7 +3,9 @@ package com.moya.myblogboot.service;
 import com.moya.myblogboot.domain.Admin;
 import com.moya.myblogboot.domain.Board;
 import com.moya.myblogboot.domain.BoardDto;
+import com.moya.myblogboot.domain.Category;
 import com.moya.myblogboot.repository.BoardRepository;
+import com.moya.myblogboot.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,7 @@ import java.util.List;
 public class BoardService {
 
     private final BoardRepository boardRepository;
+    private final CategoryRepository categoryRepository;
 
     public static final int LIMIT = 3;
 
@@ -47,12 +50,12 @@ public class BoardService {
     }
 
     @Transactional
-    public long uploadBoard(BoardDto boardDto, Admin admin) {
+    public long uploadBoard(BoardDto boardDto) {
+        Category category = categoryRepository.findOne(boardDto.getCategory()).orElseThrow(() -> new IllegalStateException("존재하지 않는 카테고리 입니다."));
         Board board= Board.builder()
-                .admin(admin)
                 .title(boardDto.getTitle())
                 .content(boardDto.getContent())
-                .category(boardDto.getCategory()).build();
+                .category(category).build();
         return boardRepository.upload(board);
     }
 

@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import Table from "react-bootstrap/Table";
 
-const PostsList = ({ posts }) => {
+const BoardList = ({ boards }) => {
   return (
     <Table striped>
       <thead>
@@ -12,11 +12,11 @@ const PostsList = ({ posts }) => {
         </tr>
       </thead>
       <tbody>
-        {posts.map((post) => (
+        {boards.map((board) => (
           <tr>
-            <td>{post.upload_date}</td>
+            <td>{board.upload_date}</td>
             <td>
-              <a href="/post/{post.bidx}">{post.title}</a>
+              <a href="/board/{board.id}">{board.title}</a>
             </td>
           </tr>
         ))}
@@ -25,7 +25,7 @@ const PostsList = ({ posts }) => {
   );
 };
 
-PostsList.propTypes = {
-  posts: PropTypes.array,
+BoardList.propTypes = {
+  boards: PropTypes.array,
 };
-export default PostsList;
+export default BoardList;

@@ -28,8 +28,6 @@ public class Admin {
     private String role = "ADMIN";
 
     @OneToMany(mappedBy = "admin")
-    private List<Board> boards = new ArrayList<>();
-    @OneToMany(mappedBy = "admin")
     private List<Reply> replies = new ArrayList<>();
     @OneToMany(mappedBy = "admin")
     private List<ReReply> reReplies = new ArrayList<>();

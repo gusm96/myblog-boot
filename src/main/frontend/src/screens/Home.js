@@ -2,15 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Container } from "../components/Styles/Container/Container.style";
 import { Header, MainHeader } from "../components/Styles/Header/Header.style";
 import axios from "axios";
-import PostsList from "../components/Posts/PostsList";
+import BoardList from "../components/Boards/BoardList";
 const Home = () => {
-  const [posts, setPosts] = useState([]);
+  const [boards, setBoards] = useState([]);
 
   useEffect(() => {
     axios
-      .get("/api/v1/posts")
+      .get("/api/v1/boards")
       .then((responce) => responce.data)
-      .then((data) => setPosts(data))
+      .then((data) => setBoards(data))
       .catch((error) => console.log(error));
   }, []);
 
@@ -18,7 +18,7 @@ const Home = () => {
     <Container>
       <Header>
         <MainHeader>
-          <PostsList posts={posts} />
+          <BoardList boards={boards} />
         </MainHeader>
       </Header>
     </Container>

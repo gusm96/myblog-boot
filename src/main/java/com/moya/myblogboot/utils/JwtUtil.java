@@ -21,6 +21,7 @@ public class JwtUtil {
     // Token 생성
     public static String createToken(String admin_name, String secretKey, long expiredMs){
         Claims claims = Jwts.claims();
+        // JWT에 사용자의 많은 정보를 담으면 보안상 위험하다.
         claims.put("admin_name", admin_name);
 
         return Jwts.builder()

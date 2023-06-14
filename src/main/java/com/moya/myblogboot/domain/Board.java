@@ -30,11 +30,6 @@ public class Board {
     private BoardStatus boardStatus; // VIEW, HIDE
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "admin_id")
-    private Admin admin;
-
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
 
@@ -46,7 +41,6 @@ public class Board {
     public Board(String title, String content, Admin admin, Category category) {
         this.title = title;
         this.content = content;
-        this.admin = admin;
         this.category = category;
         this.upload_date = LocalDateTime.now();
         this.boardStatus = BoardStatus.VIEW;

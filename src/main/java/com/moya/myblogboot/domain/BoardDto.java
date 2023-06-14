@@ -8,5 +8,5 @@ import lombok.Setter;
 public class BoardDto {
     private String title;
     private String content;
-    private Category category;
+    private String category;
 }
