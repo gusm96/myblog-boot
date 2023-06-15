@@ -18,10 +18,10 @@ public class ReReply {
     private Reply reply;
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "admin")
+    @JoinColumn(name = "admin_id")
     private Admin admin;
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "guest")
+    @JoinColumn(name = "guest_id")
     private Guest guest;
 }

@@ -1,6 +1,8 @@
 package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.Board;
+import com.moya.myblogboot.domain.BoardResDto;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -13,9 +15,9 @@ public interface BoardRepositoryInf {
     Optional<Board> findOne(Long idx);
 
     // 모든 게시글 찾기
-    List<Board> findAll(int offset, int limit);
+    List<BoardResDto> findAll(int offset, int limit);
 
     // 해당 type의 게시글 모두 찾기
-    List<Board> findAllBoardsInThatCategory(String categoryName,int offset, int limit);
+    List<BoardResDto> findAllBoardsInThatCategory(String categoryName,int offset, int limit);
 
 }

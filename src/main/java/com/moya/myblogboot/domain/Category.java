@@ -17,7 +17,6 @@ public class Category {
     private Long id;
 
     private String name;
-
     // 생성 메서드
     @Builder
     public Category(String name) {

@@ -1,11 +1,11 @@
 package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.Board;
+import com.moya.myblogboot.domain.BoardResDto;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,7 +28,7 @@ public class BoardRepository implements BoardRepositoryInf {
     }
 
     @Override
-    public List<Board> findAllBoardsInThatCategory(String categoryName,int offset, int limit) {
+    public List<BoardResDto> findAllBoardsInThatCategory(String categoryName,int offset, int limit) {
         List<Board> boards = em.createQuery(
                         "select b from Board b " +
                                 "where b.category.name=:categoryName " +
@@ -38,18 +38,19 @@ public class BoardRepository implements BoardRepositoryInf {
                 .setFirstResult(offset)
                 .setMaxResults(limit)
                 .getResultList();
-
-        return boards;
+        List<BoardResDto> result = boards.stream().map(BoardResDto::of).toList();
+        return result;
     }
 
     @Override
-    public List<Board> findAll(int offset, int limit) {
+    public List<BoardResDto> findAll(int offset, int limit) {
         List<Board> boards = em.createQuery("select b from Board b order by b.upload_date desc "
                         , Board.class)
                 .setFirstResult(offset)
                 .setMaxResults(limit)
                 .getResultList();
-        return boards;
+        List<BoardResDto> result = boards.stream().map(BoardResDto::of).toList();
+        return result;
     }
 
 }

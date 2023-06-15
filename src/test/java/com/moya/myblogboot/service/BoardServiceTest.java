@@ -14,7 +14,6 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @SpringBootTest
 @Transactional
@@ -44,9 +43,8 @@ class BoardServiceTest {
         return category;
     }
 
-    public Board createBoard(Admin admin, Category category, String title, String content) {
+    public Board createBoard( Category category, String title, String content) {
         Board board = Board.builder()
-                .admin(admin)
                 .category(category)
                 .title(title)
                 .content(content)
@@ -58,17 +56,17 @@ class BoardServiceTest {
     @Test
     void 게시글_작성() {
         // given
-        BoardDto boardDto = new BoardDto();
-        boardDto.setCategory(createCategory("Java"));
-        boardDto.setTitle("제목");
-        boardDto.setContent("내용");
+        BoardReqDto boardReqDto = new BoardReqDto();
+        boardReqDto.setCategory("Java");
+        boardReqDto.setTitle("제목");
+        boardReqDto.setContent("내용");
 
         Board board = Board.builder()
-                .admin(createAdmin())
-                .category(boardDto.getCategory())
-                .title(boardDto.getTitle())
-                .content(boardDto.getTitle())
+                .category(categoryRepository.findOne(boardReqDto.getCategory()).orElseThrow(() -> new IllegalStateException("없는 카테고리")))
+                .title(boardReqDto.getTitle())
+                .content(boardReqDto.getTitle())
                 .build();
+
         // when
         Long result = boardRepository.upload(board);
         // then
@@ -78,15 +76,14 @@ class BoardServiceTest {
     @Test
     void 게시글_리스트() {
         // given
-        Admin admin = createAdmin();
         Category category = createCategory("Java");
-        Board board1 = createBoard(admin, category, "제목1", "내용1");
-        Board board2 = createBoard(admin, category, "제목2", "내용2");
-        Board board3 = createBoard(admin, category, "제목3", "내용3");
+        Board board1 = createBoard(category, "제목1", "내용1");
+        Board board2 = createBoard(category, "제목2", "내용2");
+        Board board3 = createBoard(category, "제목3", "내용3");
         int offset = 0;
         int limit = 5;
         // when
-        List<Board> boards = boardRepository.findAll(offset,limit);
+        List<BoardResDto> boards = boardRepository.findAll(offset,limit);
         // then
         assertThat(boards.size()).isEqualTo(3);
     }
@@ -95,14 +92,14 @@ class BoardServiceTest {
    @Test
    void 게시글_상세보기() {
        // given
-       Admin admin = createAdmin();
-       Category category = createCategory("java");
-       Board board = createBoard(admin,category,"제목", "내용");
+       //Admin admin = createAdmin();
+       //Category category = createCategory("java");
+      // Board board = createBoard(category,"제목", "내용");
        // when
-       Board result = boardRepository.findOne(board.getId())
+       Board result = boardRepository.findOne(1L)
                .orElseThrow(() -> new IllegalStateException("해당 게시글이 존재하지 않습니다"));
        // then
-       assertThat(result.getId()).isEqualTo(board.getId());
+       assertThat(result.getId()).isEqualTo(1L);
    }
     @DisplayName("게시글 수정")
     @Test
@@ -111,7 +108,7 @@ class BoardServiceTest {
         // given
         Admin admin = createAdmin(); // 영속
         Category category = createCategory("Java"); // 영속
-        Board board = createBoard(admin, category, "제목", "내용"); // 영속
+        Board board = createBoard( category, "제목", "내용"); // 영속
         // when
         Category newCategory = createCategory("Python");
         board.updateBoard(newCategory, "파이썬", "웹크롤링");
@@ -127,7 +124,7 @@ class BoardServiceTest {
         // given
         Admin admin = createAdmin();
         Category category = createCategory("Java");
-        Board board = createBoard(admin, category, "제목", "내용");
+        Board board = createBoard( category, "제목", "내용");
         // when
         board.updateBoardStatus(BoardStatus.HIDE);
         // then

@@ -1,9 +1,6 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.Admin;
-import com.moya.myblogboot.domain.Board;
-import com.moya.myblogboot.domain.BoardDto;
-import com.moya.myblogboot.domain.Category;
+import com.moya.myblogboot.domain.*;
 import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,23 +20,27 @@ public class BoardService {
     public static final int LIMIT = 3;
 
     // 해당 카테고리 모든 게시글 가져오기
-    public List<Board> getAllBoardsInThatCategory(String category, int page){
-        List<Board> list = boardRepository.findAllBoardsInThatCategory(category, pagination(page), LIMIT);
+    public List<BoardResDto> getAllBoardsInThatCategory(String category, int page){
+        List<BoardResDto> list = boardRepository.findAllBoardsInThatCategory(category, pagination(page), LIMIT);
         return list;
     }
     // 선택한 게시글 가져오기
-    public Board getBoard(Long boardId){
+    public BoardResDto getBoard(Long boardId){
         Board board = boardRepository.findOne(boardId).orElseThrow(
                 () -> new IllegalStateException("해당 게시글이 존재하지 않습니다.")
         );
-        return board;
+        BoardResDto boardResDto = BoardResDto.builder().board(board).build();
+        return boardResDto;
     }
     @Transactional
-    public Long editBoard(Long boardId, BoardDto boardDto){
+    public Long editBoard(Long boardId, BoardReqDto boardReqDto){
         Board board = boardRepository.findOne(boardId).orElseThrow(
                 ()-> new IllegalStateException("해당 게시글이 존재하지 않습니다.")
                 );
-
+        Category category = categoryRepository.findOne(boardReqDto.getCategory()).orElseThrow(
+                () -> new IllegalStateException("존재하지 않는 카테고리 입니다."));
+        board.updateBoard(category, boardReqDto.getTitle(), boardReqDto.getContent());
+        // 변경 감지
         return board.getId();
     }
     @Transactional
@@ -50,17 +51,14 @@ public class BoardService {
     }
 
     @Transactional
-    public long uploadBoard(BoardDto boardDto) {
-        Category category = categoryRepository.findOne(boardDto.getCategory()).orElseThrow(() -> new IllegalStateException("존재하지 않는 카테고리 입니다."));
-        Board board= Board.builder()
-                .title(boardDto.getTitle())
-                .content(boardDto.getContent())
-                .category(category).build();
+    public long uploadBoard(BoardReqDto boardReqDto) {
+        Category category = categoryRepository.findOne(boardReqDto.getCategory()).orElseThrow(() -> new IllegalStateException("존재하지 않는 카테고리 입니다."));
+        Board board = boardReqDto.toEntity(category);
         return boardRepository.upload(board);
     }
 
-    public List<Board> getBoardList(int page) {
-        List<Board> list = null;
+    public List<BoardResDto> getBoardList(int page) {
+        List<BoardResDto> list = null;
         list = boardRepository.findAll(pagination(page), LIMIT);
         return list;
     }

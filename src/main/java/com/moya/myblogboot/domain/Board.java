@@ -1,5 +1,6 @@
 package com.moya.myblogboot.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -29,7 +30,7 @@ public class Board {
     @Enumerated(EnumType.STRING)
     private BoardStatus boardStatus; // VIEW, HIDE
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne // 대부분 Category를 함께 조회 하기때문에 FetchType 을 Default 값으로 둠 (EAGER)
     @JoinColumn(name = "category_id")
     private Category category;
 
@@ -38,7 +39,7 @@ public class Board {
 
     /*생성 메서드*/
     @Builder
-    public Board(String title, String content, Admin admin, Category category) {
+    public Board(String title, String content, Category category) {
         this.title = title;
         this.content = content;
         this.category = category;

@@ -9,7 +9,7 @@ const Home = () => {
   useEffect(() => {
     axios
       .get("/api/v1/boards")
-      .then((responce) => responce.data)
+      .then((response) => response.data)
       .then((data) => setBoards(data))
       .catch((error) => console.log(error));
   }, []);

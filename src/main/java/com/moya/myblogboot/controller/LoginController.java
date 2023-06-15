@@ -13,11 +13,11 @@ public class LoginController {
 
     private final LoginService loginService;
     // Postman test용
-    /*@GetMapping("/create/admin")
+    @GetMapping("/create/admin")
     public ResponseEntity<String> createAdmin(){
         loginService.createAdmin();
         return ResponseEntity.ok().body("어드민 계정 생성 완료.");
-    }*/
+    }
     @PostMapping("/login/admin")
     public ResponseEntity<TokenResponse> adminLogin(@RequestBody LoginReq loginReq) {
         // Token 발급
