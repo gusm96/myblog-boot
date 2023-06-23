@@ -14,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -64,7 +65,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String[] excludePath = {"/login/admin","/api/v1/boards", "/api/v1/categories"}; // 필터에서 제외시킬 url
+        String[] excludePath = {"/login/admin","/api/v1/boards", "/api/v1/categories","/api/v1/reply"}; // 필터에서 제외시킬 url
         String path = request.getRequestURI();
         log.info(path);
         return (Arrays.stream(excludePath).anyMatch(path::startsWith));

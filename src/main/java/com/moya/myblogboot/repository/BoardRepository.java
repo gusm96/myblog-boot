@@ -28,7 +28,7 @@ public class BoardRepository implements BoardRepositoryInf {
     }
 
     @Override
-    public List<BoardResDto> findAllBoardsInThatCategory(String categoryName,int offset, int limit) {
+    public List<Board> findAllBoardsInThatCategory(String categoryName,int offset, int limit) {
         List<Board> boards = em.createQuery(
                         "select b from Board b " +
                                 "where b.category.name=:categoryName " +
@@ -38,19 +38,22 @@ public class BoardRepository implements BoardRepositoryInf {
                 .setFirstResult(offset)
                 .setMaxResults(limit)
                 .getResultList();
-        List<BoardResDto> result = boards.stream().map(BoardResDto::of).toList();
-        return result;
+        return boards;
     }
 
     @Override
-    public List<BoardResDto> findAll(int offset, int limit) {
+    public List<Board> findAll(int offset, int limit) {
         List<Board> boards = em.createQuery("select b from Board b order by b.upload_date desc "
                         , Board.class)
                 .setFirstResult(offset)
                 .setMaxResults(limit)
                 .getResultList();
-        List<BoardResDto> result = boards.stream().map(BoardResDto::of).toList();
-        return result;
+        return boards;
     }
 
+    @Override
+    public String deleteBoard(Long boardId) {
+        String result = "";
+        return result;
+    }
 }

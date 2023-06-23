@@ -8,7 +8,7 @@ const Home = () => {
 
   useEffect(() => {
     axios
-      .get("/api/v1/boards")
+      .get("http://localhost:8080/api/v1/boards")
       .then((response) => response.data)
       .then((data) => setBoards(data))
       .catch((error) => console.log(error));

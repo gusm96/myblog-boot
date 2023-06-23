@@ -16,7 +16,7 @@ const BoardList = ({ boards }) => {
           <tr>
             <td>{board.upload_date}</td>
             <td>
-              <a href="/board/{board.id}">{board.title}</a>
+              <a href={"/boards/" + board.id}>{board.title}</a>
             </td>
           </tr>
         ))}

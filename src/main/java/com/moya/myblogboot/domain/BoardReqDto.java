@@ -1,11 +1,10 @@
 package com.moya.myblogboot.domain;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-@Data
+@Getter
 @NoArgsConstructor
 public class BoardReqDto {
     @NotBlank(message = "제목을 입력하세요.")

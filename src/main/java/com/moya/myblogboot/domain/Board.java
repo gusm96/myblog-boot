@@ -34,6 +34,7 @@ public class Board {
     @JoinColumn(name = "category_id")
     private Category category;
 
+
     @OneToMany(mappedBy = "board")
     private List<Reply> replies = new ArrayList<>();
 

@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 
 const BoardDetail = () => {
+  const [board, setBoard] = useState("");
   return <div>BoardDetail</div>;
 };
 

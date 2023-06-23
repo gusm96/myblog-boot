@@ -17,12 +17,20 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final CategoryRepository categoryRepository;
 
-    public static final int LIMIT = 3;
+    public static final int LIMIT = 20;
+    // 모든 게시글 찾기
+    public List<BoardResDto> getBoardList(int page) {
+        List<Board> boardList = null;
+        boardList = boardRepository.findAll(pagination(page), LIMIT);
+        List<BoardResDto> resultList = boardList.stream().map(BoardResDto::of).toList();
+        return resultList;
+    }
 
     // 해당 카테고리 모든 게시글 가져오기
     public List<BoardResDto> getAllBoardsInThatCategory(String category, int page){
-        List<BoardResDto> list = boardRepository.findAllBoardsInThatCategory(category, pagination(page), LIMIT);
-        return list;
+        List<Board> boardList = boardRepository.findAllBoardsInThatCategory(category, pagination(page), LIMIT);
+        List<BoardResDto> resultList = boardList.stream().map(BoardResDto::of).toList();
+        return resultList;
     }
     // 선택한 게시글 가져오기
     public BoardResDto getBoard(Long boardId){
@@ -32,6 +40,7 @@ public class BoardService {
         BoardResDto boardResDto = BoardResDto.builder().board(board).build();
         return boardResDto;
     }
+    // 게시글 수정
     @Transactional
     public Long editBoard(Long boardId, BoardReqDto boardReqDto){
         Board board = boardRepository.findOne(boardId).orElseThrow(
@@ -43,24 +52,19 @@ public class BoardService {
         // 변경 감지
         return board.getId();
     }
+    // 게시글 삭제
     @Transactional
-    public int deleteBoard(int bidx){
-        int result = 0;
+    public String deleteBoard(Long boardId){
+        String result = "";
 
         return result;
     }
-
+    // 게시글 업로드
     @Transactional
     public long uploadBoard(BoardReqDto boardReqDto) {
         Category category = categoryRepository.findOne(boardReqDto.getCategory()).orElseThrow(() -> new IllegalStateException("존재하지 않는 카테고리 입니다."));
         Board board = boardReqDto.toEntity(category);
         return boardRepository.upload(board);
-    }
-
-    public List<BoardResDto> getBoardList(int page) {
-        List<BoardResDto> list = null;
-        list = boardRepository.findAll(pagination(page), LIMIT);
-        return list;
     }
 
     private int pagination (int page){
