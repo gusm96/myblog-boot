@@ -9,8 +9,9 @@ public interface CategoryRepositoryInf {
 
     Long create(Category category);
 
-    Optional<Category> findOne(String categoryName);
+    Optional<Category> findOne(Long categoryId);
 
     List<Category> categories();
 
+    void removeCategory(Category category);
 }

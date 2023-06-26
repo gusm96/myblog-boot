@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -20,16 +21,23 @@ public class ReplyRepository implements ReplyRepositoryInf {
         return reply.getId();
     }
     @Override
-    public Reply findOne(Long replyId) {
+    public Optional<Reply> findOne(Long replyId) {
         Reply result = em.find(Reply.class, replyId);
-        return result;
+        return Optional.ofNullable(result);
     }
-
     @Override
     public List<Reply> replyList(Long boardId) {
         List<Reply> result = em.createQuery("select r from Reply r where r.board.id =: boardId order by r.write_date desc ", Reply.class)
                 .setParameter("boardId", boardId)
                 .getResultList();
         return result;
+    }
+
+    @Override
+    public void removeReply(Long replyId) {
+        Reply reply = em.find(Reply.class, replyId);
+        if (reply != null) {
+            em.remove(reply);
+        }
     }
 }

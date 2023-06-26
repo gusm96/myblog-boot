@@ -27,4 +27,20 @@ public class CategoryService {
             return "failed";
         }
     }
+
+    public Boolean deleteCategory(Long categoryId) {
+        Category category = findCategory(categoryId);
+        try {
+            categoryRepository.removeCategory(category);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public Category findCategory(Long categoryId) {
+        return categoryRepository.findOne(categoryId).orElseThrow(()
+                -> new IllegalStateException("해당 카테고리는 존재하지 않습니다."));
+    }
 }

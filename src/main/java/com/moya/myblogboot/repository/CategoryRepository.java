@@ -20,11 +20,8 @@ public class CategoryRepository implements CategoryRepositoryInf {
     }
 
     @Override
-    public Optional<Category> findOne(String categoryName) {
-        Category category = em.createQuery("select c from Category c where c.name=:name", Category.class)
-                .setParameter("name", categoryName)
-                .getSingleResult();
-
+    public Optional<Category> findOne(Long categoryId) {
+        Category category = em.find(Category.class, categoryId);
         return Optional.ofNullable(category);
     }
 
@@ -33,5 +30,10 @@ public class CategoryRepository implements CategoryRepositoryInf {
     public List<Category> categories() {
         List<Category> categories = em.createQuery("select c from Category c", Category.class).getResultList();
         return categories;
+    }
+
+    @Override
+    public void removeCategory(Category category) {
+        em.remove(category);
     }
 }

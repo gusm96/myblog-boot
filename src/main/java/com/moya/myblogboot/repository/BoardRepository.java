@@ -52,8 +52,7 @@ public class BoardRepository implements BoardRepositoryInf {
     }
 
     @Override
-    public String deleteBoard(Long boardId) {
-        String result = "";
-        return result;
+    public void removeBoard(Board board) {
+        em.remove(board);
     }
 }

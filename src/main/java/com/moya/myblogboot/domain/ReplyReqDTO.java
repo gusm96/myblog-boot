@@ -17,8 +17,8 @@ public class ReplyReqDTO {
     @NotBlank(message = "댓글은 2글자 이상 500글자 이하로 작성하여야합니다.")
     @Size(min = 2, max = 500)
     private String comment;
-    private Long boardId;
-    private Long parentId;
+    private Long board_id;
+    private Long parent_id;
 
     public Reply toEntity (Board board){
         return Reply.builder()

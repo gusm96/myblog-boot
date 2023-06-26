@@ -65,7 +65,15 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String[] excludePath = {"/login/admin","/api/v1/boards", "/api/v1/categories","/api/v1/reply"}; // 필터에서 제외시킬 url
+        // 필터에서 제외시킬 url
+
+        String[] excludePath = {
+                "/login/admin",
+                "/api/v1/boards",
+                "/api/v1/categories",
+                "/api/v1/reply",
+                "/api/v1/replies"
+        };
         String path = request.getRequestURI();
         log.info(path);
         return (Arrays.stream(excludePath).anyMatch(path::startsWith));

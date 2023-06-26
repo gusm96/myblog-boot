@@ -35,7 +35,7 @@ public class Board {
     private Category category;
 
 
-    @OneToMany(mappedBy = "board")
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reply> replies = new ArrayList<>();
 
     /*생성 메서드*/
@@ -47,7 +47,8 @@ public class Board {
         this.upload_date = LocalDateTime.now();
         this.boardStatus = BoardStatus.VIEW;
     }
-    /*비즈니스 로직*/
+
+
     // 게시글 수정
     public void updateBoard(Category category, String title, String content) {
         this.category = category;

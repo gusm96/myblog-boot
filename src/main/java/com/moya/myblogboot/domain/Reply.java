@@ -32,7 +32,6 @@ public class Reply {
     private LocalDateTime write_date;
 
     @Enumerated(EnumType.STRING)
-    @ColumnDefault("'NOT_MODIFIED'")
     private ModificationStatus modificationStatus;
 
     @ManyToOne(fetch = LAZY)
@@ -43,7 +42,7 @@ public class Reply {
     @JoinColumn(name = "parent_id")
     private Reply parent;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL , orphanRemoval = true)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE , orphanRemoval = true)
     private List<Reply> child = new ArrayList<>();
 
     // 댓글 작성
@@ -53,6 +52,7 @@ public class Reply {
         this.password = password;
         this.comment = comment;
         this.write_date = LocalDateTime.now();
+        this.modificationStatus = ModificationStatus.NOT_MODIFIED;
         this.board = board;
     }
 
@@ -64,16 +64,9 @@ public class Reply {
         this.child.add(child);
         child.addParentReply(this);
     }
-
     // 수정 메서드
     public void updateReply(String comment) {
         this.comment = comment;
         this.modificationStatus = ModificationStatus.MODIFIED;
-    }
-
-    // 대댓글 삭제 (자식 댓글 삭제)
-    public void removeChildReply(Reply reply) {
-        child.remove(reply);
-        reply.addParentReply(null);
     }
 }

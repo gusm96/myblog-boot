@@ -22,5 +22,7 @@ values ('제목', '내용', 2, '2023-06-19 13:42:30.000000', 'VIEW');
 insert into board (title, content, category_id, upload_date,board_status)
 values ('제목', '내용', 2, '2023-06-19 13:42:30.000000', 'VIEW');
 
+-- Reply
+
 
 

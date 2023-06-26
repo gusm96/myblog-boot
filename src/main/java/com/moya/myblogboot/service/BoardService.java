@@ -15,7 +15,7 @@ import java.util.List;
 public class BoardService {
 
     private final BoardRepository boardRepository;
-    private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
 
     public static final int LIMIT = 20;
     // 모든 게시글 찾기
@@ -34,35 +34,35 @@ public class BoardService {
     }
     // 선택한 게시글 가져오기
     public BoardResDto getBoard(Long boardId){
-        Board board = boardRepository.findOne(boardId).orElseThrow(
-                () -> new IllegalStateException("해당 게시글이 존재하지 않습니다.")
-        );
+        Board board = findBoard(boardId);
         BoardResDto boardResDto = BoardResDto.builder().board(board).build();
         return boardResDto;
     }
     // 게시글 수정
     @Transactional
     public Long editBoard(Long boardId, BoardReqDto boardReqDto){
-        Board board = boardRepository.findOne(boardId).orElseThrow(
-                ()-> new IllegalStateException("해당 게시글이 존재하지 않습니다.")
-                );
-        Category category = categoryRepository.findOne(boardReqDto.getCategory()).orElseThrow(
-                () -> new IllegalStateException("존재하지 않는 카테고리 입니다."));
+        Board board = findBoard(boardId);
+        Category category = categoryService.findCategory(boardReqDto.getCategory());
         board.updateBoard(category, boardReqDto.getTitle(), boardReqDto.getContent());
         // 변경 감지
         return board.getId();
     }
     // 게시글 삭제
     @Transactional
-    public String deleteBoard(Long boardId){
-        String result = "";
-
-        return result;
+    public Boolean deleteBoard(Long boardId){
+        try {
+            Board board = findBoard(boardId);
+            boardRepository.removeBoard(board);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
     // 게시글 업로드
     @Transactional
     public long uploadBoard(BoardReqDto boardReqDto) {
-        Category category = categoryRepository.findOne(boardReqDto.getCategory()).orElseThrow(() -> new IllegalStateException("존재하지 않는 카테고리 입니다."));
+        Category category = categoryService.findCategory(boardReqDto.getCategory());
         Board board = boardReqDto.toEntity(category);
         return boardRepository.upload(board);
     }
@@ -70,5 +70,11 @@ public class BoardService {
     private int pagination (int page){
         if (page == 1) return 0;
         return (page - 1) * LIMIT;
+    }
+
+    public Board findBoard(Long boardId) {
+        return boardRepository.findOne(boardId).orElseThrow(
+                () -> new IllegalStateException("해당 게시글이 존재하지 않습니다.")
+        );
     }
 }

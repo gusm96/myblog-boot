@@ -13,10 +13,10 @@ public class BoardReqDto {
     @NotBlank(message = "내용을 입력하세요.")
     private String content;
     @NotBlank(message = "카테고리를 선택하세요.")
-    private String category;
+    private Long category;
 
     @Builder
-    public BoardReqDto(String category, String title, String content) {
+    public BoardReqDto(Long category, String title, String content) {
         this.category = category;
         this.title = title;
         this.content = content;

@@ -19,5 +19,5 @@ public interface BoardRepositoryInf {
     // 카테고리별 모든 게시글 찾기
     List<Board> findAllBoardsInThatCategory(String categoryName,int offset, int limit);
 
-    String deleteBoard(Long boardId);
+    void removeBoard(Board board);
 }
