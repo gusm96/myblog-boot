@@ -28,9 +28,8 @@ public class BoardController {
         return ResponseEntity.ok().body(list);
     }
     // 선택한 게시글
-    @GetMapping("/api/v1/management/board/{boardId}")
+    @GetMapping("/api/v1/board/{boardId}")
     public ResponseEntity<BoardResDto> getPost(@PathVariable Long boardId) {
-        // boardId 값으로 해당 게시글 찾아서 return
         BoardResDto board = boardService.getBoard(boardId);
         return ResponseEntity.ok().body(board);
     }

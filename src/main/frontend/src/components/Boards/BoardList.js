@@ -1,7 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Table from "react-bootstrap/Table";
-
+import { Link } from "react-router-dom";
+import moment from "moment";
 const BoardList = ({ boards }) => {
   return (
     <Table striped>
@@ -13,10 +14,12 @@ const BoardList = ({ boards }) => {
       </thead>
       <tbody>
         {boards.map((board) => (
-          <tr>
-            <td>{board.upload_date}</td>
+          <tr key={board.id}>
+            <td>{moment(board.upload_date).format("YYYY-MM-DD")}</td>
             <td>
-              <a href={"/boards/" + board.id}>{board.title}</a>
+              <Link to={`/${board.id}`} key={board.id}>
+                {board.title}
+              </Link>
             </td>
           </tr>
         ))}
