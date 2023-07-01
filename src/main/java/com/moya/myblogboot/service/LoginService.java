@@ -21,24 +21,18 @@ public class LoginService {
 
     // 토큰 만료 시간
     private Long expiredMs = 1000 * 60 * 60L;
-    public String adminLogin(String admin_name, String admin_pw) throws UsernameNotFoundException {
-        Admin admin = adminRepository.findById(admin_name).orElseThrow(() ->
-               new UsernameNotFoundException("등록된 관리자 계정이 아닙니다.")
-        );
+    public String adminLogin(String admin_name, String admin_pw)  {
         String token ="";
+        Admin admin = adminRepository.findById(admin_name).orElseThrow(() ->
+               new UsernameNotFoundException("아이디 또는 비밀번호가 올바르지 않습니다.")
+        );
         if (admin_pw.equals(admin.getAdmin_pw())){
             // 비밀번호가 같다면 토큰을 받아온다.
             token = JwtUtil.createToken(admin.getAdmin_name(), secretKey, expiredMs);
         } // 비밀번호 틀리면 Exception 처리
+        else{
+            throw new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.");
+        }
         return token;
-    }
-    @Transactional
-    public void createAdmin() {
-        Admin admin = Admin.builder()
-                .admin_name("moya")
-                .admin_pw("moya1343")
-                .nickname("Moyada")
-                .build();
-        adminRepository.save(admin);
     }
 }

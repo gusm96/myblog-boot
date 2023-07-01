@@ -2,6 +2,7 @@ package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.ReplyReqDTO;
 import com.moya.myblogboot.service.ReplyService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -17,14 +18,16 @@ public class ReplyController {
 
     // 댓글 작성
     @PostMapping("/api/v1/reply")
-    public ResponseEntity<String> reqToWriteReply(@RequestBody ReplyReqDTO replyReqDTO) {
-        System.out.println(replyReqDTO.getWriter());
-        System.out.println(replyReqDTO.getBoard_id());
+    public ResponseEntity<String> reqToWriteReply(@RequestBody @Valid ReplyReqDTO replyReqDTO) {
         String result = replyService.writeReply(replyReqDTO);
         return ResponseEntity.ok().body(result);
     }
-    // 댓글 수정
 
+    // 댓글 수정
+    @PutMapping("/api/v2/reply/{replyId}")
+    public ResponseEntity<Boolean> editReply(@RequestBody @Valid ReplyReqDTO replyReqDTO) {
+        return ResponseEntity.ok().body(true);
+    }
     // 댓글 삭제
     @DeleteMapping("/api/v1/reply/{replyId}")
     public ResponseEntity<Boolean> reqToDeleteReply(@PathVariable Long replyId) {

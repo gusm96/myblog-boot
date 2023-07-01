@@ -1,12 +1,14 @@
 package com.moya.myblogboot.domain;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginReq {
-    private String admin_name;
-    private String admin_pw;
+    @NotBlank(message = "아이디를 입력하세요.")
+    private String username;
+    @NotBlank(message = "비밀번호를 입력하세요.")
+    private String password;
 }

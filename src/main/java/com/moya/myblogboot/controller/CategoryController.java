@@ -29,7 +29,7 @@ public class CategoryController {
     }
 
     // 카테고리 수정
-    @PostMapping("/api/v1/management/category/{categoryId}")
+    @PutMapping("/api/v1/management/category/{categoryId}")
     public ResponseEntity<Long> editCategory(@PathVariable Long categoryId) {
         return ResponseEntity.ok(0L);
     }

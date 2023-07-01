@@ -4,6 +4,7 @@ import com.moya.myblogboot.domain.Board;
 import com.moya.myblogboot.domain.BoardReqDto;
 import com.moya.myblogboot.domain.BoardResDto;
 import com.moya.myblogboot.service.BoardService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,13 +36,13 @@ public class BoardController {
     }
     // 게시글 작성 Post
     @PostMapping("/api/v1/management/board")
-    public ResponseEntity<Long> newPost (@RequestBody BoardReqDto boardReqDto) {
+    public ResponseEntity<Long> newPost (@RequestBody @Valid BoardReqDto boardReqDto) {
         Long boardId = boardService.uploadBoard(boardReqDto);
         return ResponseEntity.ok().body(boardId);
     }
     // 게시글 수정
-    @PostMapping("/api/v1/management/board/{boardId}")
-    public ResponseEntity<Long> editPost (@PathVariable("boardId") Long boardId, @RequestBody BoardReqDto boardReqDto){
+    @PutMapping("/api/v1/management/board/{boardId}")
+    public ResponseEntity<Long> editPost (@PathVariable("boardId") Long boardId, @RequestBody @Valid BoardReqDto boardReqDto){
         return ResponseEntity.ok().body(boardService.editBoard(boardId, boardReqDto));
     }
     // 게시글 삭제

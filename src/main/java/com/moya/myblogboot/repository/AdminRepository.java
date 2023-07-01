@@ -12,13 +12,6 @@ import java.util.Optional;
 public class AdminRepository implements AdminRepositoryInf{
 
     private final EntityManager em;
-
-    @Override
-    public Long save(Admin admin) {
-        em.persist(admin);
-        return admin.getId();
-    }
-
     @Override
     public Optional<Admin> findById(String adminName) {
         Admin admin = em.createQuery("select a from Admin a where a.admin_name= :name", Admin.class)
