@@ -34,7 +34,6 @@ public class Board {
     @JoinColumn(name = "category_id")
     private Category category;
 
-
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reply> replies = new ArrayList<>();
 
