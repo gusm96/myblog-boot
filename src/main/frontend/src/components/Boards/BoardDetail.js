@@ -7,16 +7,16 @@ const BoardDetail = () => {
   const [board, setBoard] = useState("");
   useEffect(() => {
     axios
-      .get("http://localhost:8080/api/v1/board/" + boardId)
+      .get(`http://localhost:8080/api/v1/board/${boardId}`)
       .then((response) => response.data)
       .then((data) => setBoard(data))
       .catch((error) => console.log(error));
-  }, [boardId]);
+  }, []);
   const uploadDate = moment(board.uploadDate).format("YYYY-MM-DD");
   return (
     <div>
       <h1>{board.title}</h1>
-      <p>{board.content}</p>
+      <div>{board.content}</div>
       <p>{uploadDate}</p>
     </div>
   );

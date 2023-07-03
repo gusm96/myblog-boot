@@ -23,7 +23,9 @@ public class LoginService {
     private String secretKey;
 
     // 토큰 만료 시간
-    private Long expiredMs = 1000 * 60 * 60L;
+    @Value("${jwt.expiration}")
+    private Long expiredMs;
+
     public String adminLogin(String admin_name, String admin_pw)  {
         String token ="";
         Admin admin = adminRepository.findById(admin_name).orElseThrow(() ->
@@ -43,5 +45,4 @@ public class LoginService {
     public Boolean tokenIsExpired(String token) {
         return !JwtUtil.isExpired(token, secretKey);
     }
-
 }
