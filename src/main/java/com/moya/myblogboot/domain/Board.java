@@ -30,6 +30,10 @@ public class Board {
     @Enumerated(EnumType.STRING)
     private BoardStatus boardStatus; // VIEW, HIDE
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_id")
+    private Admin admin;
+
     @ManyToOne // 대부분 Category를 함께 조회 하기때문에 FetchType 을 Default 값으로 둠 (EAGER)
     @JoinColumn(name = "category_id")
     private Category category;
@@ -39,10 +43,11 @@ public class Board {
 
     /*생성 메서드*/
     @Builder
-    public Board(String title, String content, Category category) {
+    public Board(String title, String content, Category category, Admin admin) {
         this.title = title;
         this.content = content;
         this.category = category;
+        this.admin = admin;
         this.upload_date = LocalDateTime.now();
         this.boardStatus = BoardStatus.VIEW;
     }

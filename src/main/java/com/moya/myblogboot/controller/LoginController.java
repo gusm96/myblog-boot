@@ -1,20 +1,17 @@
 package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.LoginReq;
-import com.moya.myblogboot.domain.TokenRequest;
-import com.moya.myblogboot.domain.TokenResponse;
 import com.moya.myblogboot.service.LoginService;
 import jakarta.persistence.NoResultException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.NoSuchElementException;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,32 +26,14 @@ public class LoginController {
     }
     @PostMapping("/api/v1/login/admin")
     public ResponseEntity<String> adminLogin(@RequestBody @Valid LoginReq loginReq) {
-        // Token 발급
-        String token = "";
         try {
-            token = loginService.adminLogin(loginReq.getUsername(), loginReq.getPassword());
+            String token = loginService.adminLogin(loginReq.getUsername(), loginReq.getPassword());
             return ResponseEntity.ok().body(token);
         } catch (NoResultException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "아이디 또는 비밀번호를 확인하세요.");
+        } catch (IllegalArgumentException e){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이디 또는 비밀번호를 확인하세요.");
         }
     }
 
-    @ExceptionHandler(NoResultException.class)
-    public ResponseEntity<String> handleNoResultException(NoResultException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleException(Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred");
-    }
 }

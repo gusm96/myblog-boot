@@ -56,10 +56,8 @@ class BoardServiceTest {
     @Test
     void 게시글_작성() {
         // given
-        BoardReqDto boardReqDto = new BoardReqDto();
-        boardReqDto.setCategory("Java");
-        boardReqDto.setTitle("제목");
-        boardReqDto.setContent("내용");
+        BoardReqDto boardReqDto = BoardReqDto.builder().category(1L).title("제목").content("내용").build();
+
 
         Board board = Board.builder()
                 .category(categoryRepository.findOne(boardReqDto.getCategory()).orElseThrow(() -> new IllegalStateException("없는 카테고리")))
@@ -83,9 +81,9 @@ class BoardServiceTest {
         int offset = 0;
         int limit = 5;
         // when
-        List<BoardResDto> boards = boardRepository.findAll(offset,limit);
+        List<Board> findBoards = boardRepository.findAll(offset,limit);
         // then
-        assertThat(boards.size()).isEqualTo(3);
+        assertThat(findBoards.size()).isEqualTo(3);
     }
 
    @DisplayName("해당 게시글 상세정보")

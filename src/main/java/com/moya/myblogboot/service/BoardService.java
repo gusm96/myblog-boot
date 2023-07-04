@@ -1,9 +1,13 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.*;
+import com.moya.myblogboot.exception.ExpiredTokenException;
+import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.BoardRepository;
-import com.moya.myblogboot.repository.CategoryRepository;
+import com.moya.myblogboot.utils.JwtUtil;
+import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +18,12 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class BoardService {
 
-    private final BoardRepository boardRepository;
     private final CategoryService categoryService;
+    private final BoardRepository boardRepository;
+    private final AdminRepository adminRepository;
 
+    @Value("${jwt.secret}")
+    private String secretKey;
     public static final int LIMIT = 20;
     // 모든 게시글 찾기
     public List<BoardResDto> getBoardList(int page) {
@@ -61,9 +68,15 @@ public class BoardService {
     }
     // 게시글 업로드
     @Transactional
-    public long uploadBoard(BoardReqDto boardReqDto) {
+    public long uploadBoard(BoardReqDto boardReqDto, String token) {
+        if (JwtUtil.isExpired(token, secretKey)) {
+            throw new ExpiredTokenException("인증이 만료되었습니다.");
+        }
+        String adminName = JwtUtil.getAdminName(token, secretKey);
+        Admin admin = adminRepository.findById(adminName).orElseThrow(() ->
+                new NoResultException("해당 관리자는 존재하지 않습니다."));
         Category category = categoryService.findCategory(boardReqDto.getCategory());
-        Board board = boardReqDto.toEntity(category);
+        Board board = boardReqDto.toEntity(category, admin);
         return boardRepository.upload(board);
     }
 

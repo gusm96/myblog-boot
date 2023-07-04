@@ -1,9 +1,18 @@
 package com.moya.myblogboot.service;
 
+import com.moya.myblogboot.domain.Admin;
+import com.moya.myblogboot.domain.LoginReq;
 import com.moya.myblogboot.repository.AdminRepository;
+import jakarta.persistence.NoResultException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @SpringBootTest
 @Transactional
@@ -14,19 +23,23 @@ public class LoginServiceTest {
     @Autowired
     AdminRepository adminRepository;
 
-    /*void login(){
-        // given
-        String id = "moya";
-        String pw = "moya134353@@";
 
+    @DisplayName("로그인 기능")
+    @Test
+    void 관리자_로그인() {
+        // given
+        // Client로 부터 전달받을 데이터
+        LoginReq req = new LoginReq("test", "password");
         // when
-        Optional<Admin> result = loginService.;
 
         // then
-        if(pw.equals(result.get().getPw())){
-            System.out.println("로그인 성공");
-        }else{
-            System.out.println("로그인 실패");
-        }
-    }*/
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            try{
+                Admin admin = adminRepository.findById(req.getUsername()).orElseThrow(() ->
+                        new EmptyResultDataAccessException("Admin not found with admin_name: " + req.getUsername(), 1));
+            }catch (EmptyResultDataAccessException e){
+                throw new IllegalArgumentException("아이디 또는 비밀번호를 확인하세요.", e);
+            }
+        });
+    }
 }

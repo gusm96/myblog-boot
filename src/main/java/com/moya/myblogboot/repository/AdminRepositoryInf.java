@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface AdminRepositoryInf {
     Optional<Admin> findById(String adminName);
+
+    Long save(Admin admin);
 }

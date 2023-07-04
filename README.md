@@ -11,6 +11,14 @@
 
 -----
 
+### 🛠️ Using Technology
+
+- Font-End
+  - HTML5, CSS3, JavaScript, React.js, Redux
+
+- Back-End
+  - Java, Spring boot, JPA, MariaDB 
+
 ### Router
 
 |                페이지 기능                |            주소             |

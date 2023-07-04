@@ -19,5 +19,11 @@ public class AdminRepository implements AdminRepositoryInf{
                 .getSingleResult();
         return Optional.ofNullable(admin);
     }
+
+    @Override
+    public Long save(Admin admin){
+        em.persist(admin);
+        return admin.getId();
+    }
 }
 

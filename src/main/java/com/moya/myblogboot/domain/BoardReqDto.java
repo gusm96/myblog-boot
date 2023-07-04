@@ -22,8 +22,9 @@ public class BoardReqDto {
         this.content = content;
     }
 
-    public Board toEntity(Category category){
+    public Board toEntity(Category category, Admin admin){
         return Board.builder()
+                .admin(admin)
                 .category(category)
                 .title(this.title)
                 .content(this.content)
