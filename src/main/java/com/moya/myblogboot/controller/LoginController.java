@@ -1,6 +1,6 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.LoginReq;
+import com.moya.myblogboot.domain.AdminReqDto;
 import com.moya.myblogboot.service.LoginService;
 import jakarta.persistence.NoResultException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,9 +25,9 @@ public class LoginController {
         return ResponseEntity.ok().body(loginService.tokenIsExpired(token));
     }
     @PostMapping("/api/v1/login/admin")
-    public ResponseEntity<String> adminLogin(@RequestBody @Valid LoginReq loginReq) {
+    public ResponseEntity<String> adminLogin(@RequestBody @Valid AdminReqDto adminReqDto) {
         try {
-            String token = loginService.adminLogin(loginReq.getUsername(), loginReq.getPassword());
+            String token = loginService.adminLogin(adminReqDto.getUsername(), adminReqDto.getPassword());
             return ResponseEntity.ok().body(token);
         } catch (NoResultException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "아이디 또는 비밀번호를 확인하세요.");
