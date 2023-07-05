@@ -28,13 +28,8 @@ public class Admin {
     private String nickname;
     private String role = "ADMIN";
 
-    @OneToMany(mappedBy = "admin")
-    @JsonIgnore
-    private List<Board> boards = new ArrayList<>();
-
     @Builder
     public Admin(String admin_name, String admin_pw, String nickname) {
-
         this.admin_name = admin_name;
         this.admin_pw = admin_pw;
         this.nickname = nickname;
