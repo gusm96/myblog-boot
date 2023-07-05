@@ -2,6 +2,7 @@ package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.service.LoginService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,10 +22,16 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class WebSecurityConfig{
 
-    private final LoginService loginService;
+    private LoginService loginService;
+
+    public void setLoginService(LoginService loginService) {
+        this.loginService = loginService;
+    }
+    public LoginService getLoginService (){
+        return this.loginService;
+    }
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -42,7 +49,7 @@ public class WebSecurityConfig{
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 // UsernamePasswordAuthenticationFilter 이전에 CustomFiler( JwtFilter )적용
-                .and().addFilterBefore(new JwtFilter(loginService, secretKey), UsernamePasswordAuthenticationFilter.class).build();
+                .and().addFilterBefore(new JwtFilter(getLoginService(), secretKey), UsernamePasswordAuthenticationFilter.class).build();
     }
 
     // cors 허용을 위한 설정

@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class LoginService {
 
     private final AdminRepository adminRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final  PasswordEncoder passwordEncoder;
 
     @Value("${jwt.secret}")
     private String secretKey;
