@@ -1,9 +1,8 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.Admin;
-import com.moya.myblogboot.domain.LoginReq;
+import com.moya.myblogboot.domain.AdminReqDto;
 import com.moya.myblogboot.repository.AdminRepository;
-import jakarta.persistence.NoResultException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @SpringBootTest
 @Transactional
@@ -29,7 +26,7 @@ public class LoginServiceTest {
     void 관리자_로그인() {
         // given
         // Client로 부터 전달받을 데이터
-        LoginReq req = new LoginReq("test", "password");
+        AdminReqDto req = new AdminReqDto("test", "password");
         // when
 
         // then

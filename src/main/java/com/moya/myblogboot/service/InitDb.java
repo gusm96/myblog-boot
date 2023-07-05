@@ -8,13 +8,11 @@ import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -38,10 +36,6 @@ public class InitDb {
             Long boardId2 = initService.InitBoard(admin, category2, "제목", "내용");
             Board board1 = boardRepository.findOne(boardId1).get();
             Board board2 = boardRepository.findOne(boardId2).get();
-            admin.getBoards().add(board1);
-            admin.getBoards().add(board2);
-            category1.getBoards().add(board1);
-            category2.getBoards().add(board2);
         }
     }
     @Component
@@ -78,20 +72,5 @@ public class InitDb {
             em.persist(board);
             return board.getId();
         }
-
-        /*public Optional<Admin> findAdmin(Long adminId) {
-            Admin admin = em.find(Admin.class, adminId);
-            return Optional.ofNullable(admin);
-        }
-
-        public Optional<Category> findCategory(Long categoryId) {
-            Category category = em.find(Category.class, categoryId);
-            return Optional.ofNullable(category);
-        }
-
-        public Optional<Board> findBoard(Long boardId) {
-            Board board = em.find(Board.class, boardId);
-            return Optional.ofNullable(board);
-        }*/
     }
 }
