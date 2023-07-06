@@ -1,6 +1,7 @@
 package com.moya.myblogboot.domain;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -12,7 +13,6 @@ public class BoardReqDto {
     private String title;
     @NotBlank(message = "내용을 입력하세요.")
     private String content;
-    @NotBlank(message = "카테고리를 선택하세요.")
     private Long category;
 
     @Builder

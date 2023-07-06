@@ -5,12 +5,12 @@ import com.moya.myblogboot.domain.BoardResDto;
 import com.moya.myblogboot.exception.ExpiredTokenException;
 import com.moya.myblogboot.service.BoardService;
 import jakarta.persistence.NoResultException;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -42,11 +42,11 @@ public class BoardController {
     }
     // 게시글 작성 Post
     @PostMapping("/api/v1/management/board")
-    public ResponseEntity<Long> newPost (@RequestBody @Valid BoardReqDto boardReqDto, HttpServletRequest request)  {
-        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        String token = authorization.split(" ")[1];
+    public ResponseEntity<Long> newPost (@RequestBody @Valid BoardReqDto boardReqDto)  {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String adminName = authentication.getPrincipal().toString();
         try {
-            Long boardId = boardService.uploadBoard(boardReqDto, token);
+            Long boardId = boardService.uploadBoard(boardReqDto, adminName);
             return ResponseEntity.ok().body(boardId);
         } catch (NoResultException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 관리자는 존재하지 않습니다.");

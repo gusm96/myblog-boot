@@ -3,12 +3,11 @@ package com.moya.myblogboot.controller;
 import com.moya.myblogboot.domain.AdminReqDto;
 import com.moya.myblogboot.service.LoginService;
 import jakarta.persistence.NoResultException;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -19,10 +18,13 @@ public class LoginController {
 
     private final LoginService loginService;
     @GetMapping("/api/v1/token-validation")
-    public ResponseEntity<Boolean> loginConfirmation(HttpServletRequest request) {
-        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        String token = authorization.split(" ")[1];
-        return ResponseEntity.ok().body(loginService.tokenIsExpired(token));
+    public ResponseEntity<Boolean> loginConfirmation( ) {
+        boolean result = false;
+        String authorizedAdminName = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+        if(authorizedAdminName != null && !authorizedAdminName.isEmpty()){
+            result = true;
+        }
+        return ResponseEntity.ok().body(result);
     }
     @PostMapping("/api/v1/login/admin")
     public ResponseEntity<String> adminLogin(@RequestBody @Valid AdminReqDto adminReqDto) {

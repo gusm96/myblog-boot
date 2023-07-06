@@ -3,6 +3,7 @@ package com.moya.myblogboot.utils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Date;
@@ -22,8 +23,8 @@ public class JwtUtil {
 
     // Token 만료
     public static boolean isExpired(String token, String secretKey) {
-        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token)
-                .getBody().getExpiration().before(new Date());
+            return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token)
+                    .getBody().getExpiration().before(new Date());
     }
     // Token 생성
     public static String createToken(String admin_name, String secretKey, long expiredMs){

@@ -21,9 +21,6 @@ public class BoardService {
     private final CategoryService categoryService;
     private final BoardRepository boardRepository;
     private final AdminRepository adminRepository;
-
-    @Value("${jwt.secret}")
-    private String secretKey;
     public static final int LIMIT = 20;
     // 모든 게시글 찾기
     public List<BoardResDto> getBoardList(int page) {
@@ -68,11 +65,7 @@ public class BoardService {
     }
     // 게시글 업로드
     @Transactional
-    public long uploadBoard(BoardReqDto boardReqDto, String token) {
-        if (JwtUtil.isExpired(token, secretKey)) {
-            throw new ExpiredTokenException("인증이 만료되었습니다.");
-        }
-        String adminName = JwtUtil.getAdminName(token, secretKey);
+    public long uploadBoard(BoardReqDto boardReqDto, String adminName) {
         Admin admin = adminRepository.findById(adminName).orElseThrow(() ->
                 new NoResultException("해당 관리자는 존재하지 않습니다."));
         Category category = categoryService.findCategory(boardReqDto.getCategory());

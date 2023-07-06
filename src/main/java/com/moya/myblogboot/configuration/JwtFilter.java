@@ -3,6 +3,7 @@ package com.moya.myblogboot.configuration;
 import com.moya.myblogboot.service.LoginService;
 import com.moya.myblogboot.utils.JwtUtil;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,9 +46,14 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         // Token Expired되었는지 여부
-        if (JwtUtil.isExpired(token, secretKey)) {
-            log.error("Token이 만료 되었습니다.");
-            filterChain.doFilter(request,response);
+        try {
+            if (JwtUtil.isExpired(token, secretKey)) {
+                log.error("Token이 만료 되었습니다.");
+                filterChain.doFilter(request, response);
+                return;
+            }
+        } catch (SignatureException e) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "올바른 Token이 아닙니다.");
             return;
         }
 
