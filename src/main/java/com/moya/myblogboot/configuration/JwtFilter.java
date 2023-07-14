@@ -2,7 +2,7 @@ package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.service.LoginService;
 import com.moya.myblogboot.utils.JwtUtil;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,19 +15,22 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-@RequiredArgsConstructor
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final LoginService loginService;
-    private final String secretKey;
+    private  String secretKey;
+    private  LoginService loginService;
+
+    public JwtFilter(LoginService loginService, String secretKey) {
+        this.loginService = loginService;
+        this.secretKey = secretKey;
+    }
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -48,12 +51,12 @@ public class JwtFilter extends OncePerRequestFilter {
         // Token Expired되었는지 여부
         try {
             if (JwtUtil.isExpired(token, secretKey)) {
-                log.error("Token이 만료 되었습니다.");
+                log.error("Token is expired");
                 filterChain.doFilter(request, response);
                 return;
             }
         } catch (SignatureException e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "올바른 Token이 아닙니다.");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Not a valid token");
             return;
         }
 
@@ -75,6 +78,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String[] excludePath = {
                 "/api/v1/login/admin",
                 "/api/v1/boards",
+                "/api/v1/boards/search",
                 "/api/v1/board",
                 "/api/v1/categories",
                 "/api/v1/reply",

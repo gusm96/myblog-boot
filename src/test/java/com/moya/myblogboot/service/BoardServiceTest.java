@@ -24,11 +24,11 @@ class BoardServiceTest {
     BoardService boardService;
     @Autowired
     CategoryRepository categoryRepository;
-
     @Autowired
     AdminRepository adminRepository;
-
-    public Admin createAdmin(){
+    @Autowired
+    InitDb initDb;
+    /*public Admin createAdmin(){
         Admin admin = Admin.builder()
                 .admin_name("moya")
                 .admin_pw("moya1343")
@@ -127,5 +127,20 @@ class BoardServiceTest {
         board.updateBoardStatus(BoardStatus.HIDE);
         // then
         assertThat(board.getBoardStatus()).isEqualTo(BoardStatus.HIDE);
+    }*/
+
+    @DisplayName("게시글 검색 기능")
+    @Test
+    void 게시글_검색 () {
+        // given
+        // init database
+        initDb.init();
+        // 검색 옵션
+        SearchType type = SearchType.TITLE;
+        String searchContents = "제목";
+        // when
+        List<Board> result = boardRepository.findBySearch(type, searchContents, 1, 5);
+        // then
+        assertThat(result).isNotEmpty();
     }
 }

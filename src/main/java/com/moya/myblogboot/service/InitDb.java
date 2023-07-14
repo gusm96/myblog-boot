@@ -30,10 +30,11 @@ public class InitDb {
         Admin admin = adminRepository.findById(adminName).get();
         Category category1 = categoryRepository.findOne(categoryId1).get();
         Category category2 = categoryRepository.findOne(categoryId2).get();
-        // Board 카테고리별로 10개씩
+
+      // Board 카테고리별로 10개씩
         for (int i = 0; i < 10; i++) {
-            Long boardId1 = initService.InitBoard(admin, category1, "제목", "내용");
-            Long boardId2 = initService.InitBoard(admin, category2, "제목", "내용");
+            Long boardId1 = initService.InitBoard(admin, category1, "자바", "자바의 진짜 직이네~");
+            Long boardId2 = initService.InitBoard(admin, category2, "파이썬", "파이썬 진짜 멋지네~~");
             Board board1 = boardRepository.findOne(boardId1).get();
             Board board2 = boardRepository.findOne(boardId2).get();
         }

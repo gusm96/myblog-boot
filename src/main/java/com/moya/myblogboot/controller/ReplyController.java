@@ -22,7 +22,6 @@ public class ReplyController {
         String result = replyService.writeReply(replyReqDTO);
         return ResponseEntity.ok().body(result);
     }
-
     // 댓글 수정
     @PutMapping("/api/v2/reply/{replyId}")
     public ResponseEntity<Boolean> editReply(@RequestBody @Valid ReplyReqDTO replyReqDTO) {
@@ -33,7 +32,6 @@ public class ReplyController {
     public ResponseEntity<Boolean> reqToDeleteReply(@PathVariable Long replyId) {
         return ResponseEntity.ok().body(replyService.deleteReply(replyId));
     }
-
     // 댓글 리스트
     @GetMapping("/api/v1/replies/{boardId}")
     public ResponseEntity<List> reqToReplyList(@PathVariable Long boardId) {

@@ -21,7 +21,7 @@ public class BoardService {
     private final CategoryService categoryService;
     private final BoardRepository boardRepository;
     private final AdminRepository adminRepository;
-    public static final int LIMIT = 20;
+    public static final int LIMIT = 5;
     // 모든 게시글 찾기
     public List<BoardResDto> getBoardList(int page) {
         List<Board> boardList = null;
@@ -73,14 +73,21 @@ public class BoardService {
         return boardRepository.upload(board);
     }
 
-    private int pagination (int page){
-        if (page == 1) return 0;
-        return (page - 1) * LIMIT;
-    }
-
     public Board findBoard(Long boardId) {
         return boardRepository.findOne(boardId).orElseThrow(
                 () -> new IllegalStateException("해당 게시글이 존재하지 않습니다.")
         );
+    }
+
+    public List<BoardResDto> getSearchBoards(SearchType searchType, String searchContents, int page) {
+        List<Board> list = boardRepository.findBySearch(searchType, searchContents, pagination(page), LIMIT);
+        List<BoardResDto> resultList = list.stream().map(BoardResDto::of).toList();
+        return resultList;
+    }
+
+    // 페이지값
+    private int pagination (int page){
+        if (page == 1) return 0;
+        return (page - 1) * LIMIT;
     }
 }

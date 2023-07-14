@@ -52,7 +52,7 @@ public class WebSecurityConfig{
                 .and().addFilterBefore(new JwtFilter(getLoginService(), secretKey), UsernamePasswordAuthenticationFilter.class).build();
     }
 
-    // cors 허용을 위한 설정
+    // cors 허용을 위한 설정S
     @Bean
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration configuration = new CorsConfiguration();

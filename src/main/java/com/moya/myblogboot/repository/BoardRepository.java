@@ -1,7 +1,7 @@
 package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.Board;
-import com.moya.myblogboot.domain.BoardResDto;
+import com.moya.myblogboot.domain.SearchType;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -55,4 +55,22 @@ public class BoardRepository implements BoardRepositoryInf {
     public void removeBoard(Board board) {
         em.remove(board);
     }
+
+    @Override
+    public List<Board> findBySearch(SearchType type, String searchContents, int offset, int limit) {
+        String query;
+        if (type == SearchType.TITLE) {
+            query = "select b from Board b where b.title like :searchContents order by b.upload_date desc";
+        } else if (type == SearchType.CONTENT) {
+            query = "select b from Board b where b.content like :searchContents order by b.upload_date desc";
+        } else {
+            return null;
+        }
+        return em.createQuery(query, Board.class)
+                .setParameter("searchContents", "%" + searchContents + "%")
+                .setFirstResult(offset)
+                .setMaxResults(limit)
+                .getResultList();
+    }
+
 }

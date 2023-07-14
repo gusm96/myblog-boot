@@ -1,6 +1,5 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.Category;
 import com.moya.myblogboot.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +32,8 @@ public class CategoryController {
     public ResponseEntity<Long> editCategory(@PathVariable Long categoryId) {
         return ResponseEntity.ok(0L);
     }
-
     // 카테고리 삭제
+
     @DeleteMapping("/api/v1/management/category/{categoryId}")
     public ResponseEntity<Boolean> deleteCategory(@PathVariable Long categoryId) {
         return ResponseEntity.ok(categoryService.deleteCategory(categoryId));
