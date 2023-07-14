@@ -1,6 +1,6 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.AdminReqDto;
+import com.moya.myblogboot.domain.admin.AdminReqDto;
 import com.moya.myblogboot.service.LoginService;
 import jakarta.persistence.NoResultException;
 import jakarta.validation.Valid;

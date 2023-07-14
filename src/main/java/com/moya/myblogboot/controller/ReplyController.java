@@ -1,6 +1,6 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.ReplyReqDTO;
+import com.moya.myblogboot.domain.reply.ReplyReqDTO;
 import com.moya.myblogboot.service.ReplyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

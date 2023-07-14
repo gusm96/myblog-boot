@@ -1,7 +1,7 @@
 package com.moya.myblogboot.repository;
 
-import com.moya.myblogboot.domain.Board;
-import com.moya.myblogboot.domain.SearchType;
+import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.board.SearchType;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,8 +21,16 @@ public interface BoardRepositoryInf {
     List<Board> findBySearch(SearchType type, String searchContents, int offset, int limit);
 
     // 카테고리별 모든 게시글 찾기
-    List<Board> findAllBoardsInThatCategory(String categoryName,int offset, int limit);
+    List<Board> findByCategory(String categoryName,int offset, int limit);
 
-
+    // 게시글 삭제
     void removeBoard(Board board);
+
+    // 조건별 게시글 개수
+    Long findAllCount();
+
+    Long findBySearchCount(SearchType type, String searchContents);
+
+    Long findByCategoryCount(String categoryName);
+
 }

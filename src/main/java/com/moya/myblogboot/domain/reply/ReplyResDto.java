@@ -1,5 +1,6 @@
-package com.moya.myblogboot.domain;
+package com.moya.myblogboot.domain.reply;
 
+import com.moya.myblogboot.domain.board.ModificationStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;

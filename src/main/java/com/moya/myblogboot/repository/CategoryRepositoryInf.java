@@ -1,6 +1,6 @@
 package com.moya.myblogboot.repository;
 
-import com.moya.myblogboot.domain.Category;
+import com.moya.myblogboot.domain.category.Category;
 
 import java.util.List;
 import java.util.Optional;

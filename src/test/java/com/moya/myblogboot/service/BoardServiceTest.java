@@ -1,6 +1,7 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.*;
+import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.board.SearchType;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
@@ -10,7 +11,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;

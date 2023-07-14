@@ -1,5 +1,6 @@
-package com.moya.myblogboot.domain;
+package com.moya.myblogboot.domain.reply;
 
+import com.moya.myblogboot.domain.board.Board;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;

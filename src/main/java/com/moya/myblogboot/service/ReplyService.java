@@ -1,10 +1,9 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.Board;
-import com.moya.myblogboot.domain.Reply;
-import com.moya.myblogboot.domain.ReplyReqDTO;
-import com.moya.myblogboot.domain.ReplyResDto;
-import com.moya.myblogboot.repository.BoardRepository;
+import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.reply.Reply;
+import com.moya.myblogboot.domain.reply.ReplyReqDTO;
+import com.moya.myblogboot.domain.reply.ReplyResDto;
 import com.moya.myblogboot.repository.ReplyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

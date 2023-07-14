@@ -1,7 +1,7 @@
 package com.moya.myblogboot.repository;
 
-import com.moya.myblogboot.domain.Board;
-import com.moya.myblogboot.domain.SearchType;
+import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.board.SearchType;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -28,7 +28,7 @@ public class BoardRepository implements BoardRepositoryInf {
     }
 
     @Override
-    public List<Board> findAllBoardsInThatCategory(String categoryName,int offset, int limit) {
+    public List<Board> findByCategory(String categoryName,int offset, int limit) {
         List<Board> boards = em.createQuery(
                         "select b from Board b " +
                                 "where b.category.name=:categoryName " +
@@ -71,6 +71,32 @@ public class BoardRepository implements BoardRepositoryInf {
                 .setFirstResult(offset)
                 .setMaxResults(limit)
                 .getResultList();
+    }
+
+    @Override
+    public Long findAllCount() {
+        return em.createQuery("select count(b) from Board b", Long.class).getSingleResult();
+    }
+
+    @Override
+    public Long findBySearchCount(SearchType type, String searchContents) {
+        String query;
+        if(type == SearchType.TITLE){
+            query = "select count(b) from Board b where b.title like :searchContents";
+        }else if(type == SearchType.CONTENT){
+            query = "select count(b) from Board b where b.content like :searchContents";
+        }else {
+            return null;
+        }
+        return em.createQuery(query, Long.class).setParameter("searchContents", "%" + searchContents + "%")
+                .getSingleResult();
+    }
+
+    @Override
+    public Long findByCategoryCount(String categoryName) {
+        return em.createQuery("select count(b) from Board b where b.category.name =:categoryName", Long.class)
+                .setParameter("categoryName", categoryName)
+                .getSingleResult();
     }
 
 }

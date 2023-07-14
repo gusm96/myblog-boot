@@ -1,4 +1,4 @@
-package com.moya.myblogboot.domain;
+package com.moya.myblogboot.domain.token;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

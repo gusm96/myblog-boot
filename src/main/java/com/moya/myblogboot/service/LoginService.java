@@ -1,6 +1,6 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.Admin;
+import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.utils.JwtUtil;
 import jakarta.persistence.NoResultException;

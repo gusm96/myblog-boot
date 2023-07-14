@@ -1,6 +1,6 @@
 package com.moya.myblogboot.repository;
 
-import com.moya.myblogboot.domain.Admin;
+import com.moya.myblogboot.domain.admin.Admin;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

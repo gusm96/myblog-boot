@@ -1,9 +1,10 @@
-package com.moya.myblogboot.domain;
+package com.moya.myblogboot.domain.board;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.moya.myblogboot.domain.category.Category;
+import com.moya.myblogboot.domain.reply.Reply;
+import com.moya.myblogboot.domain.admin.Admin;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

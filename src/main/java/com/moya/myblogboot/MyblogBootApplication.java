@@ -1,7 +1,5 @@
 package com.moya.myblogboot;
 
-import com.moya.myblogboot.domain.Admin;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

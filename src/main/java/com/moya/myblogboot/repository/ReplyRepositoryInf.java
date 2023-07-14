@@ -1,6 +1,6 @@
 package com.moya.myblogboot.repository;
 
-import com.moya.myblogboot.domain.Reply;
+import com.moya.myblogboot.domain.reply.Reply;
 
 import java.util.List;
 import java.util.Optional;

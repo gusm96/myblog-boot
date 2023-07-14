@@ -1,4 +1,4 @@
-package com.moya.myblogboot.domain;
+package com.moya.myblogboot.domain.board;
 
 public enum BoardStatus {
     VIEW, HIDE

@@ -1,8 +1,9 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.BoardReqDto;
-import com.moya.myblogboot.domain.BoardResDto;
-import com.moya.myblogboot.domain.SearchType;
+import com.moya.myblogboot.domain.board.BoardListResDto;
+import com.moya.myblogboot.domain.board.BoardReqDto;
+import com.moya.myblogboot.domain.board.BoardResDto;
+import com.moya.myblogboot.domain.board.SearchType;
 import com.moya.myblogboot.exception.ExpiredTokenException;
 import com.moya.myblogboot.service.BoardService;
 import jakarta.persistence.NoResultException;
@@ -15,8 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 public class BoardController {
@@ -25,15 +24,15 @@ public class BoardController {
 
     // 모든 게시글 리스트
     @GetMapping("/api/v1/boards")
-    public ResponseEntity<List> getAllBoards (@RequestParam(name = "p", defaultValue = "1") int page){
-        List<BoardResDto> list = boardService.getBoardList(page);
-        return ResponseEntity.ok().body(list);
+    public ResponseEntity<BoardListResDto> getAllBoards (@RequestParam(name = "p", defaultValue = "1") int page){
+        BoardListResDto result = boardService.getBoardList(page);
+        return ResponseEntity.ok().body(result);
     }
     // 카테고리별 게시글 리스트
     @GetMapping("/api/v1/boards/{category}")
-    public ResponseEntity<List> thisTypeOfBoards (@PathVariable("category") String category, @RequestParam(name = "p", defaultValue = "1") int page) {
-        List<BoardResDto> list = boardService.getAllBoardsInThatCategory(category, page);
-        return ResponseEntity.ok().body(list);
+    public ResponseEntity<BoardListResDto> thisTypeOfBoards (@PathVariable("category") String category, @RequestParam(name = "p", defaultValue = "1") int page) {
+        BoardListResDto result = boardService.getBoardsByCategory(category, page);
+        return ResponseEntity.ok().body(result);
     }
     // 선택한 게시글
     @GetMapping("/api/v1/board/{boardId}")
@@ -69,11 +68,11 @@ public class BoardController {
 
     // 게시글 검색 기능 추가
     @GetMapping("/api/v1/boards/search")
-    public ResponseEntity<List> searchBoards(@RequestParam("type") SearchType searchType,
+    public ResponseEntity<BoardListResDto> searchBoards(@RequestParam("type") SearchType searchType,
                                              @RequestParam("contents") String searchContents,
                                              @RequestParam(name = "p", defaultValue = "1") int page
                                              ) {
-        System.out.println(searchContents);
-        return ResponseEntity.ok().body(boardService.getSearchBoards(searchType, searchContents, page));
+        BoardListResDto result = boardService.getBoardsBySearch(searchType, searchContents, page);
+        return ResponseEntity.ok().body(result);
     }
 }

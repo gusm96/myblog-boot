@@ -1,13 +1,12 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.*;
-import com.moya.myblogboot.exception.ExpiredTokenException;
+import com.moya.myblogboot.domain.admin.Admin;
+import com.moya.myblogboot.domain.board.*;
+import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.BoardRepository;
-import com.moya.myblogboot.utils.JwtUtil;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,21 +20,52 @@ public class BoardService {
     private final CategoryService categoryService;
     private final BoardRepository boardRepository;
     private final AdminRepository adminRepository;
+
+    // 페이지별 최대 게시글 수
     public static final int LIMIT = 5;
-    // 모든 게시글 찾기
-    public List<BoardResDto> getBoardList(int page) {
-        List<Board> boardList = null;
-        boardList = boardRepository.findAll(pagination(page), LIMIT);
+
+    // 모든 게시글 리스트
+    public BoardListResDto getBoardList(int page) {
+        List<Board> boardList = boardRepository.findAll(pagination(page), LIMIT);
+        Long listCount = boardRepository.findAllCount();
+
         List<BoardResDto> resultList = boardList.stream().map(BoardResDto::of).toList();
-        return resultList;
+
+        BoardListResDto boardListResDto = BoardListResDto.builder()
+                .list(resultList)
+                .pageCount(pageCount(listCount)).build();
+        return boardListResDto;
     }
 
-    // 해당 카테고리 모든 게시글 가져오기
-    public List<BoardResDto> getAllBoardsInThatCategory(String category, int page){
-        List<Board> boardList = boardRepository.findAllBoardsInThatCategory(category, pagination(page), LIMIT);
+    // 카테고리별 게시글 리스트
+    public BoardListResDto getBoardsByCategory(String category, int page){
+        List<Board> boardList = boardRepository.findByCategory(category, pagination(page), LIMIT);
+        Long listCount = boardRepository.findByCategoryCount(category);
+
         List<BoardResDto> resultList = boardList.stream().map(BoardResDto::of).toList();
-        return resultList;
+
+        BoardListResDto boardListResDto = BoardListResDto.builder()
+                .list(resultList)
+                .pageCount(pageCount(listCount))
+                .build();
+        return boardListResDto;
     }
+    
+    // 검색한 게시글 리스트
+    public BoardListResDto getBoardsBySearch (SearchType searchType, String searchContents, int page) {
+        List<Board> list = boardRepository.findBySearch(searchType, searchContents, pagination(page), LIMIT);
+        Long listCount = boardRepository.findBySearchCount(searchType, searchContents);
+
+        List<BoardResDto> resultList = list.stream().map(BoardResDto::of).toList();
+
+        BoardListResDto boardListResDto = BoardListResDto.builder()
+                .list(resultList)
+                .pageCount(pageCount(listCount))
+                .build();
+
+        return boardListResDto;
+    }
+    
     // 선택한 게시글 가져오기
     public BoardResDto getBoard(Long boardId){
         Board board = findBoard(boardId);
@@ -73,21 +103,23 @@ public class BoardService {
         return boardRepository.upload(board);
     }
 
+    
     public Board findBoard(Long boardId) {
         return boardRepository.findOne(boardId).orElseThrow(
                 () -> new IllegalStateException("해당 게시글이 존재하지 않습니다.")
         );
     }
 
-    public List<BoardResDto> getSearchBoards(SearchType searchType, String searchContents, int page) {
-        List<Board> list = boardRepository.findBySearch(searchType, searchContents, pagination(page), LIMIT);
-        List<BoardResDto> resultList = list.stream().map(BoardResDto::of).toList();
-        return resultList;
-    }
-
-    // 페이지값
     private int pagination (int page){
         if (page == 1) return 0;
         return (page - 1) * LIMIT;
+    }
+
+    private int pageCount (Long listCount){
+        if(listCount > LIMIT){
+            return (int) Math.ceil((double) listCount / LIMIT);
+        }else{
+            return 1;
+        }
     }
 }

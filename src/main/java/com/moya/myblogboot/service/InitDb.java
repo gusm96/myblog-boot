@@ -1,8 +1,8 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.Admin;
-import com.moya.myblogboot.domain.Board;
-import com.moya.myblogboot.domain.Category;
+import com.moya.myblogboot.domain.admin.Admin;
+import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.repository.CategoryRepository;

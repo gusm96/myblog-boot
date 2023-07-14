@@ -1,4 +1,4 @@
-package com.moya.myblogboot.domain;
+package com.moya.myblogboot.domain.admin;
 
 import lombok.*;
 

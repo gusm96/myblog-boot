@@ -1,8 +1,9 @@
-package com.moya.myblogboot.domain;
+package com.moya.myblogboot.domain.reply;
 
+import com.moya.myblogboot.domain.board.ModificationStatus;
+import com.moya.myblogboot.domain.board.Board;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

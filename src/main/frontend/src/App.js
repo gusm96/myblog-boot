@@ -17,7 +17,8 @@ function App() {
       <NavBarElements />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/category/:categoryName" />
+        <Route path="/boards" element={<Home />} />
+        <Route path="/:categoryName" />
         <Route path="/:boardId" element={<BoardDetail />} />
         <Route path="/login/admin" element={<Login />} />
         <Route path="/logout" element={<Logout />} />

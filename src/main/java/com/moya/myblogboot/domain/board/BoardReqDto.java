@@ -1,7 +1,8 @@
-package com.moya.myblogboot.domain;
+package com.moya.myblogboot.domain.board;
 
+import com.moya.myblogboot.domain.category.Category;
+import com.moya.myblogboot.domain.admin.Admin;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
