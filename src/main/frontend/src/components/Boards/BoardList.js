@@ -3,8 +3,8 @@ import PropTypes from "prop-types";
 import Table from "react-bootstrap/Table";
 import { Link } from "react-router-dom";
 import moment from "moment";
-import { PageButton } from "./PageButton";
-export const BoardList = ({ boards, pageCount }) => {
+import { PageButton } from "../PageButton";
+const BoardList = ({ boards, pageCount }) => {
   return (
     <div>
       <Table striped>
@@ -36,3 +36,5 @@ BoardList.prototype = {
   boards: PropTypes.array,
   pageCount: PropTypes.number,
 };
+
+export default BoardList;

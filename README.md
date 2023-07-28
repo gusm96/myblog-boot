@@ -7,12 +7,26 @@
 1. 프로젝트 개요
 2. 프로젝트 구조 ( ERD / Router )
 3. 주요 기능 소개
-4. 배운점
+4. 배운점 / 앞으로의 계획
 
 -----
 
+# 1. 프로젝트 개요
+
+### 	프로젝트 소개
+
+- Spring boot 및 JPA 숙련도 향상 목적
+- Spring Security(JWT 인증 기능 및 비밀번호 암호화 등)을 통한 보안관련 학습 목적
+- JavaScript언어 및 React.js 프레임 워크 학습
+- Clinet - Server 구조의 프로젝트를 통해 HTTP 통신 학습
+- Rest API 학습
+
+​	
+
 ### 🛠️ Using Technology
 
+- 
+  
 - Font-End
   - HTML5, CSS3, JavaScript, React.js, Redux
 

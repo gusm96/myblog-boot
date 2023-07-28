@@ -2,6 +2,7 @@ package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.SearchType;
+import com.moya.myblogboot.domain.guest.Guest;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
@@ -142,5 +143,15 @@ class BoardServiceTest {
         List<Board> result = boardRepository.findBySearch(type, searchContents, 1, 5);
         // then
         assertThat(result).isNotEmpty();
+    }
+
+    @DisplayName("게시글 좋아요")
+    @Test
+    void 좋아요() {
+        // given
+
+        // when
+
+        // then
     }
 }

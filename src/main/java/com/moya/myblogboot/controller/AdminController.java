@@ -14,11 +14,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequiredArgsConstructor
-public class LoginController {
+public class AdminController {
 
     private final LoginService loginService;
     @GetMapping("/api/v1/token-validation")
-    public ResponseEntity<Boolean> loginConfirmation( ) {
+    public ResponseEntity<Boolean> adminLoginConfirmation() {
         boolean result = false;
         String authorizedAdminName = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
         if(authorizedAdminName != null && !authorizedAdminName.isEmpty()){
@@ -37,5 +37,4 @@ public class LoginController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이디 또는 비밀번호를 확인하세요.");
         }
     }
-
 }

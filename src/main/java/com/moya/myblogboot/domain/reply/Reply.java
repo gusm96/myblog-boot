@@ -2,6 +2,7 @@ package com.moya.myblogboot.domain.reply;
 
 import com.moya.myblogboot.domain.board.ModificationStatus;
 import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.guest.Guest;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -46,9 +47,13 @@ public class Reply {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE , orphanRemoval = true)
     private List<Reply> child = new ArrayList<>();
 
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "guest_id")
+    private Guest guest;
     // 댓글 작성
     @Builder
     public Reply(String writer, String password, String comment, Board board) {
+
         this.writer = writer;
         this.password = password;
         this.comment = comment;
