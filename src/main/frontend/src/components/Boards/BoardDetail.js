@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import moment from "moment";
+import { BOARD_CUD } from "../../apiConfig";
 const BoardDetail = () => {
   const { boardId } = useParams();
   const [board, setBoard] = useState("");
   useEffect(() => {
     axios
-      .get(`http://localhost:8080/api/v1/board/${boardId}`)
+      .get(`${BOARD_CUD}/${boardId}`)
       .then((response) => response.data)
       .then((data) => setBoard(data))
       .catch((error) => console.log(error));

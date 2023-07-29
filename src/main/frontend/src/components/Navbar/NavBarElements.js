@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Navbar, Container, Nav } from "react-bootstrap";
-import { LoginConfirmation } from "../User/LoginConfirmation";
+import { LoginConfirmation } from "../Admin/LoginConfirmation";
 const NavBarElements = () => {
   return (
     <Navbar collapseOnSelect expand="lg" variant="dark" bg="dark">

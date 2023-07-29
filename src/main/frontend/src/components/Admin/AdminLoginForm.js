@@ -4,7 +4,7 @@ import { Button, Col, Container, Form, Row } from "react-bootstrap";
 import { useCookies } from "react-cookie";
 import { LoginConfirmation } from "./LoginConfirmation";
 
-export const Login = () => {
+export const AdminLoginForm = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [cookies, setCookie] = useCookies(["token"]);

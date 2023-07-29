@@ -3,6 +3,7 @@ package com.moya.myblogboot.repository;
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.SearchType;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -23,8 +24,12 @@ public class BoardRepository implements BoardRepositoryInf {
 
     @Override
     public Optional<Board> findOne(Long id) {
-       Board board =  em.find(Board.class, id);
-        return Optional.ofNullable(board);
+        try{
+            Board board = em.find(Board.class, id);
+            return Optional.ofNullable(board);
+        }catch (NoResultException e){
+            return Optional.empty();
+        }
     }
 
     @Override

@@ -82,8 +82,11 @@ public class JwtFilter extends OncePerRequestFilter {
                 "/api/v1/board",
                 "/api/v1/categories",
                 "/api/v1/reply",
-                "/api/v1/replies"
+                "/api/v1/replies",
+                "/api/v1/guest",
+                "/api/v1/login/guest"
         };
+
         String path = request.getRequestURI();
         log.info(path);
         return (Arrays.stream(excludePath).anyMatch(path::startsWith));

@@ -2,6 +2,7 @@ package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.category.Category;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -21,8 +22,12 @@ public class CategoryRepository implements CategoryRepositoryInf {
 
     @Override
     public Optional<Category> findOne(Long categoryId) {
-        Category category = em.find(Category.class, categoryId);
-        return Optional.ofNullable(category);
+        try{
+            Category category = em.find(Category.class, categoryId);
+            return Optional.ofNullable(category);
+        }catch (NoResultException e){
+            return Optional.empty();
+        }
     }
 
 

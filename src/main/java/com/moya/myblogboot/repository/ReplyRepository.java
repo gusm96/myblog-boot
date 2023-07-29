@@ -2,7 +2,9 @@ package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.reply.Reply;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -22,8 +24,12 @@ public class ReplyRepository implements ReplyRepositoryInf {
     }
     @Override
     public Optional<Reply> findOne(Long replyId) {
-        Reply result = em.find(Reply.class, replyId);
-        return Optional.ofNullable(result);
+        try{
+            Reply result = em.find(Reply.class, replyId);
+            return Optional.ofNullable(result);
+        }catch (NoResultException e){
+            return Optional.empty();
+        }
     }
     @Override
     public List<Reply> replyList(Long boardId) {

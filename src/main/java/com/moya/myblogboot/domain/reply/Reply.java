@@ -26,10 +26,10 @@ public class Reply {
     private String writer;
 
     @Column(nullable = false)
-    private String password;
+    private String comment;
 
     @Column(nullable = false)
-    private String comment;
+    private ReplyType replyType;
 
     private LocalDateTime write_date;
 
@@ -47,15 +47,11 @@ public class Reply {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE , orphanRemoval = true)
     private List<Reply> child = new ArrayList<>();
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "guest_id")
-    private Guest guest;
     // 댓글 작성
     @Builder
-    public Reply(String writer, String password, String comment, Board board) {
-
+    public Reply( String writer, ReplyType replyType, String comment, Board board) {
         this.writer = writer;
-        this.password = password;
+        this.replyType = replyType;
         this.comment = comment;
         this.write_date = LocalDateTime.now();
         this.modificationStatus = ModificationStatus.NOT_MODIFIED;

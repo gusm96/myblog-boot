@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 import { useCookies } from "react-cookie";
 
-export const Logout = () => {
+export const AdminLogout = () => {
   const [isLoggedOut, setLoggedOut] = useState(false);
   const [cookies, setCookies, removeCookies] = useCookies(["token"]);
   const handleOnClick = (e) => {
