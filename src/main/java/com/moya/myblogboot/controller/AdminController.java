@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,7 +34,7 @@ public class AdminController {
             return ResponseEntity.ok().body(token);
         } catch (NoResultException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "아이디 또는 비밀번호를 확인하세요.");
-        } catch (IllegalArgumentException e){
+        } catch (BadCredentialsException e){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이디 또는 비밀번호를 확인하세요.");
         }
     }

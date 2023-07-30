@@ -3,6 +3,7 @@ import axios from "axios";
 import { useParams } from "react-router-dom";
 import moment from "moment";
 import { BOARD_CUD } from "../../apiConfig";
+import { Comment } from "../Comments/Comment";
 const BoardDetail = () => {
   const { boardId } = useParams();
   const [board, setBoard] = useState("");
@@ -19,6 +20,8 @@ const BoardDetail = () => {
       <h1>{board.title}</h1>
       <div>{board.content}</div>
       <p>{uploadDate}</p>
+      <hr></hr>
+      <Comment />
     </div>
   );
 };

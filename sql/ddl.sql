@@ -105,26 +105,26 @@ CREATE TABLE file
 );
 
 -- 댓글
-ALTER TABLE reply
+ALTER TABLE comment
 DROP FOREIGN KEY FK_board_TO_reply; -- 게시글 -> 댓글
 
 -- 댓글
-ALTER TABLE reply
+ALTER TABLE comment
 DROP FOREIGN KEY FK_visitor_TO_reply; -- 방문자 -> 댓글
 
 -- 댓글myblog
-ALTER TABLE reply
+ALTER TABLE comment
 DROP FOREIGN KEY Fk_admin_TO_reply; -- 관리자 -> 댓글
 
 -- 댓글
-ALTER TABLE reply
+ALTER TABLE comment
 DROP PRIMARY KEY; -- 댓글 기본키
 
 -- 댓글
-DROP TABLE IF EXISTS reply RESTRICT;
+DROP TABLE IF EXISTS comment RESTRICT;
 
 -- 댓글
-CREATE TABLE reply
+CREATE TABLE comment
 (
     ridx        BIGINT    NOT NULL PRIMARY KEY AUTO_INCREMENT, -- 댓글번호
     bidx        BIGINT    NOT NULL, -- 게시글번호
@@ -167,7 +167,7 @@ CREATE TABLE re_reply
     content     TEXT      NOT NULL, -- 내용
     write_date  TIMESTAMP NOT NULL, -- 작성일
     edit_status BOOLEAN   NOT NULL, -- 수정여부
-    CONSTRAINT FK_reply_TO_re_reply FOREIGN KEY (ridx) REFERENCES reply (ridx),
+    CONSTRAINT FK_reply_TO_re_reply FOREIGN KEY (ridx) REFERENCES comment (ridx),
     CONSTRAINT FK_visitor_TO_re_reply FOREIGN KEY (vidx) REFERENCES visitor (vidx),
     CONSTRAINT FK_admin_TO_re_reply FOREIGN KEY (aidx) REFERENCES admin (aidx)
 );

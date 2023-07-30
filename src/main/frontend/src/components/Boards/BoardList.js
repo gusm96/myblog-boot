@@ -19,7 +19,7 @@ const BoardList = ({ boards, pageCount }) => {
             <tr key={board.id}>
               <td>{moment(board.upload_date).format("YYYY-MM-DD")}</td>
               <td>
-                <Link to={`/${board.id}`} key={board.id}>
+                <Link to={`/board/${board.id}`} key={board.id}>
                   {board.title}
                 </Link>
               </td>

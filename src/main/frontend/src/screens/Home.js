@@ -22,11 +22,7 @@ const Home = () => {
 
   return (
     <Container>
-      <Header>
-        <MainHeader>
-          <BoardList boards={boards} pageCount={pageCount} />
-        </MainHeader>
-      </Header>
+      <BoardList boards={boards} pageCount={pageCount} />
     </Container>
   );
 };

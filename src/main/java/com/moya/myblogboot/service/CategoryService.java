@@ -2,6 +2,7 @@ package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.repository.CategoryRepository;
+import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +42,6 @@ public class CategoryService {
 
     public Category findCategory(Long categoryId) {
         return categoryRepository.findOne(categoryId).orElseThrow(()
-                -> new IllegalStateException("해당 카테고리는 존재하지 않습니다."));
+                -> new NoResultException("해당 카테고리는 존재하지 않습니다."));
     }
 }

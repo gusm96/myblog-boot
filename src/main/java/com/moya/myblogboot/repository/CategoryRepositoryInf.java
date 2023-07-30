@@ -11,6 +11,7 @@ public interface CategoryRepositoryInf {
 
     Optional<Category> findOne(Long categoryId);
 
+    Optional<Category> findByName(String categoryName);
     List<Category> categories();
 
     void removeCategory(Category category);

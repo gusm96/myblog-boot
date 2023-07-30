@@ -14,9 +14,9 @@ export const BOARD_CUD = `${BASE_URL}/api/v1/board`;
 export const BOARD_LIST = `${BASE_URL}/api/v1/boards`;
 
 // 댓글 등록/수정/삭제 HTTP Method GET POST DELETE
-export const REPLY_CUD = `${BASE_URL}/api/v1/reply`;
+export const COMMENT_CUD = `${BASE_URL}/api/v1/comment`;
 // 댓글 리스트
-export const REPLY_LIST = `${BASE_URL}/api/v1/replies`;
+export const COMMENT_LIST = `${BASE_URL}/api/v1/comments`;
 
 // 게스트 등록
 export const GUEST_REG = `${BASE_URL}/api/v1/guest`;

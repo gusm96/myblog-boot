@@ -4,6 +4,7 @@ import com.moya.myblogboot.domain.board.BoardListResDto;
 import com.moya.myblogboot.domain.board.BoardReqDto;
 import com.moya.myblogboot.domain.board.BoardResDto;
 import com.moya.myblogboot.domain.board.SearchType;
+import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.exception.ExpiredTokenException;
 import com.moya.myblogboot.service.BoardService;
 import jakarta.persistence.NoResultException;
@@ -15,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.NoSuchElementException;
 
 @RestController
 @RequiredArgsConstructor
@@ -39,8 +42,12 @@ public class BoardController {
     // 선택한 게시글
     @GetMapping("/api/v1/board/{boardId}")
     public ResponseEntity<BoardResDto> getBoard(@PathVariable Long boardId) {
-        BoardResDto board = boardService.getBoard(boardId);
-        return ResponseEntity.ok().body(board);
+        try{
+            BoardResDto board = boardService.getBoard(boardId);
+            return ResponseEntity.ok().body(board);
+        }catch (NoSuchElementException e){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 게시글은 존재하지 않습니다.");
+        }
     }
 
     // 게시글 작성 Post
@@ -61,14 +68,24 @@ public class BoardController {
     // 게시글 수정
     @PutMapping("/api/v1/management/board/{boardId}")
     public ResponseEntity<Long> editBoard(@PathVariable("boardId") Long boardId, @RequestBody @Valid BoardReqDto boardReqDto) {
-        return ResponseEntity.ok().body(boardService.editBoard(boardId, boardReqDto));
+        try {
+            Long result = boardService.editBoard(boardId, boardReqDto);
+            return ResponseEntity.ok().body(result);
+        }catch (NoResultException e){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 게시글은 이미 삭제되었거나 존재하지 않습니다.");
+        }
     }
 
     // 게시글 삭제
     @DeleteMapping("/api/v1/management/board/{boardId}")
     public ResponseEntity<Boolean> deleteBoard(@PathVariable("boardId") Long boardId) {
         // boardId 로 삭제 Service Logic 처리 후 결과 return
-        return ResponseEntity.ok().body(boardService.deleteBoard(boardId));
+        try{
+            boolean result = boardService.deleteBoard(boardId);
+            return ResponseEntity.ok().body(result);
+        }catch (NoResultException e){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 게시글은 이미 삭제되었거나 존재하지 않습니다.");
+        }
     }
 
     // 게시글 검색 기능 추가

@@ -1,7 +1,7 @@
 package com.moya.myblogboot.domain.board;
 
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.reply.Reply;
+import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.domain.admin.Admin;
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,7 +40,7 @@ public class Board {
     private Category category;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Reply> replies = new ArrayList<>();
+    private List<Comment> comments = new ArrayList<>();
 
     /*생성 메서드*/
     @Builder

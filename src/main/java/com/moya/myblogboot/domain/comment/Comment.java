@@ -1,8 +1,7 @@
-package com.moya.myblogboot.domain.reply;
+package com.moya.myblogboot.domain.comment;
 
 import com.moya.myblogboot.domain.board.ModificationStatus;
 import com.moya.myblogboot.domain.board.Board;
-import com.moya.myblogboot.domain.guest.Guest;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,10 +15,10 @@ import static jakarta.persistence.FetchType.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class Reply {
+public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "reply_id")
+    @Column(name = "comment_id")
     private Long id;
 
     @Column(nullable = false)
@@ -29,7 +28,7 @@ public class Reply {
     private String comment;
 
     @Column(nullable = false)
-    private ReplyType replyType;
+    private CommentType commentType;
 
     private LocalDateTime write_date;
 
@@ -42,32 +41,32 @@ public class Reply {
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "parent_id")
-    private Reply parent;
+    private Comment parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE , orphanRemoval = true)
-    private List<Reply> child = new ArrayList<>();
+    private List<Comment> child = new ArrayList<>();
 
     // 댓글 작성
     @Builder
-    public Reply( String writer, ReplyType replyType, String comment, Board board) {
+    public Comment(String writer, CommentType commentType, String comment, Board board) {
         this.writer = writer;
-        this.replyType = replyType;
+        this.commentType = commentType;
         this.comment = comment;
         this.write_date = LocalDateTime.now();
         this.modificationStatus = ModificationStatus.NOT_MODIFIED;
         this.board = board;
     }
 
-    public void addParentReply(Reply parent) {
+    public void addParentComment(Comment parent) {
         this.parent = parent;
     }
     // 대댓글 작성
-    public void addChildReply(Reply child) {
+    public void addChildComment(Comment child) {
         this.child.add(child);
-        child.addParentReply(this);
+        child.addParentComment(this);
     }
     // 수정 메서드
-    public void updateReply(String comment) {
+    public void updateComment(String comment) {
         this.comment = comment;
         this.modificationStatus = ModificationStatus.MODIFIED;
     }

@@ -30,6 +30,19 @@ public class CategoryRepository implements CategoryRepositoryInf {
         }
     }
 
+    @Override
+    public Optional<Category> findByName(String categoryName) {
+        try{
+            Category result = em.createQuery("select c from Category c where c.name =:categoryName", Category.class)
+                    .setParameter("categoryName", categoryName)
+                    .getSingleResult();
+            return Optional.of(result);
+        }catch (NoResultException e) {
+            return Optional.empty();
+        }
+
+
+    }
 
     @Override
     public List<Category> categories() {

@@ -5,12 +5,14 @@ import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.BoardRepository;
+import com.moya.myblogboot.repository.CategoryRepository;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +22,7 @@ public class BoardService {
     private final CategoryService categoryService;
     private final BoardRepository boardRepository;
     private final AdminRepository adminRepository;
+    private final CategoryRepository categoryRepository;
 
     // 페이지별 최대 게시글 수
     public static final int LIMIT = 5;
@@ -39,11 +42,16 @@ public class BoardService {
 
     // 카테고리별 게시글 리스트
     public BoardListResDto getBoardsByCategory(String category, int page){
-        List<Board> boardList = boardRepository.findByCategory(category, pagination(page), LIMIT);
-        Long listCount = boardRepository.findByCategoryCount(category);
+        // 카테고리 유효성 검사
+        Category findCategorty = categoryRepository.findByName(category).orElseThrow(() ->
+                new NoResultException("존재하지 않는 카테고리입니다."));
+
+        List<Board> boardList = boardRepository.findByCategory(findCategorty.getName(), pagination(page), LIMIT);
+
+        // 해당하는 카테고리의 게시글 수
+        Long listCount = boardRepository.findByCategoryCount(findCategorty.getName());
 
         List<BoardResDto> resultList = boardList.stream().map(BoardResDto::of).toList();
-
         BoardListResDto boardListResDto = BoardListResDto.builder()
                 .list(resultList)
                 .pageCount(pageCount(listCount))
@@ -68,17 +76,21 @@ public class BoardService {
     
     // 선택한 게시글 가져오기
     public BoardResDto getBoard(Long boardId){
-        Board board = findBoard(boardId);
-        BoardResDto boardResDto = BoardResDto.builder().board(board).build();
-        return boardResDto;
+        try{
+            Board board = findBoard(boardId);
+            BoardResDto boardResDto = BoardResDto.builder().board(board).build();
+            return boardResDto;
+        }catch (NoResultException e){
+            throw new NoSuchElementException("해당 게시글이 존재하지 않습니다.");
+        }
     }
     // 게시글 수정
     @Transactional
     public Long editBoard(Long boardId, BoardReqDto boardReqDto){
         Board board = findBoard(boardId);
         Category category = categoryService.findCategory(boardReqDto.getCategory());
-        board.updateBoard(category, boardReqDto.getTitle(), boardReqDto.getContent());
         // 변경 감지
+        board.updateBoard(category, boardReqDto.getTitle(), boardReqDto.getContent());
         return board.getId();
     }
     // 게시글 삭제
@@ -106,7 +118,7 @@ public class BoardService {
     
     public Board findBoard(Long boardId) {
         return boardRepository.findOne(boardId).orElseThrow(
-                () -> new IllegalStateException("해당 게시글이 존재하지 않습니다.")
+                () -> new NoResultException("해당 게시글이 존재하지 않습니다.")
         );
     }
 
