@@ -1,7 +1,12 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.admin.Admin;
+import com.moya.myblogboot.domain.guest.Guest;
+import com.moya.myblogboot.domain.guest.GuestReqDto;
+import com.moya.myblogboot.domain.token.Token;
+import com.moya.myblogboot.domain.token.TokenUserType;
 import com.moya.myblogboot.repository.AdminRepository;
+import com.moya.myblogboot.repository.GuestRepository;
 import com.moya.myblogboot.utils.JwtUtil;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
@@ -18,25 +23,38 @@ import org.springframework.transaction.annotation.Transactional;
 public class LoginService {
 
     private final AdminRepository adminRepository;
+    private final GuestRepository guestRepository;
     private final  PasswordEncoder passwordEncoder;
 
     @Value("${jwt.secret}")
-    private String secretKey;
+    private  String secret;
 
-    // 토큰 만료 시간
-    @Value("${jwt.expiration}")
-    private Long expiredMs;
+    @Value("${jwt.access-token-expiration}")
+    private  Long accessTokenExpiration;
 
-    public String adminLogin(String admin_name, String admin_pw)  {
-        Admin admin = adminRepository.findById(admin_name).orElseThrow(() ->
-                new NoResultException("아이디 또는 비밀번호를 확인하세요")
-        );
-        if (!passwordEncoder.matches(admin_pw, admin.getAdmin_pw())) {
+    @Value("${jwt.refresh-token-expiration}")
+    private  Long refreshTokenExpiration;
+
+    // 관리자 로그인
+    public Token adminLogin(String admin_name, String admin_pw)  {
+        Admin findAdmin = adminRepository.findById(admin_name).orElseThrow(() ->
+                new NoResultException("아이디 또는 비밀번호를 확인하세요."));
+        if (!passwordEncoder.matches(admin_pw, findAdmin.getAdmin_pw())) {
             throw new BadCredentialsException("아이디 또는 비밀번호를 확인하세요.");
         }
-        return JwtUtil.createToken(admin.getAdmin_name(), secretKey, expiredMs);
+        return createToken(findAdmin.getAdmin_name(), TokenUserType.ADMIN);
     }
-    public Boolean tokenIsExpired(String token) {
-        return !JwtUtil.isExpired(token, secretKey);
+
+    // 게스트 로그인
+    public Token guestLogin(GuestReqDto guestReqDto) {
+        Guest findGuest = guestRepository.findByName(guestReqDto.getUsername()).orElseThrow(() ->
+                new NoResultException("아이디 또는 비밀번호를 확인하세요."));
+        if (!passwordEncoder.matches(guestReqDto.getPassword(), findGuest.getPassword())) {
+            throw new BadCredentialsException("아이디 또는 비밀번호를 확인하세요.");
+        }
+        return createToken(findGuest.getUsername(), TokenUserType.GUEST);
+    }
+    private Token createToken(String username, TokenUserType tokenUserType) {
+        return JwtUtil.createToken(username, tokenUserType, secret, accessTokenExpiration, refreshTokenExpiration);
     }
 }

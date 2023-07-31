@@ -1,16 +1,16 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
-import reactSessionApi from "react-session-api";
 import { GUEST_LOGIN } from "../../apiConfig";
 import { FormContainer } from "../Styles/Container/FormContainer";
+import { useCookie } from "react-cookie";
 
 export const LoginForm = () => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
-
+  const [cookie, setCookie] = useCookie(["token"]);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -27,7 +27,7 @@ export const LoginForm = () => {
         password: formData.password,
       })
       .then((res) => res.data)
-      .then((data) => reactSessionApi.set("Guest", data))
+      .then((data) => data)
       .catch((error) => {
         alert("아이디 또는 비밀번호를 확인하세요.");
         console.log(error);

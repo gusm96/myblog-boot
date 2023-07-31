@@ -2,7 +2,9 @@ package com.moya.myblogboot.controller;
 
 
 import com.moya.myblogboot.domain.guest.GuestReqDto;
+import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.service.GuestService;
+import com.moya.myblogboot.service.LoginService;
 import jakarta.persistence.NoResultException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class GuestController {
 
     private final GuestService guestService;
+    private final LoginService loginService;
 
     @PostMapping("/api/v1/guest")
     public ResponseEntity<String> joinGuest(@RequestBody @Valid GuestReqDto guestReqDto) {
@@ -31,14 +34,14 @@ public class GuestController {
     }
 
     @PostMapping("/api/v1/login/guest")
-    public ResponseEntity<String> loginGuest(@RequestBody @Valid GuestReqDto guestReqDto) {
+    public ResponseEntity<Token> loginGuest(@RequestBody @Valid GuestReqDto guestReqDto) {
         try {
-            String username = guestService.login(guestReqDto);
-            return ResponseEntity.ok().body(username);
+            Token token = loginService.guestLogin(guestReqDto);
+            return ResponseEntity.ok().body(token);
         } catch (NoResultException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 아이디입니다.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "아이디 또는 비밀번호를 확인하세요.");
         } catch (BadCredentialsException e){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이디 또는 비밀번호를 확인하세요.");
         }
     }
 

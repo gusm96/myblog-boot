@@ -22,39 +22,39 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig{
-
+public class WebSecurityConfig {
+    @Value("${jwt.secret}")
+    private String secret;
     private LoginService loginService;
 
     public void setLoginService(LoginService loginService) {
         this.loginService = loginService;
     }
-    public LoginService getLoginService (){
+
+    public LoginService getLoginService() {
         return this.loginService;
     }
 
-    @Value("${jwt.secret}")
-    private String secretKey;
-
     @Bean
-    public SecurityFilterChain filterChain (HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.httpBasic().disable()
                 .csrf().disable() // Cross Site Request Forgery (사이트간 위조요청) Non-browser clients service에선 disable 가능 (Spring security 에선 기본 설정이 protection)
                 .cors().and() // Cross Origin Resource Sharing (교차 출처 리소스 공유)
                 .authorizeHttpRequests()
-                .requestMatchers(new AntPathRequestMatcher("/management/**")).authenticated()
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/management/**")).authenticated()
+                .requestMatchers(new AntPathRequestMatcher("/management/**")).hasRole("ADMIN")
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/management/**")).hasRole("ADMIN")
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/comment/**")).hasAnyRole("GUEST", "ADMIN")
                 .anyRequest().permitAll()
                 .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 // UsernamePasswordAuthenticationFilter 이전에 CustomFiler( JwtFilter )적용
-                .and().addFilterBefore(new JwtFilter(getLoginService(), secretKey), UsernamePasswordAuthenticationFilter.class).build();
+                .and().addFilterBefore(new JwtFilter(loginService, secret), UsernamePasswordAuthenticationFilter.class).build();
     }
 
     // cors 허용을 위한 설정S
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(){
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
         configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Front
@@ -64,7 +64,7 @@ public class WebSecurityConfig{
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
-        }
+    }
 
     // 비밀번호 해싱을 위한 Bcrypt
     @Bean

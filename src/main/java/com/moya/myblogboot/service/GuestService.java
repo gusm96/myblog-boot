@@ -38,13 +38,5 @@ public class GuestService {
     private boolean isInvalidData(String username){
         return guestRepository.findByName(username).isPresent();
     }
-    public String login(GuestReqDto guestReqDto) {
-        Guest findGuest = guestRepository.findByName(guestReqDto.getUsername()).orElseThrow(() ->
-                new NoResultException("존재하지 않는 아이디 입니다."));
-        if (passwordEncoder.matches(guestReqDto.getPassword(), findGuest.getPassword())) {
-            return findGuest.getUsername();
-        }else {
-            throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
-        }
-    }
+
 }

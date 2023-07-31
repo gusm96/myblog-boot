@@ -1,9 +1,6 @@
 package com.moya.myblogboot.domain.token;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
@@ -12,4 +9,5 @@ import lombok.Setter;
 public class TokenResponse {
     private String access_token;
     private String refresh_token;
+
 }

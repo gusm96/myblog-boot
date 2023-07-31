@@ -2,40 +2,53 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
   Button,
-  Col,
-  Container,
   Modal,
   ModalBody,
-  ModalDialog,
   ModalFooter,
   ModalHeader,
   ModalTitle,
-  Row,
 } from "react-bootstrap";
 import reactSessionApi from "react-session-api";
 import { COMMENT_CUD } from "../../apiConfig";
 import { LoginForm } from "../Guest/LoginForm";
-import { FormContainer } from "../Styles/Container/FormContainer";
+import { LoginConfirmation } from "../Admin/LoginConfirmation";
 
 export const Comment = () => {
-  const [sessionData, setSesstionData] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [sessionData, setSessionData] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState({
+    status: false,
+    loginType: "",
+  });
   const [isLoginModal, setIsLoginModal] = useState(false);
   const [commentData, setCommentData] = useState("");
+
   useEffect(() => {
-    const guest = reactSessionApi.get("guest");
-    setSesstionData(guest);
-    if (sessionData !== null) {
-      setIsLoggedIn(true);
+    const admin = LoginConfirmation;
+    if (admin) {
+      setIsLoggedIn({
+        status: true,
+        loginType: "ADMIN",
+      });
+    } else {
+      const guest = reactSessionApi.get("guest");
+      setSessionData(guest);
+      alert("게스트 오류");
+      if (guest !== null) {
+        setIsLoggedIn({
+          status: true,
+          loginType: "GUEST",
+        });
+      }
     }
   }, []);
+
   const handleChange = (e) => {
     setCommentData(e.target.value);
   };
+
   const handleCommentBoxClick = (e) => {
     e.preventDefault();
-    if (!isLoggedIn) {
-      console.log("true");
+    if (!isLoggedIn.status) {
       setIsLoginModal(true);
     }
   };
@@ -43,14 +56,22 @@ export const Comment = () => {
   const handleOnSubmit = (e) => {
     e.preventDefault();
     // textarea의 값이 0 or null or " "이 아닌지 확인
-    if (commentData !== null || commentData.trim() === "") {
+    if (commentData.trim() === "") {
       alert("댓글의 내용을 입력하세요.");
     } else {
-      axios.post(`${COMMENT_CUD}`, {
-        writer: sessionData,
-        comment: commentData.comment,
-        commentType: "GUEST",
-      });
+      if (isLoggedIn.loginType === "GUEST") {
+        axios.post(`${COMMENT_CUD}`, {
+          writer: sessionData,
+          comment: commentData,
+          commentType: isLoggedIn.loginType,
+        });
+      } else {
+        axios.post(`${COMMENT_CUD}`, {
+          writer: "admin",
+          comment: commentData,
+          commentType: isLoggedIn.loginType,
+        });
+      }
     }
   };
 

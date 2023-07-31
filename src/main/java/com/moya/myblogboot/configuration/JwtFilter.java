@@ -1,14 +1,16 @@
 package com.moya.myblogboot.configuration;
 
+import com.moya.myblogboot.domain.token.TokenInfo;
+import com.moya.myblogboot.domain.token.TokenUserType;
+import com.moya.myblogboot.exception.ExpiredTokenException;
 import com.moya.myblogboot.service.LoginService;
 import com.moya.myblogboot.utils.JwtUtil;
-import io.jsonwebtoken.Jwt;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,13 +25,12 @@ import java.util.List;
 
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
-
-    private  String secretKey;
+    private  String secret;
     private  LoginService loginService;
 
-    public JwtFilter(LoginService loginService, String secretKey) {
+    public JwtFilter(LoginService loginService, String secret) {
         this.loginService = loginService;
-        this.secretKey = secretKey;
+        this.secret = secret;
     }
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -50,22 +51,31 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // Token Expired되었는지 여부
         try {
-            if (JwtUtil.isExpired(token, secretKey)) {
-                log.error("Token is expired");
+            if (JwtUtil.isExpired(token, secret)) {
+                log.error("토큰이 만료되었습니다.");
                 filterChain.doFilter(request, response);
                 return;
             }
         } catch (SignatureException e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Not a valid token");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 유효하지 않습니다.");
+            return;
+        } catch (ExpiredTokenException e){
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 만료되었습니다.");
             return;
         }
 
-        String adminName = JwtUtil.getAdminName(token, secretKey);
-        log.info("admin_name : {}", adminName);
+        // Token에 저장된 정보
+        TokenInfo tokenInfo = JwtUtil.getTokenInfo(token, secret);
+        String username = tokenInfo.getName();
+        String role = tokenInfo.getType() == TokenUserType.ADMIN ? "ADMIN" : "GUEST";
 
-        // 권한을 부여한다.
+        log.info("Username : {}", username);
+        log.info("Role : {}", role);
+
+        // 권한 부여
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(adminName, null, List.of(new SimpleGrantedAuthority("ADMIN")));
+                new UsernamePasswordAuthenticationToken(username, null, List.of(new SimpleGrantedAuthority(role)));
+
         // Detail을 넣어준다.
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
@@ -77,14 +87,14 @@ public class JwtFilter extends OncePerRequestFilter {
         // 필터에서 제외시킬 url
         String[] excludePath = {
                 "/api/v1/login/admin",
+                "/api/v1/login/guest",
                 "/api/v1/boards",
                 "/api/v1/boards/search",
                 "/api/v1/board",
                 "/api/v1/categories",
                 "/api/v1/comment",
                 "/api/v1/comments",
-                "/api/v1/guest",
-                "/api/v1/login/guest"
+                "/api/v1/guest"
         };
 
         String path = request.getRequestURI();

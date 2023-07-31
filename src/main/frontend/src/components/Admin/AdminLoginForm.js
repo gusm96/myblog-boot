@@ -1,43 +1,43 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { Button, Col, Container, Form, Row } from "react-bootstrap";
+import React, { useState } from "react";
+import { Button, Form } from "react-bootstrap";
 import { useCookies } from "react-cookie";
 import { LoginConfirmation } from "./LoginConfirmation";
+import { ADMIN_LOGIN } from "../../apiConfig";
 
 export const AdminLoginForm = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  });
   const [cookies, setCookie] = useCookies(["token"]);
-
-  if (LoginConfirmation) {
-    alert("잘못된 접근입니다.");
+  const isLoggedIn = LoginConfirmation();
+  if (isLoggedIn) {
+    alert("로그인 된 상태");
     window.location.href = "/management";
   }
 
-  const handleUsernameChange = (e) => {
-    setUsername(e.target.value);
-  };
-
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
-    console.log(`username = ${username}`);
-    console.log(`password = ${password}`);
     e.preventDefault();
     // 서버에 로그인 요청 보내기
     try {
-      const response = await axios.post(
-        "http://localhost:8080/api/v1/login/admin",
-        {
-          username,
-          password,
-        }
-      );
+      const response = await axios.post(`${ADMIN_LOGIN}`, {
+        username: formData.username,
+        password: formData.password,
+      });
       if (response.status === 200) {
         const token = response.data;
-        setCookie("token", token, { path: "/" });
+        setCookie("access_token", token.access_token, { path: "/" });
+        setCookie("refresh_token", token.refresh_token, { path: "/" });
+        window.location.href = "/management";
         // 리다이렉트
       } else {
         // 실패시 ..
@@ -50,27 +50,31 @@ export const AdminLoginForm = () => {
   return (
     <Form onSubmit={handleSubmit}>
       <Form.Group controlId="formUsername">
-        <Form.Label>Username</Form.Label>
+        <Form.Label>아이디</Form.Label>
         <Form.Control
           type="text"
-          placeholder="Enter username"
-          value={username}
-          onChange={handleUsernameChange}
+          name="username"
+          placeholder="아이디를 입력하세요."
+          value={formData.username}
+          onChange={handleChange}
+          required
         />
       </Form.Group>
 
       <Form.Group controlId="formPassword">
-        <Form.Label>Password</Form.Label>
+        <Form.Label>비밀번호</Form.Label>
         <Form.Control
           type="password"
-          placeholder="Enter password"
-          value={password}
-          onChange={handlePasswordChange}
+          name="password"
+          placeholder="비밀번호를 입력하세요."
+          value={formData.password}
+          onChange={handleChange}
+          required
         />
       </Form.Group>
 
       <Button variant="primary" type="submit">
-        Login
+        로그인
       </Button>
     </Form>
   );
