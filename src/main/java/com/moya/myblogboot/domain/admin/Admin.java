@@ -26,7 +26,6 @@ public class Admin {
     private String admin_pw;
     @Column(nullable = false, unique = true)
     private String nickname;
-    private String role = "ADMIN";
 
     @Builder
     public Admin(String admin_name, String admin_pw, String nickname) {

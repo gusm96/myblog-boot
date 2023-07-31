@@ -67,7 +67,8 @@ public class JwtFilter extends OncePerRequestFilter {
         // Token에 저장된 정보
         TokenInfo tokenInfo = JwtUtil.getTokenInfo(token, secret);
         String username = tokenInfo.getName();
-        String role = tokenInfo.getType() == TokenUserType.ADMIN ? "ADMIN" : "GUEST";
+        // 권한 지정
+        String role = tokenInfo.getType() == TokenUserType.ADMIN ? "ROLE_ADMIN" : "ROLE_GUEST";
 
         log.info("Username : {}", username);
         log.info("Role : {}", role);

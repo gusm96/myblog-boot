@@ -11,9 +11,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Collection;
 
 
 @RestController
@@ -38,6 +42,7 @@ public class AdminController {
 
     @PostMapping("/api/v1/login/admin")
     public ResponseEntity<Token> adminLogin(@RequestBody @Valid AdminReqDto adminReqDto) {
+
         try {
             Token token = loginService.adminLogin(adminReqDto.getUsername(), adminReqDto.getPassword());
             return ResponseEntity.ok().body(token);
@@ -46,6 +51,8 @@ public class AdminController {
         } catch (BadCredentialsException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이디 또는 비밀번호를 확인하세요.");
         }
+
+
     }
 
     @GetMapping("/api/v1/logout/admin")

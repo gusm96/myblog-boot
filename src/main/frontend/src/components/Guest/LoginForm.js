@@ -11,6 +11,7 @@ export const LoginForm = () => {
     password: "",
   });
   const [cookie, setCookie] = useCookie(["token"]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -21,17 +22,23 @@ export const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios
-      .post(GUEST_LOGIN, {
+    try {
+      const response = await axios.post(`${GUEST_LOGIN}`, {
         username: formData.username,
         password: formData.password,
-      })
-      .then((res) => res.data)
-      .then((data) => data)
-      .catch((error) => {
-        alert("아이디 또는 비밀번호를 확인하세요.");
-        console.log(error);
       });
+      if (response.status === 200) {
+        const token = response.data;
+        setCookie("access_token", token.access_token, { path: "/" });
+        setCookie("refresh_token", token.refresh_token, { path: "/" });
+        // 리다이렉트
+      } else {
+        // 실패시 ..
+        alert("아이디 또는 비밀번호가 일치하지 않습니다.");
+      }
+    } catch (error) {
+      alert("아이디 또는 비밀번호가 일치하지 않습니다.");
+    }
   };
 
   return (
