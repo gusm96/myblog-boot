@@ -36,7 +36,10 @@ public class BoardController {
 
     // 카테고리별 게시글 리스트
     @GetMapping("/api/v1/boards/{category}")
-    public ResponseEntity<BoardListResDto> thisTypeOfBoards(@PathVariable("category") String category, @RequestParam(name = "p", defaultValue = "1") int page) {
+    public ResponseEntity<BoardListResDto> thisTypeOfBoards(
+            @PathVariable("category") String category,
+            @RequestParam(name = "p", defaultValue = "1") int page
+    ) {
         BoardListResDto result = boardService.getBoardsByCategory(category, page);
         return ResponseEntity.ok().body(result);
     }
@@ -48,7 +51,7 @@ public class BoardController {
             BoardResDto board = boardService.getBoard(boardId);
             return ResponseEntity.ok().body(board);
         }catch (NoSuchElementException e){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 게시글은 존재하지 않습니다.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
     }
 
@@ -61,7 +64,7 @@ public class BoardController {
             Long boardId = boardService.uploadBoard(boardReqDto, adminName);
             return ResponseEntity.ok().body(boardId);
         } catch (NoResultException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 관리자는 존재하지 않습니다.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (ExpiredTokenException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 만료되었습니다.");
         }
@@ -74,7 +77,7 @@ public class BoardController {
             Long result = boardService.editBoard(boardId, boardReqDto);
             return ResponseEntity.ok().body(result);
         }catch (NoResultException e){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 게시글은 이미 삭제되었거나 존재하지 않습니다.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
     }
 
@@ -86,7 +89,7 @@ public class BoardController {
             boolean result = boardService.deleteBoard(boardId);
             return ResponseEntity.ok().body(result);
         }catch (NoResultException e){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 게시글은 이미 삭제되었거나 존재하지 않습니다.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }
     }
 

@@ -47,9 +47,9 @@ public class AdminController {
             Token token = loginService.adminLogin(adminReqDto.getUsername(), adminReqDto.getPassword());
             return ResponseEntity.ok().body(token);
         } catch (NoResultException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "아이디 또는 비밀번호를 확인하세요.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (BadCredentialsException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이디 또는 비밀번호를 확인하세요.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
 
 

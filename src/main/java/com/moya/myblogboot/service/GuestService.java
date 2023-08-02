@@ -1,18 +1,13 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.guest.Guest;
 import com.moya.myblogboot.domain.guest.GuestReqDto;
 import com.moya.myblogboot.repository.GuestRepository;
-import jakarta.persistence.NoResultException;
-import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

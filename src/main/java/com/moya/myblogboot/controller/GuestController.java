@@ -1,10 +1,13 @@
 package com.moya.myblogboot.controller;
 
 
+import com.moya.myblogboot.domain.PasswordStrength;
 import com.moya.myblogboot.domain.guest.GuestReqDto;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.service.GuestService;
 import com.moya.myblogboot.service.LoginService;
+import com.moya.myblogboot.service.PasswordStrengthCheck;
+import com.moya.myblogboot.service.UsernameValidator;
 import jakarta.persistence.NoResultException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +26,28 @@ public class GuestController {
 
     private final GuestService guestService;
     private final LoginService loginService;
+    private final PasswordStrengthCheck passwordStrengthCheck;
+    private final UsernameValidator usernameValidator;
 
+
+    @PostMapping("/api/v1/guest/password-validator")
+    public ResponseEntity<PasswordStrength> passwordStrengthResponse(@RequestBody @Valid String password){
+        return ResponseEntity.ok().body(passwordStrengthCheck.strengthCheck(password));
+    }
+    /*@PostMapping("/api/v1/guest/username-validator")
+    public ResponseEntity<Boolean> validateUsername(@RequestBody @Valid String username){
+        return ResponseEntity.ok().body();
+    }*/
     @PostMapping("/api/v1/guest")
     public ResponseEntity<String> joinGuest(@RequestBody @Valid GuestReqDto guestReqDto) {
         try{
+            usernameValidator.isValidUsername(guestReqDto.getUsername());
         return ResponseEntity.ok().body(guestService.join(guestReqDto));}
+        catch (IllegalStateException e){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
         catch (DataIntegrityViolationException e){
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 존재하는 아이디입니다.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
     }
 
@@ -39,9 +57,9 @@ public class GuestController {
             Token token = loginService.guestLogin(guestReqDto);
             return ResponseEntity.ok().body(token);
         } catch (NoResultException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "아이디 또는 비밀번호를 확인하세요.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         } catch (BadCredentialsException e){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이디 또는 비밀번호를 확인하세요.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
