@@ -7,7 +7,6 @@ import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.service.GuestService;
 import com.moya.myblogboot.service.LoginService;
 import com.moya.myblogboot.service.PasswordStrengthCheck;
-import com.moya.myblogboot.service.UsernameValidator;
 import jakarta.persistence.NoResultException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,22 +26,21 @@ public class GuestController {
     private final GuestService guestService;
     private final LoginService loginService;
     private final PasswordStrengthCheck passwordStrengthCheck;
-    private final UsernameValidator usernameValidator;
 
 
     @PostMapping("/api/v1/guest/password-validator")
     public ResponseEntity<PasswordStrength> passwordStrengthResponse(@RequestBody @Valid String password){
         return ResponseEntity.ok().body(passwordStrengthCheck.strengthCheck(password));
     }
-    /*@PostMapping("/api/v1/guest/username-validator")
+    @PostMapping("/api/v1/guest/username-validator")
     public ResponseEntity<Boolean> validateUsername(@RequestBody @Valid String username){
-        return ResponseEntity.ok().body();
-    }*/
+        return ResponseEntity.ok().body(guestService.isValidUsername(username));
+    }
     @PostMapping("/api/v1/guest")
     public ResponseEntity<String> joinGuest(@RequestBody @Valid GuestReqDto guestReqDto) {
         try{
-            usernameValidator.isValidUsername(guestReqDto.getUsername());
-        return ResponseEntity.ok().body(guestService.join(guestReqDto));}
+            return ResponseEntity.ok().body(guestService.registerGuest(guestReqDto));
+        }
         catch (IllegalStateException e){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
@@ -50,11 +48,10 @@ public class GuestController {
             throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
         }
     }
-
     @PostMapping("/api/v1/login/guest")
-    public ResponseEntity<Token> loginGuest(@RequestBody @Valid GuestReqDto guestReqDto) {
+    public ResponseEntity<String> loginGuest(@RequestBody @Valid GuestReqDto guestReqDto) {
         try {
-            Token token = loginService.guestLogin(guestReqDto);
+            String token = loginService.guestLogin(guestReqDto);
             return ResponseEntity.ok().body(token);
         } catch (NoResultException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());

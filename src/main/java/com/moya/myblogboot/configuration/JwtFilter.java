@@ -5,7 +5,6 @@ import com.moya.myblogboot.domain.token.TokenUserType;
 import com.moya.myblogboot.exception.ExpiredTokenException;
 import com.moya.myblogboot.service.LoginService;
 import com.moya.myblogboot.utils.JwtUtil;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -88,7 +87,7 @@ public class JwtFilter extends OncePerRequestFilter {
         // 필터에서 제외시킬 url
         String[] excludePath = {
                 "/api/v1/login/admin",
-                "/api/v1/login/guest",
+                "/api/v1/login/member",
                 "/api/v1/boards",
                 "/api/v1/boards/search",
                 "/api/v1/board",
@@ -99,7 +98,7 @@ public class JwtFilter extends OncePerRequestFilter {
         };
 
         String path = request.getRequestURI();
-        log.info(path);
+        log.info("Path : {}", path);
         return (Arrays.stream(excludePath).anyMatch(path::startsWith));
     }
 }

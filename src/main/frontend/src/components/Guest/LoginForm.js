@@ -29,8 +29,7 @@ export const LoginForm = () => {
       });
       if (response.status === 200) {
         const token = response.data;
-        setCookie("access_token", token.access_token, { path: "/" });
-        setCookie("refresh_token", token.refresh_token, { path: "/" });
+        setCookie("token", token, { path: "/" });
         // 리다이렉트
       } else {
         // 실패시 ..

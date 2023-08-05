@@ -2,7 +2,6 @@ package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.guest.Guest;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

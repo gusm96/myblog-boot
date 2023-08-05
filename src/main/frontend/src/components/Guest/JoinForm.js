@@ -59,7 +59,7 @@ export const JoinForm = () => {
             name="username"
             value={formData.username}
             onChange={handleChange}
-            placeholder="아이디 또는 비밀번호를 입력하세요."
+            placeholder="사용할 아이디 또는 닉네임을 입력하세요."
             required
           />
         </Form.Group>

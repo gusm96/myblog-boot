@@ -17,7 +17,7 @@ public class JwtUtil {
 
     public static TokenInfo getTokenInfo(String token, String secret) {
         Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
-        String name = claims.get("name", String.class);
+        String name = claims.get("username", String.class);
         String type = claims.get("type", String.class);
         TokenUserType tokenUserType = type.equals("ADMIN") ? TokenUserType.ADMIN : TokenUserType.GUEST;
         return TokenInfo.builder()
@@ -38,29 +38,43 @@ public class JwtUtil {
         }
     }
     // Token 생성
-    public static Token createToken (String name, TokenUserType type, String secret, Long accessTokenExpiration, Long refreshTokenExpiration){
+    public static Token createToken (String username, TokenUserType type, String secret, Long accessTokenExpiration, Long refreshTokenExpiration){
         Claims claims = Jwts.claims();
         // JWT에 사용자의 많은 정보를 담으면 보안상 위험하다.
-        claims.put("name", name);
+        claims.put("username", username);
         claims.put("type", type);
-        String access_token = Jwts.builder()
+        String accessToken = Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date((System.currentTimeMillis())))
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
-
-        String refresh_token = Jwts.builder()
+        String refreshToken = Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date((System.currentTimeMillis())))
-                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
+                .setExpiration(new Date(refreshTokenExpiration))
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
 
         return Token.builder()
-                .access_token(access_token)
-                .refresh_token(refresh_token)
+                .access_token(accessToken)
+                .refresh_token(refreshToken)
                 .build();
     }
+
+    // Access Token 재발급
+    public static String reissuingToken(String username, TokenUserType type, String secret, Long accessTokenExpiration) {
+        Claims claims = Jwts.claims();
+        claims.put("username", username);
+        claims.put("type", type);
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(new Date((System.currentTimeMillis())))
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
+                .signWith(SignatureAlgorithm.HS256, secret)
+                .compact();
+    }
+
+
 }
 

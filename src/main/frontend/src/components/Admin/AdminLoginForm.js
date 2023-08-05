@@ -35,8 +35,7 @@ export const AdminLoginForm = () => {
       });
       if (response.status === 200) {
         const token = response.data;
-        setCookie("access_token", token.access_token, { path: "/" });
-        setCookie("refresh_token", token.refresh_token, { path: "/" });
+        setCookie("token", token, { path: "/" });
         window.location.href = "/management";
         // 리다이렉트
       } else {
