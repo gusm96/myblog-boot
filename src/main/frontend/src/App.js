@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./screens/Home";
 import BoardDetail from "./components/Boards/BoardDetail";
@@ -9,10 +9,24 @@ import { AdminLoginForm } from "./components/Admin/AdminLoginForm";
 import { AdminLogout } from "./components/Admin/AdminLogout";
 import { UserLayout } from "./components/Layout/UserLayout";
 import { AdminLayout } from "./components/Layout/AdminLayout";
+import { LoginConfirm } from "./components/LoginConfirm";
 
 export default App;
 
 function App() {
+  const { accessToken, setAccessToken } = useState("");
+  const { isLoggedIn, setIsLoggedIn } = useState(false);
+
+  const updateAccessToken = (token) => {
+    setAccessToken(token);
+  };
+  if (accessToken !== null || accessToken !== "") {
+    const isExpired = LoginConfirm(accessToken);
+    if (!isExpired) {
+      setIsLoggedIn(false);
+    }
+  }
+
   return (
     <Router>
       <Routes>

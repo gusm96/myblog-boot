@@ -27,5 +27,6 @@ export const GUEST_LOGIN = `${BASE_URL}/api/v1/login/guest`;
 export const ADMIN_LOGIN = `${BASE_URL}/api/v1/login/admin`;
 // 관리자 로그아웃
 export const ADMIN_LOGOUT = `${BASE_URL}/api/v1/logout/admin`;
+
 // 토큰 유효 검증
-export const ADMIN_VALIDATION = `${BASE_URL}/api/v1/token-validation`;
+export const TOKEN_VALIDATION = `${BASE_URL}/api/v1/token-validation`;

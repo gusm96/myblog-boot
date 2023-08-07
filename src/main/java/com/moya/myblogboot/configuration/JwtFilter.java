@@ -3,7 +3,7 @@ package com.moya.myblogboot.configuration;
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.domain.token.TokenUserType;
 import com.moya.myblogboot.exception.ExpiredTokenException;
-import com.moya.myblogboot.service.LoginService;
+import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.JwtUtil;
 import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.FilterChain;
@@ -25,10 +25,10 @@ import java.util.List;
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
     private  String secret;
-    private  LoginService loginService;
+    private AuthService authService;
 
-    public JwtFilter(LoginService loginService, String secret) {
-        this.loginService = loginService;
+    public JwtFilter(AuthService authService, String secret) {
+        this.authService = authService;
         this.secret = secret;
     }
     @Override

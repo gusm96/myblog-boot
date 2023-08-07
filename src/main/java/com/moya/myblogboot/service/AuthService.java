@@ -11,7 +11,6 @@ import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.GuestRepository;
 import com.moya.myblogboot.repository.TokenRepository;
 import com.moya.myblogboot.utils.JwtUtil;
-import io.jsonwebtoken.Jwt;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class LoginService {
+public class AuthService {
 
     private final AdminRepository adminRepository;
     private final GuestRepository guestRepository;
@@ -40,7 +39,7 @@ public class LoginService {
     private  Long refreshTokenExpiration;
 
     // 관리자 로그인
-    public String adminLogin(String admin_name, String admin_pw)  {
+    public Token adminLogin(String admin_name, String admin_pw)  {
         Admin findAdmin = adminRepository.findById(admin_name).orElseThrow(() ->
                 new NoResultException("아이디 또는 비밀번호를 확인하세요."));
         if (!passwordEncoder.matches(admin_pw, findAdmin.getAdmin_pw())) {
@@ -49,11 +48,11 @@ public class LoginService {
         Token newToken = createToken(findAdmin.getAdmin_name(), TokenUserType.ADMIN);
         // DB에 Refresh Token 저장
         saveRefreshToken(newToken.getRefresh_token(), findAdmin.getAdmin_name(), TokenUserType.ADMIN);
-        return newToken.getAccess_token();
+        return newToken;
     }
 
     // 게스트 로그인
-    public String guestLogin(GuestReqDto guestReqDto) {
+    public Token guestLogin(GuestReqDto guestReqDto) {
         Guest findGuest = guestRepository.findByName(guestReqDto.getUsername()).orElseThrow(() ->
                 new NoResultException("아이디 또는 비밀번호를 확인하세요."));
         if (!passwordEncoder.matches(guestReqDto.getPassword(), findGuest.getPassword())) {
@@ -62,7 +61,7 @@ public class LoginService {
         Token newToken = createToken(findGuest.getUsername(), TokenUserType.GUEST);
         // DB에 Refresh Token 저장
         saveRefreshToken(newToken.getRefresh_token(), findGuest.getUsername(), TokenUserType.GUEST);
-        return newToken.getAccess_token();
+        return newToken;
     }
 
     // Refresh Token 저장
@@ -73,6 +72,7 @@ public class LoginService {
                 .username(username)
                 .tokenUserType(tokenUserType)
                 .build();
+        System.out.println(refreshToken.getTokenUserType());
         tokenRepository.save(refreshToken);
     }
     public boolean accessTokenIsExpired(String accessToken) {

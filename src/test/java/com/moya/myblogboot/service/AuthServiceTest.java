@@ -13,10 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Transactional
-public class LoginServiceTest {
+public class AuthServiceTest {
 
     @Autowired
-    LoginService loginService;
+    AuthService authService;
     @Autowired
     AdminRepository adminRepository;
 

@@ -4,7 +4,6 @@ import { Button, Form } from "react-bootstrap";
 import { useCookies } from "react-cookie";
 import { LoginConfirmation } from "./LoginConfirmation";
 import { ADMIN_LOGIN } from "../../apiConfig";
-
 export const AdminLoginForm = () => {
   const [formData, setFormData] = useState({
     username: "",
@@ -35,7 +34,8 @@ export const AdminLoginForm = () => {
       });
       if (response.status === 200) {
         const token = response.data;
-        setCookie("token", token, { path: "/" });
+        // Access Token은 private 변수에 저장
+        setCookie("refresh_token", token.refreshToken, { path: "/" });
         window.location.href = "/management";
         // 리다이렉트
       } else {
