@@ -8,10 +8,8 @@ import {
   ModalHeader,
   ModalTitle,
 } from "react-bootstrap";
-import reactSessionApi from "react-session-api";
 import { COMMENT_CUD } from "../../apiConfig";
 import { LoginForm } from "../Guest/LoginForm";
-import { LoginConfirmation } from "../Admin/LoginConfirmation";
 
 export const Comment = () => {
   const [sessionData, setSessionData] = useState(null);
@@ -23,22 +21,20 @@ export const Comment = () => {
   const [commentData, setCommentData] = useState("");
 
   useEffect(() => {
-    const admin = LoginConfirmation;
+    const admin = true;
     if (admin) {
       setIsLoggedIn({
         status: true,
         loginType: "ADMIN",
       });
     } else {
-      const guest = reactSessionApi.get("guest");
-      setSessionData(guest);
       alert("게스트 오류");
-      if (guest !== null) {
-        setIsLoggedIn({
-          status: true,
-          loginType: "GUEST",
-        });
-      }
+      // if (guest !== null) {
+      //   setIsLoggedIn({
+      //     status: true,
+      //     loginType: "GUEST",
+      //   });
+      // }
     }
   }, []);
 

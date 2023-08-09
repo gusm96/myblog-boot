@@ -20,13 +20,12 @@ public class TokenRepository implements TokenRepositoryInf {
     }
 
     @Override
-    public Optional<RefreshToken> findOne(String username, TokenUserType tokenUserType) {
+    public Optional<RefreshToken> findOne(String refresh_token) {
         try{
             RefreshToken token = em.createQuery(
-                            "select t from RefreshToken t where username =: username and tokenUserType =: tokenUserType",
+                            "select t from RefreshToken t where t.token =: refresh_token",
                             RefreshToken.class)
-                    .setParameter("username", username)
-                    .setParameter("tokenUserType", tokenUserType)
+                    .setParameter("refresh_token", refresh_token)
                     .getSingleResult();
             return Optional.of(token);
         }catch (NoResultException e){

@@ -30,3 +30,5 @@ export const ADMIN_LOGOUT = `${BASE_URL}/api/v1/logout/admin`;
 
 // 토큰 유효 검증
 export const TOKEN_VALIDATION = `${BASE_URL}/api/v1/token-validation`;
+// 토큰 재발급
+export const REISSUING_TOKEN = `${BASE_URL}/api/v1/reissuing-token`;

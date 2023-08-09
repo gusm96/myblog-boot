@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./screens/Home";
 import BoardDetail from "./components/Boards/BoardDetail";
@@ -9,24 +9,53 @@ import { AdminLoginForm } from "./components/Admin/AdminLoginForm";
 import { AdminLogout } from "./components/Admin/AdminLogout";
 import { UserLayout } from "./components/Layout/UserLayout";
 import { AdminLayout } from "./components/Layout/AdminLayout";
-import { LoginConfirm } from "./components/LoginConfirm";
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import { REISSUING_TOKEN, TOKEN_VALIDATION } from "./apiConfig";
+import { useCookies } from "react-cookie";
+import { updateAccessToken } from "./store/userSlice";
 
 export default App;
 
 function App() {
-  const { accessToken, setAccessToken } = useState("");
-  const { isLoggedIn, setIsLoggedIn } = useState(false);
+  const [cookies] = useCookies(["refresh_token"]);
+  const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
+  const access_token = useSelector((state) => state.user.access_token);
+  const dispatch = useDispatch();
 
-  const updateAccessToken = (token) => {
-    setAccessToken(token);
-  };
-  if (accessToken !== null || accessToken !== "") {
-    const isExpired = LoginConfirm(accessToken);
-    if (!isExpired) {
-      setIsLoggedIn(false);
+  useEffect(() => {
+    const reissuingAccessToken = async () => {
+      await axios
+        .post(`${REISSUING_TOKEN}`, {
+          refresh_token: cookies.refresh_token,
+        })
+        .then((res) => res.data)
+        .then((data) => dispatch(updateAccessToken(data)))
+        .catch((error) => console.log(error));
+    };
+    if (isLoggedIn && access_token) {
+      // access_token 유효 검사
+      axios
+        .get(`${TOKEN_VALIDATION}`, {
+          headers: {
+            Authorization: `bearer ${access_token}`,
+          },
+        })
+        .then((res) => res.data)
+        .then((data) => {
+          dispatch(updateAccessToken(data));
+        })
+        .catch((error) => {
+          if (error.response.status === 401 || error.response.status === 403) {
+            reissuingAccessToken();
+          } else {
+            console.log(error);
+          }
+        });
     }
-  }
-
+    console.log(isLoggedIn);
+    console.log(access_token);
+  }, [access_token, dispatch, isLoggedIn, cookies.refresh_token]);
   return (
     <Router>
       <Routes>
@@ -43,11 +72,8 @@ function App() {
           <Route path="/login/admin" element={<AdminLoginForm />} />
           <Route path="/logout/admin" element={<AdminLogout />} />
           <Route path="/management" element={<Management />} />
-          <Route path="/management/new-post" element={<BoardForm />} />
-          <Route
-            path="/management/boards/:boardId"
-            element={<BoardEditForm />}
-          />
+          <Route path="/new-post" element={<BoardForm />} />
+          <Route path="/boards/:boardId" element={<BoardEditForm />} />
         </Route>
       </Routes>
     </Router>

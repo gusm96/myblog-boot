@@ -75,18 +75,19 @@ public class AuthService {
         System.out.println(refreshToken.getTokenUserType());
         tokenRepository.save(refreshToken);
     }
-    public boolean accessTokenIsExpired(String accessToken) {
-        return JwtUtil.isExpired(accessToken, secret);
+    public String reissuingAccessToken(String refresh_token) {
+            if(!tokenIsExpired(refresh_token)){
+                // DB에서 Token 조회
+                RefreshToken findRefreshToken = tokenRepository.findOne(refresh_token).orElseThrow(()
+                        -> new NoResultException("토큰이 유효하지 않습니다.")
+                );
+                return JwtUtil.reissuingToken(findRefreshToken.getUsername(), findRefreshToken.getTokenUserType(), secret, accessTokenExpiration);
+            }
+        return null;
+
     }
-    public String reissuingAccessToken(String username, TokenUserType tokenUserType) {
-        RefreshToken findRefreshToken = tokenRepository.findOne(username, tokenUserType).orElseThrow(() ->
-                new NoResultException("토큰이 유효하지 않습니다.")
-        );
-        // Refresh Token 만료 확인
-        if(JwtUtil.isExpired(findRefreshToken.getToken(), secret)){
-            throw new ExpiredTokenException("토큰이 만료되었습니다.");
-        }
-        return JwtUtil.reissuingToken(findRefreshToken.getUsername(), findRefreshToken.getTokenUserType(), secret, accessTokenExpiration);
+    public boolean tokenIsExpired(String token) {
+        return JwtUtil.isExpired(token, secret);
     }
     private Token createToken(String username, TokenUserType tokenUserType) {
         return JwtUtil.createToken(username, tokenUserType, secret, accessTokenExpiration, refreshTokenExpiration);
