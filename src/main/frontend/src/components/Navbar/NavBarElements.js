@@ -1,6 +1,8 @@
 import React from "react";
 import { Navbar, Container, Nav } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 const NavBarElements = () => {
+  const navigate = useNavigate();
   return (
     <Navbar collapseOnSelect expand="lg" variant="dark" bg="dark">
       <Container>

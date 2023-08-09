@@ -23,6 +23,10 @@ const userSlice = createSlice({
     },
   },
 });
+
+export const selectIsLoggedIn = (state) => state.user.isLoggedIn;
+export const selectAccessToken = (state) => state.user.accessToken;
+export const selectUserType = (state) => state.user.userType;
 export const { login, logout, updateAccessToken } = userSlice.actions;
 
-export default userSlice.reducer;
+export default userSlice;

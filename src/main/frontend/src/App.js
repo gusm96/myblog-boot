@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./screens/Home";
 import BoardDetail from "./components/Boards/BoardDetail";
@@ -13,14 +13,19 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { REISSUING_TOKEN, TOKEN_VALIDATION } from "./apiConfig";
 import { useCookies } from "react-cookie";
-import { updateAccessToken } from "./store/userSlice";
+import {
+  selectAccessToken,
+  selectIsLoggedIn,
+  updateAccessToken,
+} from "./store/userSlice";
 
 export default App;
 
 function App() {
   const [cookies] = useCookies(["refresh_token"]);
-  const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
-  const access_token = useSelector((state) => state.user.access_token);
+  const [isExpired, setIsExpired] = useState(false);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const access_token = useSelector(selectAccessToken);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -42,9 +47,7 @@ function App() {
           },
         })
         .then((res) => res.data)
-        .then((data) => {
-          dispatch(updateAccessToken(data));
-        })
+        .then((data) => setIsExpired(data))
         .catch((error) => {
           if (error.response.status === 401 || error.response.status === 403) {
             reissuingAccessToken();
@@ -52,10 +55,11 @@ function App() {
             console.log(error);
           }
         });
+    } else if (isExpired) {
+      reissuingAccessToken();
     }
-    console.log(isLoggedIn);
-    console.log(access_token);
-  }, [access_token, dispatch, isLoggedIn, cookies.refresh_token]);
+  }, [access_token, dispatch, isLoggedIn, cookies.refresh_token, isExpired]);
+
   return (
     <Router>
       <Routes>
@@ -72,6 +76,7 @@ function App() {
           <Route path="/login/admin" element={<AdminLoginForm />} />
           <Route path="/logout/admin" element={<AdminLogout />} />
           <Route path="/management" element={<Management />} />
+
           <Route path="/new-post" element={<BoardForm />} />
           <Route path="/boards/:boardId" element={<BoardEditForm />} />
         </Route>
