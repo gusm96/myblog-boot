@@ -10,5 +10,7 @@ public interface TokenRepositoryInf {
 
     Optional<RefreshToken> findOne(String refresh_token);
 
+    Optional<RefreshToken> findByNmaeAndUserType(String username, TokenUserType tokenUserType);
+
     void delete(RefreshToken token);
 }

@@ -3,6 +3,7 @@ package com.moya.myblogboot.controller;
 import com.moya.myblogboot.domain.admin.AdminReqDto;
 import com.moya.myblogboot.domain.guest.GuestReqDto;
 import com.moya.myblogboot.domain.token.Token;
+import com.moya.myblogboot.domain.token.TokenUserType;
 import com.moya.myblogboot.exception.ExpiredTokenException;
 import com.moya.myblogboot.service.AuthService;
 import jakarta.persistence.NoResultException;
@@ -13,6 +14,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -51,14 +54,19 @@ public class AuthController {
     }
 
     // 로그아웃
-    /*@PostMapping("/api/v1/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
+    @PostMapping("/api/v1/logout")
+    public ResponseEntity<?> logout() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String usernmae = authentication.getPrincipal().toString();
+        String username = authentication.getPrincipal().toString();
         String role =  authentication.getAuthorities().iterator().next().getAuthority();
         TokenUserType userType = role.equals("ADMIN") ? TokenUserType.ADMIN : TokenUserType.GUEST;
-
-    }*/
+        try {
+            String result = authService.logout(username, userType);
+            return ResponseEntity.ok().body(result);
+        } catch (NoResultException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
+        }
+    }
 
 
     // 토큰 검증

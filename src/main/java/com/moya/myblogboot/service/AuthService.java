@@ -6,7 +6,6 @@ import com.moya.myblogboot.domain.guest.GuestReqDto;
 import com.moya.myblogboot.domain.token.RefreshToken;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.domain.token.TokenUserType;
-import com.moya.myblogboot.exception.ExpiredTokenException;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.GuestRepository;
 import com.moya.myblogboot.repository.TokenRepository;
@@ -72,7 +71,6 @@ public class AuthService {
                 .username(username)
                 .tokenUserType(tokenUserType)
                 .build();
-        System.out.println(refreshToken.getTokenUserType());
         tokenRepository.save(refreshToken);
     }
     public String reissuingAccessToken(String refresh_token) {
@@ -93,5 +91,11 @@ public class AuthService {
         return JwtUtil.createToken(username, tokenUserType, secret, accessTokenExpiration, refreshTokenExpiration);
     }
 
-
+    @Transactional
+    public String logout(String usernmae, TokenUserType userType) {
+        RefreshToken findToken = tokenRepository.findByNmaeAndUserType(usernmae, userType).orElseThrow(() ->
+                new NoResultException("토큰이 유효하지 않습니다."));
+        tokenRepository.delete(findToken);
+        return "로그아웃 되었습니다.";
+    }
 }
