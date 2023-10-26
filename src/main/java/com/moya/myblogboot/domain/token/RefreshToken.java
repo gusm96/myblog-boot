@@ -20,13 +20,13 @@ public class RefreshToken {
     @Column(nullable = false)
     private String username;
 
-    @Column(name = "user_type", nullable = false)
-    private TokenUserType tokenUserType;
+    @Column(name = "token_role", nullable = false)
+    private String tokenRole;
 
     @Builder
-    public RefreshToken(String token, String username, TokenUserType tokenUserType) {
+    public RefreshToken(String token, String username, String tokenRole) {
         this.token = token;
         this.username = username;
-        this.tokenUserType = tokenUserType;
+        this.tokenRole = tokenRole;
     }
 }

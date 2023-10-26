@@ -2,8 +2,6 @@ package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.SearchType;
-import com.moya.myblogboot.domain.guest.Guest;
-import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
 import static org.assertj.core.api.Assertions.*;
@@ -25,8 +23,6 @@ class BoardServiceTest {
     BoardService boardService;
     @Autowired
     CategoryRepository categoryRepository;
-    @Autowired
-    AdminRepository adminRepository;
     @Autowired
     InitDb initDb;
     /*public Admin createAdmin(){

@@ -66,9 +66,9 @@ public class JwtFilter extends OncePerRequestFilter {
         // Token에 저장된 정보
         TokenInfo tokenInfo = JwtUtil.getTokenInfo(token, secret);
         String username = tokenInfo.getName();
+
         // 권한 지정
         String role = tokenInfo.getType() == TokenUserType.ADMIN ? "ROLE_ADMIN" : "ROLE_GUEST";
-
         log.info("Username : {}", username);
         log.info("Role : {}", role);
 
@@ -86,15 +86,14 @@ public class JwtFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         // 필터에서 제외시킬 url
         String[] excludePath = {
-                "/api/v1/login/admin",
-                "/api/v1/login/member",
+                "/api/v1/join",
+                "/api/v1/login",
                 "/api/v1/boards",
                 "/api/v1/boards/search",
                 "/api/v1/board",
                 "/api/v1/categories",
                 "/api/v1/comment",
                 "/api/v1/comments",
-                "/api/v1/guest"
         };
 
         String path = request.getRequestURI();

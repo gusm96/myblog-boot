@@ -2,7 +2,7 @@ package com.moya.myblogboot.domain.board;
 
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.comment.Comment;
-import com.moya.myblogboot.domain.admin.Admin;
+import com.moya.myblogboot.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,8 +32,8 @@ public class Board {
     private BoardStatus boardStatus; // VIEW, HIDE
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "admin_id")
-    private Admin admin;
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     @ManyToOne // 대부분 Category를 함께 조회 하기때문에 FetchType 을 Default 값으로 둠 (EAGER)
     @JoinColumn(name = "category_id")
@@ -44,11 +44,11 @@ public class Board {
 
     /*생성 메서드*/
     @Builder
-    public Board(String title, String content, Category category, Admin admin) {
+    public Board(String title, String content, Category category, Member member) {
         this.title = title;
         this.content = content;
         this.category = category;
-        this.admin = admin;
+        this.member = member;
         this.upload_date = LocalDateTime.now();
         this.boardStatus = BoardStatus.VIEW;
     }

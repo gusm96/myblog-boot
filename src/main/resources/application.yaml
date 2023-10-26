@@ -17,13 +17,11 @@ spring:
     init:
       mode: always
       platform: mariadb
-  cache:
-    type: redis
+  data:
     redis:
-      time-to-live: 3600
-      cache-null-values: true
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 6000
 
 ## Logging
 logging:

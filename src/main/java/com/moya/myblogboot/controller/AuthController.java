@@ -1,7 +1,7 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.admin.AdminReqDto;
-import com.moya.myblogboot.domain.guest.GuestReqDto;
+import com.moya.myblogboot.domain.member.LoginReqDto;
+import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.domain.token.TokenUserType;
 import com.moya.myblogboot.exception.ExpiredTokenException;
@@ -13,13 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
@@ -28,29 +24,18 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // 게스트 로그인
-    @PostMapping("/api/v1/login/guest")
-    public ResponseEntity<?> loginGuest(@RequestBody @Valid GuestReqDto guestReqDto) {
-        try {
-            Token token = authService.guestLogin(guestReqDto);
-            return ResponseEntity.ok().body(token);
-        } catch (NoResultException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (BadCredentialsException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
+    // 회원 가입
+    @PostMapping("/api/v1/join")
+    public ResponseEntity<?> join(@RequestBody @Valid MemberJoinReqDto memberJoinReqDto){
+        authService.memberJoin(memberJoinReqDto);
+        return ResponseEntity.ok("회원가입이 성공적으로 완료되었습니다.");
     }
-    // 관리자 로그인
-    @PostMapping("/api/v1/login/admin")
-    public ResponseEntity<?> adminLogin(@RequestBody @Valid AdminReqDto adminReqDto) {
-        try {
-            Token token = authService.adminLogin(adminReqDto.getUsername(), adminReqDto.getPassword());
-            return ResponseEntity.ok().body(token);
-        } catch (NoResultException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (BadCredentialsException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
+
+    // 로그인
+    @PostMapping("/api/v1/login")
+    public ResponseEntity<?> login(@RequestBody @Valid LoginReqDto loginReqDto) {
+        Token token = authService.memberLogin(loginReqDto.getUsername(), loginReqDto.getPassword());
+        return ResponseEntity.ok().body(token);
     }
 
     // 로그아웃

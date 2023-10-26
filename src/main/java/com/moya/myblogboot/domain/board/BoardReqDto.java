@@ -1,7 +1,7 @@
 package com.moya.myblogboot.domain.board;
 
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.admin.Admin;
+import com.moya.myblogboot.domain.member.Member;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -23,9 +23,9 @@ public class BoardReqDto {
         this.content = content;
     }
 
-    public Board toEntity(Category category, Admin admin){
+    public Board toEntity(Category category, Member member){
         return Board.builder()
-                .admin(admin)
+                .member(member)
                 .category(category)
                 .title(this.title)
                 .content(this.content)

@@ -2,7 +2,6 @@ package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.admin.AdminReqDto;
-import com.moya.myblogboot.repository.AdminRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

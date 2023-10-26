@@ -38,11 +38,11 @@ public class JwtUtil {
         }
     }
     // Token 생성
-    public static Token createToken (String username, TokenUserType type, String secret, Long accessTokenExpiration, Long refreshTokenExpiration){
+    public static Token createToken (String username, String roleName, String secret, Long accessTokenExpiration, Long refreshTokenExpiration){
         Claims claims = Jwts.claims();
         // JWT에 사용자의 많은 정보를 담으면 보안상 위험하다.
         claims.put("username", username);
-        claims.put("type", type);
+        claims.put("role", roleName);
         String accessToken = Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date((System.currentTimeMillis())))
@@ -63,10 +63,10 @@ public class JwtUtil {
     }
 
     // Access Token 재발급
-    public static String reissuingToken(String username, TokenUserType type, String secret, Long accessTokenExpiration) {
+    public static String reissuingToken(String username, String roleName, String secret, Long accessTokenExpiration) {
         Claims claims = Jwts.claims();
         claims.put("username", username);
-        claims.put("type", type);
+        claims.put("role", roleName);
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date((System.currentTimeMillis())))

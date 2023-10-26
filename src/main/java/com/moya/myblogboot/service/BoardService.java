@@ -1,11 +1,11 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.repository.AdminRepository;
+import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
+import com.moya.myblogboot.repository.MemberRepository;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class BoardService {
 
     private final CategoryService categoryService;
     private final BoardRepository boardRepository;
-    private final AdminRepository adminRepository;
+    private final MemberRepository memberRepository;
     private final CategoryRepository categoryRepository;
 
     // 페이지별 최대 게시글 수
@@ -107,11 +107,11 @@ public class BoardService {
     }
     // 게시글 업로드
     @Transactional
-    public long uploadBoard(BoardReqDto boardReqDto, String adminName) {
-        Admin admin = adminRepository.findById(adminName).orElseThrow(() ->
-                new NoResultException("해당 관리자는 존재하지 않습니다."));
+    public long uploadBoard(BoardReqDto boardReqDto, String username) {
+        Member member = memberRepository.findOne(username).orElseThrow(() ->
+                new NoResultException("해당 사용자는 존재하지 않습니다."));
         Category category = categoryService.findCategory(boardReqDto.getCategory());
-        Board board = boardReqDto.toEntity(category, admin);
+        Board board = boardReqDto.toEntity(category, member);
         return boardRepository.upload(board);
     }
 
