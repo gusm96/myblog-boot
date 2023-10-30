@@ -18,11 +18,10 @@ public class JwtUtil {
     public static TokenInfo getTokenInfo(String token, String secret) {
         Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
         String name = claims.get("username", String.class);
-        String type = claims.get("type", String.class);
-        TokenUserType tokenUserType = type.equals("ADMIN") ? TokenUserType.ADMIN : TokenUserType.GUEST;
+        String role = claims.get("role", String.class);
         return TokenInfo.builder()
                 .name(name)
-                .type(tokenUserType)
+                .role(role)
                 .build();
     }
 

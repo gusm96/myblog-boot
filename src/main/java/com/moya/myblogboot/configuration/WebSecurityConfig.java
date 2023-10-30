@@ -41,7 +41,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests()
                 .requestMatchers(new AntPathRequestMatcher("/management/**")).hasRole("ADMIN")
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/management/**")).hasRole("ADMIN")
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/comment/**")).hasAnyRole("GUEST", "ADMIN")
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/comment/**")).hasAnyRole("NORMAL", "ADMIN")
                 .anyRequest().permitAll()
                 .and()
                 .sessionManagement()

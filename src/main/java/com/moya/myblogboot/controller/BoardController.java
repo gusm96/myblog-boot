@@ -47,50 +47,32 @@ public class BoardController {
     // 선택한 게시글
     @GetMapping("/api/v1/board/{boardId}")
     public ResponseEntity<BoardResDto> getBoard(@PathVariable Long boardId) {
-        try{
-            BoardResDto board = boardService.getBoard(boardId);
-            return ResponseEntity.ok().body(board);
-        }catch (NoSuchElementException e){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
+        BoardResDto board = boardService.getBoard(boardId);
+        return ResponseEntity.ok().body(board);
     }
 
     // 게시글 작성 Post
     @PostMapping("/api/v1/management/board")
     public ResponseEntity<Long> postBoard(@RequestBody @Valid BoardReqDto boardReqDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String adminName = authentication.getPrincipal().toString();
-        try {
-            Long boardId = boardService.uploadBoard(boardReqDto, adminName);
-            return ResponseEntity.ok().body(boardId);
-        } catch (NoResultException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        } catch (ExpiredTokenException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 만료되었습니다.");
-        }
+        String username = authentication.getPrincipal().toString();
+        Long boardId = boardService.uploadBoard(boardReqDto, username);
+        return ResponseEntity.ok().body(boardId);
     }
 
     // 게시글 수정
     @PutMapping("/api/v1/management/board/{boardId}")
     public ResponseEntity<Long> editBoard(@PathVariable("boardId") Long boardId, @RequestBody @Valid BoardReqDto boardReqDto) {
-        try {
-            Long result = boardService.editBoard(boardId, boardReqDto);
-            return ResponseEntity.ok().body(result);
-        }catch (NoResultException e){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
+        Long result = boardService.editBoard(boardId, boardReqDto);
+        return ResponseEntity.ok().body(result);
     }
 
     // 게시글 삭제
     @DeleteMapping("/api/v1/management/board/{boardId}")
     public ResponseEntity<Boolean> deleteBoard(@PathVariable("boardId") Long boardId) {
         // boardId 로 삭제 Service Logic 처리 후 결과 return
-        try{
-            boolean result = boardService.deleteBoard(boardId);
-            return ResponseEntity.ok().body(result);
-        }catch (NoResultException e){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
+        boolean result = boardService.deleteBoard(boardId);
+        return ResponseEntity.ok().body(result);
     }
 
     // 게시글 검색 기능 추가

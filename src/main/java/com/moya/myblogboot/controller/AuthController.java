@@ -10,6 +10,7 @@ import jakarta.persistence.NoResultException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,8 +35,8 @@ public class AuthController {
     // 로그인
     @PostMapping("/api/v1/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginReqDto loginReqDto) {
-        Token token = authService.memberLogin(loginReqDto.getUsername(), loginReqDto.getPassword());
-        return ResponseEntity.ok().body(token);
+        String accessToken = authService.memberLogin(loginReqDto.getUsername(), loginReqDto.getPassword());
+        return ResponseEntity.ok().body(accessToken);
     }
 
     // 로그아웃
@@ -43,14 +44,7 @@ public class AuthController {
     public ResponseEntity<?> logout() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getPrincipal().toString();
-        String role =  authentication.getAuthorities().iterator().next().getAuthority();
-        TokenUserType userType = role.equals("ADMIN") ? TokenUserType.ADMIN : TokenUserType.GUEST;
-        try {
-            String result = authService.logout(username, userType);
-            return ResponseEntity.ok().body(result);
-        } catch (NoResultException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
-        }
+        return ResponseEntity.ok().body(authService.logout(username));
     }
 
 
@@ -61,7 +55,7 @@ public class AuthController {
         String token = request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
         try {
             // Token 유효성 검사.
-            return ResponseEntity.ok().body(authService.tokenIsExpired(token));
+            return ResponseEntity.ok().body("으악");
         } catch (ExpiredTokenException | NoResultException e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
         }
@@ -69,13 +63,8 @@ public class AuthController {
 
     // Access Token 재발급
     @PostMapping("/api/v1/reissuing-token")
-    public ResponseEntity<?> reissuingAccessToken (@RequestBody @Valid String refresh_token){
-        String token = refresh_token.split(" ")[1];
-        try{
-            String newAccessToken = authService.reissuingAccessToken(token);
-            return ResponseEntity.status(HttpStatus.CREATED).body(newAccessToken);
-        }catch (ExpiredTokenException | NoResultException e){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
-        }
+    public ResponseEntity<?> reissuingAccessToken (@RequestBody @Valid String username){
+        String newToken = authService.reissuingAccessToken(username);
+        return ResponseEntity.ok().body(newToken);
     }
 }

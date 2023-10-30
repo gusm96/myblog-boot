@@ -59,7 +59,7 @@ public class JwtFilter extends OncePerRequestFilter {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 유효하지 않습니다.");
             return;
         } catch (ExpiredTokenException e){
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 만료되었습니다.");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 만료되었습니다. JwtFilter 에용");
             return;
         }
 
@@ -68,7 +68,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String username = tokenInfo.getName();
 
         // 권한 지정
-        String role = tokenInfo.getType() == TokenUserType.ADMIN ? "ROLE_ADMIN" : "ROLE_GUEST";
+        String role = tokenInfo.getRole().equals("ADMIN") ? "ROLE_ADMIN" : "ROLE_NORMAL";
         log.info("Username : {}", username);
         log.info("Role : {}", role);
 

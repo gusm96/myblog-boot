@@ -27,7 +27,7 @@ public class InitDb {
         String roleAdmin = initService.initRole("ADMIN");
         String roleNormal = initService.initRole("NORMAL");
         Role role = roleRepository.findOne(roleAdmin).get();
-        String username = initService.initAdminMember("moya", "moya1343", "Moya", role);
+        String username = initService.initAdminMember("moyada123", "moyada123", "Moya", role);
 
         Long categoryId1 = initService.initCategory("Java");
         Long categoryId2 = initService.initCategory("Python");

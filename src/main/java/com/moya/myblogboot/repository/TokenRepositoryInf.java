@@ -8,9 +8,7 @@ import java.util.Optional;
 public interface TokenRepositoryInf {
     void save(RefreshToken token);
 
-    Optional<RefreshToken> findOne(String refresh_token);
-
-    Optional<RefreshToken> findByNmaeAndUserType(String username, TokenUserType tokenUserType);
+    Optional<RefreshToken> findOne(String username);
 
     void delete(RefreshToken token);
 }

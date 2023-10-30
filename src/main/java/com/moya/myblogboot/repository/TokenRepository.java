@@ -20,33 +20,18 @@ public class TokenRepository implements TokenRepositoryInf {
     }
 
     @Override
-    public Optional<RefreshToken> findOne(String refresh_token) {
+    public Optional<RefreshToken> findOne(String username) {
         try{
             RefreshToken token = em.createQuery(
-                            "select t from RefreshToken t where t.token =: refresh_token",
+                            "select t from RefreshToken t where t.username =: username",
                             RefreshToken.class)
-                    .setParameter("refresh_token", refresh_token)
+                    .setParameter("username", username)
                     .getSingleResult();
             return Optional.of(token);
         }catch (NoResultException e){
             return Optional.empty();
         }
     }
-
-    @Override
-    public Optional<RefreshToken> findByNmaeAndUserType(String username, TokenUserType tokenUserType) {
-        try{
-            RefreshToken token = em.createQuery("select t from RefreshToken t " +
-                            "where t.username =: username and t.tokenUserType =: tokenUserType", RefreshToken.class)
-                    .setParameter("usersname", username)
-                    .setParameter("tokenUserType", tokenUserType)
-                    .getSingleResult();
-            return Optional.of(token);
-        }catch (NoResultException e){
-            return Optional.empty();
-        }
-    }
-
     @Override
     public void delete(RefreshToken token) {
         em.remove(token);

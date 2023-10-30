@@ -8,11 +8,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TokenInfo {
     private String name;
-    private TokenUserType type;
+    private String role;
 
     @Builder
-    public TokenInfo(String name, TokenUserType type) {
+    public TokenInfo(String name, String role) {
         this.name = name;
-        this.type = type;
+        this.role = role;
     }
 }
