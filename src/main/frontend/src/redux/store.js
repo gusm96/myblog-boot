@@ -1,8 +1,5 @@
-import {
-  combineReducers,
-  configureStore,
-  getDefaultMiddleware,
-} from "@reduxjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import logger from "redux-logger";
 import storage from "redux-persist/lib/storage";
 import persistReducer from "redux-persist/es/persistReducer";
 import persistStore from "redux-persist/es/persistStore";
@@ -20,17 +17,16 @@ const persistConfig = {
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-const customizedMiddleware = getDefaultMiddleware({
-  thunk: true,
-  immutableCheck: true,
-  serializableCheck: {
-    ignoredActions: ["persist/PERSIST"],
-  },
-});
-
 const store = configureStore({
   reducer: persistedReducer,
-  middleware: customizedMiddleware,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      thunk: true,
+      immutableCheck: true,
+      serializableCheck: {
+        ignoreActions: ["persist/PERSIST"],
+      },
+    }).concat(logger),
 });
 
 const persistor = persistStore(store);

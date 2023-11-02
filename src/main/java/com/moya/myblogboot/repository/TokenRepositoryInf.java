@@ -1,7 +1,6 @@
 package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.token.RefreshToken;
-import com.moya.myblogboot.domain.token.TokenUserType;
 
 import java.util.Optional;
 

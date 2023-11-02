@@ -2,7 +2,6 @@ package com.moya.myblogboot.utils;
 
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.domain.token.TokenInfo;
-import com.moya.myblogboot.domain.token.TokenUserType;
 import com.moya.myblogboot.exception.ExpiredTokenException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -27,13 +26,12 @@ public class JwtUtil {
 
     // Token 만료
     public static boolean isExpired(String token, String secret) {
-        boolean result = false;
         try{
-            result = Jwts.parser().setSigningKey(secret).parseClaimsJws(token)
+            Jwts.parser().setSigningKey(secret).parseClaimsJws(token)
                     .getBody().getExpiration().before(new Date());
-            return result;
+            return false;
         }catch (ExpiredJwtException e){
-            throw new ExpiredTokenException("토큰이 만료되었습니다.");
+            return true;
         }
     }
     // Token 생성

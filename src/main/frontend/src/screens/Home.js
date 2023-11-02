@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Container } from "../components/Styles/Container/Container.style";
-import { Header, MainHeader } from "../components/Styles/Header/Header.style";
-import axios from "axios";
 import BoardList from "../components/Boards/BoardList";
 import { useSearchParams } from "react-router-dom";
-import { BOARD_LIST } from "../apiConfig";
+import { getBoardList } from "../services/boardApi";
 const Home = () => {
   const [boards, setBoards] = useState([]);
   const [pageCount, setPageCount] = useState("");
   const [page] = useSearchParams("p");
   useEffect(() => {
-    axios
-      .get(`${BOARD_LIST}?${page}`)
-      .then((res) => res.data)
+    getBoardList(page)
       .then((data) => {
         setBoards(data.list);
         setPageCount(data.pageCount);

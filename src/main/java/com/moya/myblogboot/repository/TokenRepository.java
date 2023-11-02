@@ -1,7 +1,6 @@
 package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.token.RefreshToken;
-import com.moya.myblogboot.domain.token.TokenUserType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;

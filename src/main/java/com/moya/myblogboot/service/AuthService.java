@@ -1,5 +1,6 @@
 package com.moya.myblogboot.service;
 
+import com.moya.myblogboot.domain.member.LoginReqDto;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.member.Role;
@@ -12,6 +13,7 @@ import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.repository.RoleRepository;
 import com.moya.myblogboot.repository.TokenRepository;
 import com.moya.myblogboot.utils.JwtUtil;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,16 +45,18 @@ public class AuthService {
 
     // 회원 가입
     @Transactional
-    public void memberJoin (MemberJoinReqDto memberJoinReqDto){
+    public String memberJoin (MemberJoinReqDto memberJoinReqDto){
         // 아이디 중복 체크
         validateUsername(memberJoinReqDto.getUsername());
         // 비밀번호 암호화
         memberJoinReqDto.passwordEncode(passwordEncoder.encode(memberJoinReqDto.getPassword()));
+        // Dto 객체 Entity화
         Member newMember = memberJoinReqDto.toEntity();
         // 일반호원 권한 등록
         addNormalRoleToMember(newMember);
         // 회원 Persist
         memberRepository.save(newMember);
+        return "회원가입을 축하드립니다.";
     }
     // 일반회원 권한 등록
     private void addNormalRoleToMember(Member newMember) {
@@ -71,25 +75,23 @@ public class AuthService {
     }
 
     // 회원 로그인
-    public String memberLogin(String username, String password) {
+    public Token memberLogin(LoginReqDto loginReqDto) {
         // username으로 회원 찾기
-        Member findMember = memberRepository.findOne(username).orElseThrow(()
+        Member findMember = memberRepository.findOne(loginReqDto.getUsername()).orElseThrow(()
                 -> new UsernameNotFoundException("존재하지 않는 아이디 입니다."));
         // password 비교
-        if (!passwordEncoder.matches(password, findMember.getPassword())) {
-            // 일치하지 않음
-            throw new BadCredentialsException("비밀번호를 확인하세요.");
-        }
-        Role role = findMember.getRole();
-        // Token 생성
-        Token newToken = createToken(findMember.getUsername(), role.getRoleName());
-        // DB에 RefreshToken 저장
-        saveRefreshToken(newToken.getRefresh_token(), findMember.getUsername(), role.getRoleName());
+        if (!passwordEncoder.matches(loginReqDto.getPassword(), findMember.getPassword()))
+            throw new BadCredentialsException("비밀번호가 일치하지 않습니다..");
 
-        return newToken.getAccess_token();
+        String role = findMember.getRole().getRoleName();
+        // Token 생성
+        Token newToken = createToken(findMember.getUsername(), role);
+        // DB에 RefreshToken 저장
+        saveRefreshToken(newToken.getRefresh_token(), findMember.getUsername(), role);
+        // Response용 Dto로 생성하여
+        return newToken;
     }
 
-    //
     // Refresh Token 저장
     @Transactional
     public void saveRefreshToken(String token,String username, String roleName){
@@ -114,31 +116,26 @@ public class AuthService {
                 -> new InvalidateTokenException("존재하지 않는 토큰입니다."));
     }
 
-    private boolean tokenIsExpired(String token) {
-        return JwtUtil.isExpired(token, secret);
+    private void  tokenIsExpired(String token) {
+        if(JwtUtil.isExpired(token, secret))
+            throw new ExpiredTokenException("만료된 토큰입니다.");
     }
+
     private Token createToken(String username, String roleName) {
         return JwtUtil.createToken(username, roleName, secret, accessTokenExpiration, refreshTokenExpiration);
     }
 
     @Transactional
     public String logout(String username) {
+        System.out.println(username);
         RefreshToken findRefreshToken = getFindRefreshToken(username);
-        if (!tokenIsExpired(findRefreshToken.getToken())) {
-            // JWT token 만료 시키기
-        }
         tokenRepository.delete(findRefreshToken);
         return "로그아웃 완료";
     }
 
-    // 토큰 재발급
-    public String getAccessTokenFromRefreshToken(){
-        String newToken = "";
-            // 1. Access Token이 만료되었을 경우 해당 코드를 실행한다. if accessTokenIsExpired -> ()
-            // 2. Refresh Token을 DB에서 찾는다. username으로.
-            // 3. 찾아온 Refresh Token을 검증한다.
-            // 4. Refresh Token으로 Access Token 재발급.
-            // 5. Refresh Token이 만료되었으면, 강제 로그아웃 반환.
-        return newToken;
+    public String validateTokenAndExtractRole(String accessToken) {
+        // 토큰 유효성 검증
+        tokenIsExpired(accessToken);
+        return JwtUtil.getTokenInfo(accessToken, secret).getRole();
     }
 }

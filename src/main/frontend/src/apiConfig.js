@@ -18,17 +18,14 @@ export const COMMENT_CUD = `${BASE_URL}/api/v1/comment`;
 // 댓글 리스트
 export const COMMENT_LIST = `${BASE_URL}/api/v1/comments`;
 
-// 게스트 등록
-export const GUEST_REG = `${BASE_URL}/api/v1/guest`;
-// 게스트 로그인
-export const GUEST_LOGIN = `${BASE_URL}/api/v1/login/guest`;
-
-// 관리자 로그인
-export const ADMIN_LOGIN = `${BASE_URL}/api/v1/login/admin`;
-// 관리자 로그아웃
-export const ADMIN_LOGOUT = `${BASE_URL}/api/v1/logout/admin`;
-
 // 토큰 유효 검증
 export const TOKEN_VALIDATION = `${BASE_URL}/api/v1/token-validation`;
 // 토큰 재발급
 export const REISSUING_TOKEN = `${BASE_URL}/api/v1/reissuing-token`;
+// 토큰 Role 정보 확인
+export const TOKEN_ROLE = `${BASE_URL}/api/v1/token-role`;
+
+// 멤버 로그인
+export const MEMBER_LOGIN = `${BASE_URL}/api/v1/login`;
+// 멤버 로그아웃
+export const MEMBER_LOGOUT = `${BASE_URL}/api/v1/logout`;

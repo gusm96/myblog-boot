@@ -1,7 +1,6 @@
 package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.domain.token.TokenInfo;
-import com.moya.myblogboot.domain.token.TokenUserType;
 import com.moya.myblogboot.exception.ExpiredTokenException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.JwtUtil;
@@ -88,6 +87,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String[] excludePath = {
                 "/api/v1/join",
                 "/api/v1/login",
+                "/api/v1/logout",
                 "/api/v1/boards",
                 "/api/v1/boards/search",
                 "/api/v1/board",

@@ -9,7 +9,6 @@ import {
   ModalTitle,
 } from "react-bootstrap";
 import { COMMENT_CUD } from "../../apiConfig";
-import { LoginForm } from "../Guest/LoginForm";
 
 export const Comment = () => {
   const [sessionData, setSessionData] = useState(null);
@@ -117,9 +116,7 @@ export const Comment = () => {
         <ModalHeader closeButton>
           <ModalTitle>로그인</ModalTitle>
         </ModalHeader>
-        <ModalBody>
-          <LoginForm />
-        </ModalBody>
+        <ModalBody></ModalBody>
         <ModalFooter>회원가입</ModalFooter>
       </Modal>
     </div>
