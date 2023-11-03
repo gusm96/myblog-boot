@@ -64,8 +64,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // Token에 저장된 정보
         TokenInfo tokenInfo = JwtUtil.getTokenInfo(token, secret);
-        String username = tokenInfo.getName();
-
+        String username = tokenInfo.getUsername();
         // 권한 지정
         String role = tokenInfo.getRole().equals("ADMIN") ? "ROLE_ADMIN" : "ROLE_NORMAL";
         log.info("Username : {}", username);
@@ -94,6 +93,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 "/api/v1/categories",
                 "/api/v1/comment",
                 "/api/v1/comments",
+                "/api/v1/reissuing-token"
         };
 
         String path = request.getRequestURI();

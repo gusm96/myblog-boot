@@ -1,21 +1,33 @@
-import { useSelector } from "react-redux";
-import Redirect from "../Redirect";
+import { useDispatch, useSelector } from "react-redux";
 import { selectAccessToken, selectIsLoggedIn } from "../../redux/userSlice";
 import { getRoleFromToken } from "../../services/authApi";
 import { useState } from "react";
 import { Col, Container, Row } from "react-bootstrap";
 import { AdminNavBar } from "../Navbar/AdminNavBar";
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useCookies } from "react-cookie";
 
 export const ProtectedRoute = () => {
   const [role, setRole] = useState(null);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const accessToken = useSelector(selectAccessToken);
+  const [cookie, setCookie, removeCookie] = useCookies(["refresh_token"]);
+
+  const dispatch = useDispatch();
+  const location = useLocation();
   if (isLoggedIn) {
-    getRoleFromToken(accessToken).then((data) => setRole(data));
+    getRoleFromToken(accessToken)
+      .then((data) => setRole(data))
+      .catch((error) => {
+        if (error.response.data === "토큰이 만료되었습니다.") {
+        }
+      });
   }
-  if (!isLoggedIn || role === "NORMAL") {
-    return <Redirect to="/login" />;
+  if (!isLoggedIn) {
+    return <Navigate to="/login" state={{ from: location }} />;
+  } else if (role === "NORMAL") {
+    alert("접근 권한이 없습니다.");
+    return <Navigate to="/" />;
   }
 
   return (

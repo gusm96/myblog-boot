@@ -2,21 +2,20 @@ import React from "react";
 import { useState } from "react";
 import { useCookies } from "react-cookie";
 import { login } from "../../services/authApi";
-import { Button, Form } from "react-bootstrap";
+import { Button, Form, Nav } from "react-bootstrap";
 import { userLogin } from "../../redux/authAction";
 import { useDispatch } from "react-redux";
-import Redirect from "../../components/Redirect";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export const LoginForm = () => {
-  // 1. if 현재 로그인 상태인가 ?
-  //  경우 1. Token 존재 및 유효
-  // 경우 2. Token 존재, 만료 but refresh Token 유효
-  // 방법 1. Cookie 에 Token이 있다면 Server에 유휴성 검사 요청.
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { from } = location.state || { from: { pathname: "/" } };
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
-  const [cookies, setCookies] = useCookies(["refresh_token"]);
+  const [cookies, setCookies] = useCookies(["refresh_token_idx"]);
 
   const dispatch = useDispatch();
 
@@ -32,10 +31,19 @@ export const LoginForm = () => {
     e.preventDefault();
     await login(formData)
       .then((data) => {
-        setCookies("refresh_token", data.refresh_token, { path: "/" });
+        setCookies("refresh_token_idx", data.refresh_token_idx, { path: "/" });
         dispatch(userLogin(data.access_token));
+        if (from.pathname === "/login") {
+          // 이동하려는 페이지가 로그인 페이지인지 확인
+          navigate("/"); // 로그인 페이지라면 홈페이지로 이동
+        } else {
+          navigate(from); // 로그인 페이지가 아니라면 이전 페이지로 이동
+        }
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        console.log(error);
+        alert(error.response.data);
+      });
   };
 
   return (
@@ -68,6 +76,8 @@ export const LoginForm = () => {
       <Button variant="primary" type="submit">
         로그인
       </Button>
+      <hr></hr>
+      <Nav.Link to="/join">회원가입</Nav.Link>
     </Form>
   );
 };

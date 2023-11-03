@@ -16,10 +16,10 @@ public class JwtUtil {
 
     public static TokenInfo getTokenInfo(String token, String secret) {
         Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
-        String name = claims.get("username", String.class);
+        String username = claims.get("username", String.class);
         String role = claims.get("role", String.class);
         return TokenInfo.builder()
-                .name(name)
+                .username(username)
                 .role(role)
                 .build();
     }

@@ -2,17 +2,14 @@ package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.member.LoginReqDto;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
-import com.moya.myblogboot.exception.ExpiredTokenException;
+import com.moya.myblogboot.domain.token.TokenReqDto;
 import com.moya.myblogboot.service.AuthService;
-import jakarta.persistence.NoResultException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,33 +30,29 @@ public class AuthController {
     }
 
     // 로그아웃
-    @PostMapping("/api/v1/logout")
-    public ResponseEntity<?> logout(@RequestBody @Valid String username) {
-        return ResponseEntity.ok().body(authService.logout(username));
+    @GetMapping("/api/v1/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
+        return ResponseEntity.ok().body(authService.logout(accessToken));
     }
 
     // 토큰 검증
     @GetMapping("/api/v1/token-validation")
     public ResponseEntity<?> accessTokenValidation (HttpServletRequest request) {
-        // Http Header에서 Token 정보를 가져온다.
-        String token = request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
-        try {
-            // Token 유효성 검사.
-            return ResponseEntity.ok().body("으악");
-        } catch (ExpiredTokenException | NoResultException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
-        }
-    }
+        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
+        return ResponseEntity.ok().body(authService.validateToken(accessToken));
 
+    }
+    // 토큰 권한 조회
     @GetMapping("/api/v1/token-role")
     public ResponseEntity<?> getTokenFromRole(HttpServletRequest request){
         String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
         return ResponseEntity.ok().body(authService.validateTokenAndExtractRole(accessToken));
     }
     // Access Token 재발급
-    @PostMapping("/api/v1/token-reissuing")
-    public ResponseEntity<?> reissuingAccessToken (@RequestBody @Valid String username){
-        String newToken = authService.reissuingAccessToken(username);
+    @PostMapping("/api/v1/reissuing-token")
+    public ResponseEntity<?> reissuingAccessToken (@RequestBody @Valid TokenReqDto req){
+        String newToken = authService.reissuingAccessToken(req.getRefreshTokenIdx());
         return ResponseEntity.ok().body(newToken);
     }
 }

@@ -1,16 +1,23 @@
 import React from "react";
-import { Navbar, Container, Nav, Button } from "react-bootstrap";
+import { Navbar, Container, Nav } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { selectIsLoggedIn } from "../../redux/userSlice";
 import { userLogout } from "../../redux/authAction";
+import { useCookies } from "react-cookie";
+import { logout } from "../../services/authApi";
+import { selectAccessToken, selectIsLoggedIn } from "../../redux/userSlice";
 const NavBarElements = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
   const isLoggedIn = useSelector(selectIsLoggedIn);
-  const handleLogout = (e) => {
-    e.preventDefault();
-    dispatch(userLogout());
+  const accessToken = useSelector(selectAccessToken);
+  const [cookies, setCookies, removeCookies] = useCookies([
+    "refresh_token_idx",
+  ]);
+  const dispatch = useDispatch();
+  const handleLogout = () => {
+    if (window.confirm("정말 로그아웃 하시겠습니까?")) {
+      dispatch(userLogout());
+      removeCookies("refresh_token_idx");
+      logout(accessToken);
+    }
   };
 
   return (
@@ -21,9 +28,9 @@ const NavBarElements = () => {
           <Nav.Link href="#">Resume</Nav.Link>
           <Nav.Link href="#">Portfolio</Nav.Link>
           {isLoggedIn ? (
-            <Button variant="primary" onClick={handleLogout}>
-              로그아웃
-            </Button>
+            <Nav.Link href="/" onClick={handleLogout}>
+              Logout
+            </Nav.Link>
           ) : (
             <Nav.Link href="/login">Login</Nav.Link>
           )}

@@ -1,17 +1,50 @@
 import axios from "axios";
-import { MEMBER_LOGIN, TOKEN_ROLE } from "../apiConfig";
+import {
+  MEMBER_JOIN,
+  MEMBER_LOGIN,
+  MEMBER_LOGOUT,
+  REISSUING_TOKEN,
+  TOKEN_ROLE,
+  TOKEN_VALIDATION,
+} from "../apiConfig";
 
-export const login = (formdata) => {
+export const join = (formData) => {
   return axios
-    .post(`${MEMBER_LOGIN}`, {
-      username: formdata.username,
-      password: formdata.password,
+    .post(`${MEMBER_JOIN}`, {
+      username: formData.username,
+      password: formData.password1,
+      nickname: formData.nickname,
     })
     .then((res) => res.data);
 };
 
-export const logout = () => {
-  return;
+export const login = (formData) => {
+  return axios
+    .post(`${MEMBER_LOGIN}`, {
+      username: formData.username,
+      password: formData.password,
+    })
+    .then((res) => res.data);
+};
+
+export const logout = (accessToken) => {
+  return axios
+    .get(`${MEMBER_LOGOUT}`, {
+      headers: {
+        Authorization: `bearer ${accessToken}`,
+      },
+    })
+    .then((res) => res.data);
+};
+
+export const validateAccessToken = (accessToken) => {
+  return axios
+    .get(`${TOKEN_VALIDATION}`, {
+      headers: {
+        Authorization: `bearer ${accessToken}`,
+      },
+    })
+    .then((res) => res.data);
 };
 
 export const getRoleFromToken = (accessToken) => {
@@ -20,6 +53,14 @@ export const getRoleFromToken = (accessToken) => {
       headers: {
         Authorization: `bearer ${accessToken}`,
       },
+    })
+    .then((res) => res.data);
+};
+
+export const reissuingAccessToken = (refreshTokenIdx) => {
+  return axios
+    .post(`${REISSUING_TOKEN}`, {
+      refresh_token_dix: refreshTokenIdx,
     })
     .then((res) => res.data);
 };

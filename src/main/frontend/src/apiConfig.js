@@ -29,3 +29,5 @@ export const TOKEN_ROLE = `${BASE_URL}/api/v1/token-role`;
 export const MEMBER_LOGIN = `${BASE_URL}/api/v1/login`;
 // 멤버 로그아웃
 export const MEMBER_LOGOUT = `${BASE_URL}/api/v1/logout`;
+// 멤버 가입
+export const MEMBER_JOIN = `${BASE_URL}/api/v1/join`;

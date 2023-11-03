@@ -5,9 +5,9 @@ import com.moya.myblogboot.domain.token.RefreshToken;
 import java.util.Optional;
 
 public interface TokenRepositoryInf {
-    void save(RefreshToken token);
+    Long save(RefreshToken token);
 
-    Optional<RefreshToken> findOne(String username);
-
+    Optional<RefreshToken> findRefreshTokenByIndex(Long refresh_token_idx);
+    Optional<RefreshToken> findRefreshTokenByUsername(String username);
     void delete(RefreshToken token);
 }

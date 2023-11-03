@@ -14,15 +14,30 @@ public class TokenRepository implements TokenRepositoryInf {
 
     private final EntityManager em;
     @Override
-    public void save(RefreshToken token) {
+    public Long save(RefreshToken token) {
         em.persist(token);
+        return token.getId();
     }
 
     @Override
-    public Optional<RefreshToken> findOne(String username) {
+    public Optional<RefreshToken> findRefreshTokenByIndex(Long refresh_token_idx) {
         try{
             RefreshToken token = em.createQuery(
-                            "select t from RefreshToken t where t.username =: username",
+                            "select t from RefreshToken t where t.id =: tokenId",
+                            RefreshToken.class)
+                    .setParameter("tokenId", refresh_token_idx)
+                    .getSingleResult();
+            return Optional.of(token);
+        }catch (NoResultException e){
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<RefreshToken> findRefreshTokenByUsername(String username) {
+        try{
+            RefreshToken token = em.createQuery(
+                    "select t from RefreshToken t where t.username =: username",
                             RefreshToken.class)
                     .setParameter("username", username)
                     .getSingleResult();
@@ -31,6 +46,7 @@ public class TokenRepository implements TokenRepositoryInf {
             return Optional.empty();
         }
     }
+
     @Override
     public void delete(RefreshToken token) {
         em.remove(token);
