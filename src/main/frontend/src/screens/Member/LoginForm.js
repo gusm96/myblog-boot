@@ -31,7 +31,10 @@ export const LoginForm = () => {
     e.preventDefault();
     await login(formData)
       .then((data) => {
-        setCookies("refresh_token_idx", data.refresh_token_idx, { path: "/" });
+        setCookies("refresh_token_idx", data.refresh_token_idx, {
+          path: "/",
+          httpOnly: true,
+        });
         dispatch(userLogin(data.access_token));
         if (from.pathname === "/login") {
           // 이동하려는 페이지가 로그인 페이지인지 확인

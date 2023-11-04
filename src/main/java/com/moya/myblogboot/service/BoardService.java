@@ -25,7 +25,7 @@ public class BoardService {
     private final CategoryRepository categoryRepository;
 
     // 페이지별 최대 게시글 수
-    public static final int LIMIT = 5;
+    public static final int LIMIT = 10;
 
     // 모든 게시글 리스트
     public BoardListResDto getBoardList(int page) {

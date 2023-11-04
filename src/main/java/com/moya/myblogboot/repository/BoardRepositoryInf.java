@@ -16,7 +16,6 @@ public interface BoardRepositoryInf {
 
     // 모든 게시글 찾기
     List<Board> findAll(int offset, int limit);
-
     // 게시글 검색
     List<Board> findBySearch(SearchType type, String searchContents, int offset, int limit);
 

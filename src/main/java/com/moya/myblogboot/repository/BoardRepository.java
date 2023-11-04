@@ -34,7 +34,7 @@ public class BoardRepository implements BoardRepositoryInf {
 
     @Override
     public List<Board> findByCategory(String categoryName,int offset, int limit) {
-        List<Board> boards = em.createQuery(
+        return  em.createQuery(
                         "select b from Board b " +
                                 "where b.category.name=:categoryName " +
                                 "order by b.upload_date desc "
@@ -43,17 +43,16 @@ public class BoardRepository implements BoardRepositoryInf {
                 .setFirstResult(offset)
                 .setMaxResults(limit)
                 .getResultList();
-        return boards;
+
     }
 
     @Override
     public List<Board> findAll(int offset, int limit) {
-        List<Board> boards = em.createQuery("select b from Board b order by b.upload_date desc "
+        return em.createQuery("select b from Board b order by b.upload_date desc "
                         , Board.class)
                 .setFirstResult(offset)
                 .setMaxResults(limit)
                 .getResultList();
-        return boards;
     }
 
     @Override
