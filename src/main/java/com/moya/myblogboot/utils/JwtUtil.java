@@ -2,7 +2,6 @@ package com.moya.myblogboot.utils;
 
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.domain.token.TokenInfo;
-import com.moya.myblogboot.exception.ExpiredTokenException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -60,10 +59,10 @@ public class JwtUtil {
     }
 
     // Access Token 재발급
-    public static String reissuingToken(String username, String roleName, String secret, Long accessTokenExpiration) {
+    public static String reissuingToken(TokenInfo tokenInfo, String secret, Long accessTokenExpiration) {
         Claims claims = Jwts.claims();
-        claims.put("username", username);
-        claims.put("role", roleName);
+        claims.put("username", tokenInfo.getUsername());
+        claims.put("role", tokenInfo.getRole());
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date((System.currentTimeMillis())))

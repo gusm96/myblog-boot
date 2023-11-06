@@ -15,7 +15,7 @@ export const LoginForm = () => {
     username: "",
     password: "",
   });
-  const [cookies, setCookies] = useCookies(["refresh_token_idx"]);
+  const [cookies, setCookies] = useCookies(["refresh_token_key"]);
 
   const dispatch = useDispatch();
 
@@ -31,7 +31,7 @@ export const LoginForm = () => {
     e.preventDefault();
     await login(formData)
       .then((data) => {
-        setCookies("refresh_token_idx", data.refresh_token_idx, {
+        setCookies("refresh_token_key", data.refresh_token_key, {
           path: "/",
           httpOnly: true,
         });

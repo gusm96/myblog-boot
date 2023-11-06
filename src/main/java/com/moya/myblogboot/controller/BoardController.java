@@ -1,12 +1,12 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.board.BoardListResDto;
-import com.moya.myblogboot.domain.board.BoardReqDto;
-import com.moya.myblogboot.domain.board.BoardResDto;
-import com.moya.myblogboot.domain.board.SearchType;
+import com.moya.myblogboot.domain.board.*;
+import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,11 +17,11 @@ import org.springframework.web.bind.annotation.*;
 public class BoardController {
 
     private final BoardService boardService;
-
+    private final AuthService authService;
     // 모든 게시글 리스트
     @GetMapping("/api/v1/boards")
     public ResponseEntity<BoardListResDto> getAllBoards(@RequestParam(name = "p", defaultValue = "1") int page) {
-        return ResponseEntity.ok().body(boardService.getBoardList(page));
+        return ResponseEntity.ok().body(boardService.retrieveBoardList(page));
     }
 
     // 카테고리별 게시글 리스트
@@ -30,13 +30,13 @@ public class BoardController {
             @PathVariable("category") String category,
             @RequestParam(name = "p", defaultValue = "1") int page
     ) {
-        return ResponseEntity.ok().body(boardService.getBoardsByCategory(category, page));
+        return ResponseEntity.ok().body(boardService.retrieveBoardListByCategory(category, page));
     }
 
     // 선택한 게시글
     @GetMapping("/api/v1/board/{boardId}")
     public ResponseEntity<BoardResDto> getBoard(@PathVariable Long boardId) {
-        return ResponseEntity.ok().body(boardService.getBoard(boardId));
+        return ResponseEntity.ok().body(boardService.retrieveBoardResponseById(boardId));
     }
 
     // 게시글 작성 Post
@@ -66,8 +66,14 @@ public class BoardController {
                                                         @RequestParam("contents") String searchContents,
                                                         @RequestParam(name = "p", defaultValue = "1") int page
     ) {
-        return ResponseEntity.ok().body(boardService.getBoardsBySearch(searchType, searchContents, page));
+        return ResponseEntity.ok().body(boardService.retrieveBoardListBySearch(searchType, searchContents, page));
     }
 
     // 게시글 좋아요 기능
+    @PostMapping("/api/v1/board-like")
+    public ResponseEntity<?> likeBoard(HttpServletRequest request, @RequestBody @Valid BoardLikeReqDto boardLikeReqDto){
+        String token = request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
+        String username = authService.getTokenInfo(token).getUsername();
+        return ResponseEntity.ok().body(boardService.addLikeToBoard(username, boardLikeReqDto.getBoardIdx()));
+    }
 }

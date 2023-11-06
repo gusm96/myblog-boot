@@ -19,7 +19,7 @@ public class CommentService {
     private final BoardService boardService;
     @Transactional
     public String writeComment(CommentReqDTO commentReqDTO) {
-        Board board = boardService.findBoard(commentReqDTO.getBoard_id());
+        Board board = boardService.retrieveBoardById(commentReqDTO.getBoard_id());
         Comment comment = commentReqDTO.toEntity(board);
         if (commentReqDTO.getParent_id() != null) {
             Comment parent = findComment(commentReqDTO.getParent_id());

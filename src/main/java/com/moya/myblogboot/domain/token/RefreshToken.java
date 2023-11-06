@@ -1,32 +1,27 @@
 package com.moya.myblogboot.domain.token;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.TimeToLive;
+import org.springframework.data.redis.core.index.Indexed;
 
-@Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "token")
+@Builder
+@AllArgsConstructor
+@RedisHash(value = "refreshToken")
 public class RefreshToken {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String token;
-
-    @Column(nullable = false)
+    @Indexed
     private String username;
 
-    @Column(name = "token_role", nullable = false)
-    private String tokenRole;
+    private String tokenValue;
 
-    @Builder
-    public RefreshToken(String token, String username, String tokenRole) {
-        this.token = token;
-        this.username = username;
-        this.tokenRole = tokenRole;
-    }
+    @TimeToLive
+    private Long expiration;
 }

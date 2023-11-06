@@ -57,10 +57,8 @@ export const getRoleFromToken = (accessToken) => {
     .then((res) => res.data);
 };
 
-export const reissuingAccessToken = (refreshTokenIdx) => {
+export const reissuingAccessToken = () => {
   return axios
-    .post(`${REISSUING_TOKEN}`, {
-      refresh_token_dix: refreshTokenIdx,
-    })
+    .get(`${REISSUING_TOKEN}`, { withCredentials: true })
     .then((res) => res.data);
 };

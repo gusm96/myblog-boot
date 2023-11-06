@@ -52,4 +52,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleNoSuchElementException (NoSuchElementException e){
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
+
+    @ExceptionHandler(BoardNotFoundException.class)
+    public ResponseEntity<?> handleBoardNotFoundException (BoardNotFoundException e){
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
 }

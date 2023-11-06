@@ -24,21 +24,21 @@ export default App;
 function App() {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const access_token = useSelector(selectAccessToken);
-  const [cookies, setCookie, removeCookie] = useCookies(["refresh_token_idx"]);
+  const [cookies, setCookie, removeCookie] = useCookies(["refresh_token_key"]);
   const dispatch = useDispatch();
   useEffect(() => {
     // 로그인 상태면 access Token 주기적으로 검증.
     if (isLoggedIn && access_token !== null) {
       validateAccessToken(access_token).catch((error) => {
         if (error.response.status === 401) {
-          reissuingAccessToken(cookies.refresh_token_idx)
+          reissuingAccessToken()
             .then((data) => {
               dispatch(updateAccessToken(data));
             })
             .catch((error) => {
               if (error.response.status === 401) {
                 // refresh Token 만료
-                removeCookie("refresh_token_idx");
+                removeCookie("refresh_token_key");
                 dispatch(userLogout());
               }
             });

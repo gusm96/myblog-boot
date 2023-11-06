@@ -1,14 +1,11 @@
 package com.moya.myblogboot.domain.token;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class TokenReqDto {
-    private Long refreshTokenIdx;
+    private Long refreshTokenKey;
 }

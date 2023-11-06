@@ -50,9 +50,11 @@ public class AuthController {
         return ResponseEntity.ok().body(authService.validateTokenAndExtractRole(accessToken));
     }
     // Access Token 재발급
-    @PostMapping("/api/v1/reissuing-token")
-    public ResponseEntity<?> reissuingAccessToken (@RequestBody @Valid TokenReqDto req){
-        String newToken = authService.reissuingAccessToken(req.getRefreshTokenIdx());
+    @GetMapping("/api/v1/reissuing-token")
+    public ResponseEntity<?> reissuingAccessToken (@CookieValue("refresh_token_key") String refreshTokenKey){
+        System.out.println("test");
+        System.out.println(refreshTokenKey);
+        String newToken = authService.reissuingAccessToken(Long.parseLong(refreshTokenKey));
         return ResponseEntity.ok().body(newToken);
     }
 }
