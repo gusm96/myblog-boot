@@ -20,19 +20,23 @@ export const join = (formData) => {
 
 export const login = (formData) => {
   return axios
-    .post(`${MEMBER_LOGIN}`, {
-      username: formData.username,
-      password: formData.password,
-    })
+    .post(
+      `${MEMBER_LOGIN}`,
+      {
+        username: formData.username,
+        password: formData.password,
+      },
+      {
+        withCredentials: true,
+      }
+    )
     .then((res) => res.data);
 };
 
-export const logout = (accessToken) => {
+export const logout = () => {
   return axios
     .get(`${MEMBER_LOGOUT}`, {
-      headers: {
-        Authorization: `bearer ${accessToken}`,
-      },
+      withCredentials: true,
     })
     .then((res) => res.data);
 };

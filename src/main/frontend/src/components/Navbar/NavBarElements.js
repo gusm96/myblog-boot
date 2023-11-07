@@ -2,21 +2,16 @@ import React from "react";
 import { Navbar, Container, Nav } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { userLogout } from "../../redux/authAction";
-import { useCookies } from "react-cookie";
 import { logout } from "../../services/authApi";
-import { selectAccessToken, selectIsLoggedIn } from "../../redux/userSlice";
+import { selectIsLoggedIn } from "../../redux/userSlice";
 const NavBarElements = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
-  const accessToken = useSelector(selectAccessToken);
-  const [cookies, setCookies, removeCookies] = useCookies([
-    "refresh_token_key",
-  ]);
+
   const dispatch = useDispatch();
   const handleLogout = () => {
     if (window.confirm("정말 로그아웃 하시겠습니까?")) {
       dispatch(userLogout());
-      removeCookies("refresh_token_key");
-      logout(accessToken);
+      logout();
     }
   };
 

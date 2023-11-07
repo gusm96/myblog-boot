@@ -103,10 +103,6 @@ public class AuthService {
         return JwtUtil.reissuingToken(getTokenInfo(findRefreshToken.getTokenValue()), secret, accessTokenExpiration);
     }
 
-    private RefreshToken retrieveRefreshTokenByUsername(String username) {
-        return refreshTokenRedisRepository.findByUsername(username).orElseThrow(()
-                -> new InvalidateTokenException("존재하지 않는 토큰입니다."));
-    }
     private RefreshToken retrieveRefreshTokenById (Long id) {
         return refreshTokenRedisRepository.findById(id).orElseThrow(()
                 -> new InvalidateTokenException("존재하지 않는 토큰입니다."));
@@ -122,15 +118,13 @@ public class AuthService {
     }
 
     @Transactional
-    public String logout(String accessToken) {
-        TokenInfo tokenInfo = getTokenInfo(accessToken);
-        RefreshToken refreshToken = retrieveRefreshTokenByUsername(tokenInfo.getUsername());
+    public void logout(Long refreshTokenKey) {
+        RefreshToken refreshToken = retrieveRefreshTokenById(refreshTokenKey);
         refreshTokenRedisRepository.delete(refreshToken);
-        return "로그아웃 완료";
     }
 
-    public TokenInfo getTokenInfo(String accessToken) {
-        return JwtUtil.getTokenInfo(accessToken, secret);
+    public TokenInfo getTokenInfo(String token) {
+        return JwtUtil.getTokenInfo(token, secret);
     }
 
     public String validateTokenAndExtractRole(String accessToken) {

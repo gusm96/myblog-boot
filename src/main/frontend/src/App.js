@@ -8,15 +8,10 @@ import { UserLayout } from "./components/Layout/UserLayout";
 import { ProtectedRoute } from "./components/Layout/ProtectedRoute";
 import { LoginForm } from "./screens/Member/LoginForm";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  selectAccessToken,
-  selectIsLoggedIn,
-  updateAccessToken,
-} from "./redux/userSlice";
+import { selectAccessToken, selectIsLoggedIn } from "./redux/userSlice";
 import { useEffect } from "react";
 import { reissuingAccessToken, validateAccessToken } from "./services/authApi";
-import { useCookies } from "react-cookie";
-import { userLogout } from "./redux/authAction";
+import { updateUserAccessToken, userLogout } from "./redux/authAction";
 import { JoinForm } from "./screens/Member/JoinForm";
 
 export default App;
@@ -24,7 +19,6 @@ export default App;
 function App() {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const access_token = useSelector(selectAccessToken);
-  const [cookies, setCookie, removeCookie] = useCookies(["refresh_token_key"]);
   const dispatch = useDispatch();
   useEffect(() => {
     // 로그인 상태면 access Token 주기적으로 검증.
@@ -33,19 +27,18 @@ function App() {
         if (error.response.status === 401) {
           reissuingAccessToken()
             .then((data) => {
-              dispatch(updateAccessToken(data));
+              dispatch(updateUserAccessToken(data));
             })
             .catch((error) => {
               if (error.response.status === 401) {
-                // refresh Token 만료
-                removeCookie("refresh_token_key");
+                // Server에 Logout 요청.
                 dispatch(userLogout());
               }
             });
         }
       });
     }
-  }, [isLoggedIn, access_token, cookies, dispatch, removeCookie]);
+  }, [isLoggedIn, access_token, dispatch]);
 
   return (
     <Router>

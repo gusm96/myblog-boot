@@ -1,6 +1,5 @@
 import React from "react";
 import { useState } from "react";
-import { useCookies } from "react-cookie";
 import { login } from "../../services/authApi";
 import { Button, Form, Nav } from "react-bootstrap";
 import { userLogin } from "../../redux/authAction";
@@ -15,7 +14,6 @@ export const LoginForm = () => {
     username: "",
     password: "",
   });
-  const [cookies, setCookies] = useCookies(["refresh_token_key"]);
 
   const dispatch = useDispatch();
 
@@ -31,11 +29,7 @@ export const LoginForm = () => {
     e.preventDefault();
     await login(formData)
       .then((data) => {
-        setCookies("refresh_token_key", data.refresh_token_key, {
-          path: "/",
-          httpOnly: true,
-        });
-        dispatch(userLogin(data.access_token));
+        dispatch(userLogin(data));
         if (from.pathname === "/login") {
           // 이동하려는 페이지가 로그인 페이지인지 확인
           navigate("/"); // 로그인 페이지라면 홈페이지로 이동

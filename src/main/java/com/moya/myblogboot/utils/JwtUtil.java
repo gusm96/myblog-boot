@@ -48,7 +48,7 @@ public class JwtUtil {
         String refreshToken = Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date((System.currentTimeMillis())))
-                .setExpiration(new Date(refreshTokenExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() +refreshTokenExpiration))
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
 
