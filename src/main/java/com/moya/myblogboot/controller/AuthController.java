@@ -3,6 +3,7 @@ package com.moya.myblogboot.controller;
 import com.moya.myblogboot.domain.member.LoginReqDto;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.token.TokenResDto;
+import com.moya.myblogboot.exception.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.CookieUtil;
@@ -64,9 +65,9 @@ public class AuthController {
     // Access Token 재발급
     @GetMapping("/api/v1/reissuing-token")
     public ResponseEntity<?> reissuingAccessToken (HttpServletRequest request){
-        Cookie cookie = CookieUtil.findCookie(request, "refresh_token_key");
-        if(cookie == null)
+        Cookie refreshTokenCookie = CookieUtil.findCookie(request, "refresh_token_key");
+        if(refreshTokenCookie == null)
             throw new InvalidateTokenException("토큰이 존재하지 않습니다.");
-        return ResponseEntity.ok().body(authService.reissuingAccessToken(Long.parseLong(cookie.getValue())));
+        return ResponseEntity.ok().body(authService.reissuingAccessToken(Long.parseLong(refreshTokenCookie.getValue())));
     }
 }

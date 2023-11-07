@@ -38,7 +38,7 @@ export const logout = () => {
     .get(`${MEMBER_LOGOUT}`, {
       withCredentials: true,
     })
-    .then((res) => res.data);
+    .catch((error) => console.log(error));
 };
 
 export const validateAccessToken = (accessToken) => {

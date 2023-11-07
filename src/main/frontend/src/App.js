@@ -13,6 +13,7 @@ import { useEffect } from "react";
 import { reissuingAccessToken, validateAccessToken } from "./services/authApi";
 import { updateUserAccessToken, userLogout } from "./redux/authAction";
 import { JoinForm } from "./screens/Member/JoinForm";
+import { NotFound } from "./screens/error/NotFound";
 
 export default App;
 
@@ -31,7 +32,7 @@ function App() {
             })
             .catch((error) => {
               if (error.response.status === 401) {
-                // Server에 Logout 요청.
+                alert("토큰이 만료되어 로그아웃 합니다.");
                 dispatch(userLogout());
               }
             });
@@ -44,23 +45,22 @@ function App() {
     <Router>
       <Routes>
         {/* 일반 사용자 전용 페이지 */}
-        <Route element={<UserLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/boards" element={<Home />} />
-          <Route path="/:categoryName" />
-          <Route path="/board/:boardId" element={<BoardDetail />} />
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/join" element={<JoinForm />} />
+        <Route path="/" element={<UserLayout />}>
+          <Route index element={<Home />} />
+          <Route path="boards" element={<Home />} />
+          {/* <Route path=":categoryName" /> */}
+          <Route path="board/:boardId" element={<BoardDetail />} />
+          <Route path="login" element={<LoginForm />} />
+          <Route path="join" element={<JoinForm />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
 
         {/* 관리자 전용 페이지 */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/management" element={<Management />} />
-          <Route path="/management/new-post" element={<BoardForm />} />
-          <Route
-            path="/management/boards/:boardId"
-            element={<BoardEditForm />}
-          />
+        <Route path="/management" element={<ProtectedRoute />}>
+          <Route index element={<Management />} />
+          <Route path="new-post" element={<BoardForm />} />
+          <Route path="boards/:boardId" element={<BoardEditForm />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </Router>

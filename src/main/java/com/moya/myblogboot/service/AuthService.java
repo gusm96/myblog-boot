@@ -6,6 +6,7 @@ import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.member.Role;
 import com.moya.myblogboot.domain.token.*;
 import com.moya.myblogboot.exception.DuplicateUsernameException;
+import com.moya.myblogboot.exception.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.ExpiredTokenException;
 import com.moya.myblogboot.exception.InvalidateTokenException;
 import com.moya.myblogboot.repository.MemberRepository;
@@ -67,7 +68,6 @@ public class AuthService {
     private void validateUsername(String username) {
         Optional<Member> findMember = memberRepository.findOne(username);
         if (findMember.isPresent()){
-            // 아이디 중복
             throw new DuplicateUsernameException("이미 존재하는 회원입니다.");
         }
     }
@@ -98,7 +98,12 @@ public class AuthService {
         // Refresh Token 찾는다.
         RefreshToken findRefreshToken = retrieveRefreshTokenById(refreshTokenKey);
         // Refresh Token 검증.
-        tokenIsExpired(findRefreshToken.getTokenValue());
+        try{
+            tokenIsExpired(findRefreshToken.getTokenValue());
+        }catch (ExpiredTokenException e){
+            refreshTokenRedisRepository.delete(findRefreshToken);
+            throw new ExpiredRefreshTokenException("토큰이 만료되었습니다.");
+        }
         // Access Token 재발급
         return JwtUtil.reissuingToken(getTokenInfo(findRefreshToken.getTokenValue()), secret, accessTokenExpiration);
     }

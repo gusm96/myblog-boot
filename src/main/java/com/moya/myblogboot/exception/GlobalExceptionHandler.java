@@ -1,5 +1,9 @@
 package com.moya.myblogboot.exception;
 
+import com.moya.myblogboot.utils.CookieUtil;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -56,5 +60,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BoardNotFoundException.class)
     public ResponseEntity<?> handleBoardNotFoundException (BoardNotFoundException e){
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(ExpiredRefreshTokenException.class)
+    public ResponseEntity<?> handleExpiredRefreshTokenException (HttpServletRequest request, HttpServletResponse response, ExpiredRefreshTokenException e){
+        Cookie refreshTokenCookie = CookieUtil.findCookie(request, "refresh_token_key");
+        CookieUtil.deleteCookie(response, refreshTokenCookie);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
 }
