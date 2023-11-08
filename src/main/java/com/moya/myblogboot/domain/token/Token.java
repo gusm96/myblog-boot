@@ -2,7 +2,7 @@ package com.moya.myblogboot.domain.token;
 
 import lombok.*;
 
-@Data
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

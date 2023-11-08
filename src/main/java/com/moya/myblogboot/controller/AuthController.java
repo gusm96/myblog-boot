@@ -3,7 +3,6 @@ package com.moya.myblogboot.controller;
 import com.moya.myblogboot.domain.member.LoginReqDto;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.token.TokenResDto;
-import com.moya.myblogboot.exception.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.CookieUtil;
@@ -52,15 +51,15 @@ public class AuthController {
     // 토큰 검증
     @GetMapping("/api/v1/token-validation")
     public ResponseEntity<?> accessTokenValidation (HttpServletRequest request) {
-        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
-        return ResponseEntity.ok().body(authService.validateToken(accessToken));
+        return ResponseEntity.ok().body(authService.validateToken(getAccessToken(request)));
 
     }
+
     // 토큰 권한 조회
     @GetMapping("/api/v1/token-role")
     public ResponseEntity<?> getTokenFromRole(HttpServletRequest request){
-        String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
-        return ResponseEntity.ok().body(authService.validateTokenAndExtractRole(accessToken));
+        return ResponseEntity.ok().body(authService.validateTokenAndExtractRole(getAccessToken(request)));
+
     }
     // Access Token 재발급
     @GetMapping("/api/v1/reissuing-token")
@@ -69,5 +68,9 @@ public class AuthController {
         if(refreshTokenCookie == null)
             throw new InvalidateTokenException("토큰이 존재하지 않습니다.");
         return ResponseEntity.ok().body(authService.reissuingAccessToken(Long.parseLong(refreshTokenCookie.getValue())));
+    }
+
+    private static String getAccessToken(HttpServletRequest request) {
+        return request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
     }
 }

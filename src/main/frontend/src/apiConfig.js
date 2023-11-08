@@ -13,6 +13,11 @@ export const BOARD_CUD = `${BASE_URL}/api/v1/board`;
 // 게시글 리스트
 export const BOARD_LIST = `${BASE_URL}/api/v1/boards`;
 
+// 게시글 좋아요 CRRUD
+export const BOARD_LIKE_CRUD = `${BASE_URL}/api/v1/board-like`;
+// 게시글 좋아요 확인
+export const BOARD_LIKE_CHECK = `${BASE_URL}/api/v1/board-like/check`;
+
 // 댓글 등록/수정/삭제 HTTP Method GET POST DELETE
 export const COMMENT_CUD = `${BASE_URL}/api/v1/comment`;
 // 댓글 리스트

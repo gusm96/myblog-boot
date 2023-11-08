@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Button,
   Modal,
@@ -8,34 +8,13 @@ import {
   ModalHeader,
   ModalTitle,
 } from "react-bootstrap";
-import { COMMENT_CUD } from "../../apiConfig";
+import { useSelector } from "react-redux";
+import { selectIsLoggedIn } from "../../redux/userSlice";
 
 export const Comment = () => {
-  const [sessionData, setSessionData] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState({
-    status: false,
-    loginType: "",
-  });
-  const [isLoginModal, setIsLoginModal] = useState(false);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const [isLoggedInModal, setIsLoggedInModal] = useState(false);
   const [commentData, setCommentData] = useState("");
-
-  useEffect(() => {
-    const admin = true;
-    if (admin) {
-      setIsLoggedIn({
-        status: true,
-        loginType: "ADMIN",
-      });
-    } else {
-      alert("게스트 오류");
-      // if (guest !== null) {
-      //   setIsLoggedIn({
-      //     status: true,
-      //     loginType: "GUEST",
-      //   });
-      // }
-    }
-  }, []);
 
   const handleChange = (e) => {
     setCommentData(e.target.value);
@@ -43,8 +22,8 @@ export const Comment = () => {
 
   const handleCommentBoxClick = (e) => {
     e.preventDefault();
-    if (!isLoggedIn.status) {
-      setIsLoginModal(true);
+    if (!isLoggedIn) {
+      setIsLoggedInModal(true);
     }
   };
 
@@ -54,24 +33,11 @@ export const Comment = () => {
     if (commentData.trim() === "") {
       alert("댓글의 내용을 입력하세요.");
     } else {
-      if (isLoggedIn.loginType === "GUEST") {
-        axios.post(`${COMMENT_CUD}`, {
-          writer: sessionData,
-          comment: commentData,
-          commentType: isLoggedIn.loginType,
-        });
-      } else {
-        axios.post(`${COMMENT_CUD}`, {
-          writer: "admin",
-          comment: commentData,
-          commentType: isLoggedIn.loginType,
-        });
-      }
     }
   };
 
   const handleCloseLoginModal = () => {
-    setIsLoginModal(false);
+    setIsLoggedInModal(false);
   };
   return (
     <div
@@ -102,7 +68,7 @@ export const Comment = () => {
         댓글작성
       </Button>
       <Modal
-        show={isLoginModal}
+        show={isLoggedInModal}
         onHide={handleCloseLoginModal}
         style={{
           display: "flex",

@@ -1,6 +1,7 @@
 package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.board.*;
+import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,8 +9,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -35,16 +34,14 @@ public class BoardController {
 
     // 선택한 게시글
     @GetMapping("/api/v1/board/{boardId}")
-    public ResponseEntity<BoardResDto> getBoard(@PathVariable Long boardId) {
+    public ResponseEntity<?> getBoard(@PathVariable Long boardId) {
         return ResponseEntity.ok().body(boardService.retrieveBoardResponseById(boardId));
     }
 
     // 게시글 작성 Post
     @PostMapping("/api/v1/management/board")
-    public ResponseEntity<Long> postBoard(@RequestBody @Valid BoardReqDto boardReqDto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getPrincipal().toString();
-        return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, username));
+    public ResponseEntity<Long> postBoard(HttpServletRequest request, @RequestBody @Valid BoardReqDto boardReqDto) {
+        return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, getTokenInfo(request).getMemberPrimaryKey()));
     }
 
     // 게시글 수정
@@ -56,24 +53,36 @@ public class BoardController {
     // 게시글 삭제
     @DeleteMapping("/api/v1/management/board/{boardId}")
     public ResponseEntity<Boolean> deleteBoard(@PathVariable("boardId") Long boardId) {
-        // boardId 로 삭제 Service Logic 처리 후 결과 return
         return ResponseEntity.ok().body(boardService.deleteBoard(boardId));
     }
 
     // 게시글 검색 기능 추가
     @GetMapping("/api/v1/boards/search")
-    public ResponseEntity<BoardListResDto> searchBoards(@RequestParam("type") SearchType searchType,
-                                                        @RequestParam("contents") String searchContents,
-                                                        @RequestParam(name = "p", defaultValue = "1") int page
-    ) {
+    public ResponseEntity<BoardListResDto> searchBoards(
+            @RequestParam("type") SearchType searchType,
+            @RequestParam("contents") String searchContents,
+            @RequestParam(name = "p", defaultValue = "1") int page) {
         return ResponseEntity.ok().body(boardService.retrieveBoardListBySearch(searchType, searchContents, page));
     }
 
     // 게시글 좋아요 기능
-    @PostMapping("/api/v1/board-like")
-    public ResponseEntity<?> likeBoard(HttpServletRequest request, @RequestBody @Valid BoardLikeReqDto boardLikeReqDto){
-        String token = request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
-        String username = authService.getTokenInfo(token).getUsername();
-        return ResponseEntity.ok().body(boardService.addLikeToBoard(username, boardLikeReqDto.getBoardIdx()));
+    @PostMapping("/api/v1/board-like/{boardId}")
+    public ResponseEntity<?> requestToAddBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
+        return ResponseEntity.ok().body(boardService.addLikeToBoard(getTokenInfo(request).getMemberPrimaryKey(), boardId));
     }
+
+    // 게시글 좋아요 여부
+    @GetMapping("/api/v1/board-like/{boardId}")
+    public ResponseEntity<?> requestToCheckBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
+        return ResponseEntity.ok().body(boardService.checkBoardLikedStatus(getTokenInfo(request).getMemberPrimaryKey(), boardId));
+    }
+
+    @DeleteMapping("/api/v1/board-like/{boardId}")
+    public ResponseEntity<?> requestToDeleteBoardLike (HttpServletRequest request, @PathVariable("boardId") Long boardId){
+        return ResponseEntity.ok().body(boardService.deleteBoardLike(getTokenInfo(request).getMemberPrimaryKey(), boardId));
+    }
+    private TokenInfo getTokenInfo(HttpServletRequest req){
+        return authService.getTokenInfo(req.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1]);
+    }
+
 }

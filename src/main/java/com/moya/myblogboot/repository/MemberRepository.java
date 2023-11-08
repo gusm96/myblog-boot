@@ -20,10 +20,22 @@ public class MemberRepository implements MemberRepositoryInf {
     }
 
     @Override
-    public Optional<Member> findOne(String username) {
+    public Optional<Member>  findByUsername (String username) {
         try{
             Member findMember = em.createQuery("select m from Member m where m.username =: username", Member.class)
                     .setParameter("username", username)
+                    .getSingleResult();
+            return Optional.ofNullable(findMember);
+        }catch (NoResultException e){
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<Member> findById(Long memberId) {
+        try{
+            Member findMember = em.createQuery("select m from Member m where m.id =: memberId", Member.class)
+                    .setParameter("memberId", memberId)
                     .getSingleResult();
             return Optional.ofNullable(findMember);
         }catch (NoResultException e){

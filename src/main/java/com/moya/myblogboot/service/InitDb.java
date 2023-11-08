@@ -1,6 +1,7 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.board.BoardReqDto;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.member.Role;
@@ -30,7 +31,7 @@ public class InitDb {
         String username = initService.initAdminMember("moyada123", "moyada123", "Moya", role);
         Long categoryId1 = initService.initCategory("Java");
         Long categoryId2 = initService.initCategory("Python");
-        Member adminMember = memberRepository.findOne(username).get();
+        Member adminMember = memberRepository.findByUsername(username).get();
         Category category1 = categoryRepository.findOne(categoryId1).get();
         Category category2 = categoryRepository.findOne(categoryId2).get();
 
@@ -40,6 +41,8 @@ public class InitDb {
             Long boardId2 = initService.initBoard(adminMember, category2, "파이썬", "파이썬 진짜 멋지네~~");
             Board board1 = boardRepository.findOne(boardId1).get();
             Board board2 = boardRepository.findOne(boardId2).get();
+            initService.increment(boardId1);
+            initService.increment(boardId2);
         }
     }
     @Component
@@ -48,6 +51,7 @@ public class InitDb {
     static class InitService {
         private final EntityManager em;
         private final PasswordEncoder passwordEncoder;
+        private final BoardService boardService;
         public String initRole (String roleName){
             Role role = Role.builder()
                     .roleName(roleName)
@@ -76,14 +80,12 @@ public class InitDb {
             return category.getId();
         }
         public Long initBoard(Member member, Category category, String title, String content) {
-            Board board = Board.builder()
-                    .member(member)
-                    .category(category)
-                    .title(title)
-                    .content(content)
-                    .build();
-            em.persist(board);
-            return board.getId();
+            BoardReqDto boardReqDto = BoardReqDto.builder().title(title).content(content).category(category.getId()).build();
+            return boardService.uploadBoard(boardReqDto, member.getId());
+        }
+
+        public void increment(Long boardId){
+            boardService.incrementBoardLikeCount(boardId);
         }
     }
 }

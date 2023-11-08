@@ -13,15 +13,17 @@ public class BoardResDto {
     private String category;
     private LocalDateTime upload_date;
     private LocalDateTime edit_date;
+    private Long likes;
 
     @Builder
-    public BoardResDto(Board board) {
+    public BoardResDto(Board board, Long likes) {
         this.id = board.getId();
         this.title = board.getTitle();
         this.content = board.getContent();
         this.category = board.getCategory().getName();
         this.upload_date = board.getUpload_date();
         this.edit_date = getEdit_date();
+        this.likes = likes;
     }
 
     // List<Board> to List<BoardResDto>

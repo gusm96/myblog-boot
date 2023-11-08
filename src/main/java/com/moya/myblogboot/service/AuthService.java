@@ -66,8 +66,7 @@ public class AuthService {
 
     // 회원 아이디 유효성 검사.
     private void validateUsername(String username) {
-        Optional<Member> findMember = memberRepository.findOne(username);
-        if (findMember.isPresent()){
+        if (memberRepository.findByUsername(username).isPresent()){
             throw new DuplicateUsernameException("이미 존재하는 회원입니다.");
         }
     }
@@ -75,21 +74,19 @@ public class AuthService {
     // 회원 로그인
     public TokenResDto memberLogin(LoginReqDto loginReqDto) {
         // username으로 회원 찾기
-        Member findMember = memberRepository.findOne(loginReqDto.getUsername()).orElseThrow(()
+        Member findMember = memberRepository.findByUsername(loginReqDto.getUsername()).orElseThrow(()
                 -> new UsernameNotFoundException("존재하지 않는 아이디 입니다."));
         // password 비교
         if (!passwordEncoder.matches(loginReqDto.getPassword(), findMember.getPassword()))
             throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
-
-        String role = findMember.getRole().getRoleName();
         // Token 생성
-        Token newToken = createToken(findMember.getUsername(), role);
+        Token newToken = createToken(findMember);
         // Redis RefreshToken 저장.
-        saveRefreshTokenToRedis(newToken.getRefresh_token(), findMember);
+        Long refreshTokenKey = saveRefreshTokenToRedis(newToken.getRefresh_token(), findMember);
 
         return TokenResDto.builder()
                 .access_token(newToken.getAccess_token())
-                .refresh_token_key(findMember.getId())
+                .refresh_token_key(refreshTokenKey)
                 .build();
     }
 
@@ -118,8 +115,8 @@ public class AuthService {
             throw new ExpiredTokenException("만료된 토큰입니다.");
     }
 
-    private Token createToken(String username, String roleName) {
-        return JwtUtil.createToken(username, roleName, secret, accessTokenExpiration, refreshTokenExpiration);
+    private Token createToken(Member member) {
+        return JwtUtil.createToken(member, secret, accessTokenExpiration, refreshTokenExpiration);
     }
 
     @Transactional
@@ -143,7 +140,7 @@ public class AuthService {
         return true;
     }
     @Transactional
-    public void saveRefreshTokenToRedis(String refreshToken, Member member){
+    public Long saveRefreshTokenToRedis(String refreshToken, Member member){
         // Redis에 저장.
         RefreshToken token = RefreshToken.builder()
                 .id(member.getId())
@@ -152,5 +149,7 @@ public class AuthService {
                 .expiration(refreshTokenExpiration)
                 .build();
         refreshTokenRedisRepository.save(token);
+
+        return member.getId();
     }
 }

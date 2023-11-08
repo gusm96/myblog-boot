@@ -7,6 +7,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TokenInfo {
-    private String username;
+    private Long memberPrimaryKey;
     private String role;
 }

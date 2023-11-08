@@ -3,16 +3,16 @@ package com.moya.myblogboot.domain.board;
 import jakarta.persistence.Id;
 import lombok.*;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.index.Indexed;
 
 
 @Getter
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-@RedisHash("BoardLike")
-public class BoardLike {
+@RedisHash(value = "userBoardLike")
+public class UserBoardLike {
     @Id
-    private String id;
+    private Long id;
+    @Indexed
     private Long boardId;
-    private Long guestId;
 }

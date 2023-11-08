@@ -1,7 +1,7 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.AbstractContainerBaseTest;
-import com.moya.myblogboot.domain.board.BoardLike;
+import com.moya.myblogboot.domain.board.UserBoardLike;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,9 +20,9 @@ public class BoardLikeServiceTest extends AbstractContainerBaseTest {
         Long boardId = 1L;
         Long guestId = 1L;
         String key = "board_like: "+ boardId;
-        BoardLike boardLike = new BoardLike(key, boardId, guestId);
+        UserBoardLike userBoardLike = new UserBoardLike(key, boardId, guestId);
         // when
-        redisTemplate.opsForValue().set(key, boardLike);
+        redisTemplate.opsForValue().set(key, userBoardLike);
         Long count = redisTemplate.opsForSet().size(key);
 
         // then

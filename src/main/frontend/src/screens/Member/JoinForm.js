@@ -12,6 +12,11 @@ export const JoinForm = () => {
     nickname: "",
   });
   const [passwordMatch, setPasswordMatch] = useState(false);
+
+  const isFormFilled = () => {
+    return Object.values(formData).every((field) => field !== "");
+  };
+
   // 비밀번호 일치 여부 상태 변수
   useEffect(() => {
     if (formData.password1 !== "" && formData.password2 !== "") {
@@ -58,7 +63,7 @@ export const JoinForm = () => {
           <Form.Group
             as={Row}
             className="mb-3"
-            controlId="formPlaintextPassword"
+            controlId="formPlaintextUsername"
           >
             <Col sm>
               <Form.Control
@@ -73,7 +78,7 @@ export const JoinForm = () => {
           <Form.Group
             as={Row}
             className="mb-3"
-            controlId="formPlaintextPassword"
+            controlId="formPlaintextPassword1"
           >
             <Col sm>
               <Form.Control
@@ -89,7 +94,7 @@ export const JoinForm = () => {
           <Form.Group
             as={Row}
             className="mb-3"
-            controlId="formPlaintextPassword"
+            controlId="formPlaintextPassword2"
           >
             <Col sm>
               <Form.Control
@@ -110,7 +115,7 @@ export const JoinForm = () => {
           <Form.Group
             as={Row}
             className="mb-3"
-            controlId="formPlaintextPassword"
+            controlId="formPlaintextNickname"
           >
             <Col sm>
               <Form.Control
@@ -123,7 +128,11 @@ export const JoinForm = () => {
               ></Form.Control>
             </Col>
           </Form.Group>
-          <Button variant="primary" type="submit">
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={!passwordMatch || !isFormFilled()}
+          >
             가입하기
           </Button>
         </Form>

@@ -34,7 +34,6 @@ logging:
 ## JWT
 jwt:
   secret: moya.myblog.secret.key
-  access-token-expiration: 60000
-  refresh-token-expiration: 120000
-##1209600000e
+  access-token-expiration: 300000
+  refresh-token-expiration: 1209600000
 

@@ -14,6 +14,7 @@ import { reissuingAccessToken, validateAccessToken } from "./services/authApi";
 import { updateUserAccessToken, userLogout } from "./redux/authAction";
 import { JoinForm } from "./screens/Member/JoinForm";
 import { NotFound } from "./screens/error/NotFound";
+import { NavigateBack } from "./screens/error/NavigateBack";
 
 export default App;
 
@@ -23,7 +24,7 @@ function App() {
   const dispatch = useDispatch();
   useEffect(() => {
     // 로그인 상태면 access Token 주기적으로 검증.
-    if (isLoggedIn && access_token !== null) {
+    if (access_token !== null) {
       validateAccessToken(access_token).catch((error) => {
         if (error.response.status === 401) {
           reissuingAccessToken()
@@ -39,7 +40,7 @@ function App() {
         }
       });
     }
-  }, [isLoggedIn, access_token, dispatch]);
+  }, [access_token, dispatch]);
 
   return (
     <Router>
@@ -50,7 +51,10 @@ function App() {
           <Route path="boards" element={<Home />} />
           {/* <Route path=":categoryName" /> */}
           <Route path="board/:boardId" element={<BoardDetail />} />
-          <Route path="login" element={<LoginForm />} />
+          <Route
+            path="login"
+            element={isLoggedIn ? <NavigateBack /> : <LoginForm />}
+          />
           <Route path="join" element={<JoinForm />} />
           <Route path="*" element={<NotFound />} />
         </Route>

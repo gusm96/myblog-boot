@@ -7,9 +7,9 @@ import { useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export const LoginForm = () => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const { from } = location.state || { from: { pathname: "/" } };
+  const from = location.state?.from || "/";
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -30,15 +30,9 @@ export const LoginForm = () => {
     await login(formData)
       .then((data) => {
         dispatch(userLogin(data));
-        if (from.pathname === "/login") {
-          // 이동하려는 페이지가 로그인 페이지인지 확인
-          navigate("/"); // 로그인 페이지라면 홈페이지로 이동
-        } else {
-          navigate(from); // 로그인 페이지가 아니라면 이전 페이지로 이동
-        }
+        navigate(from);
       })
       .catch((error) => {
-        console.log(error);
         alert(error.response.data);
       });
   };
@@ -74,7 +68,7 @@ export const LoginForm = () => {
         로그인
       </Button>
       <hr></hr>
-      <Nav.Link to="/join">회원가입</Nav.Link>
+      <Nav.Link href="/join">회원가입</Nav.Link>
     </Form>
   );
 };
