@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +30,9 @@ public class CategoryService {
         }
     }
 
+    @Transactional
     public Boolean deleteCategory(Long categoryId) {
-        Category category = findCategory(categoryId);
+        Category category = retrieveCategoryById(categoryId);
         try {
             categoryRepository.removeCategory(category);
             return true;
@@ -40,8 +42,8 @@ public class CategoryService {
         }
     }
 
-    public Category findCategory(Long categoryId) {
+    public Category retrieveCategoryById(Long categoryId) {
         return categoryRepository.findOne(categoryId).orElseThrow(()
-                -> new NoResultException("해당 카테고리는 존재하지 않습니다."));
+                -> new NoSuchElementException("해당 카테고리는 존재하지 않습니다."));
     }
 }

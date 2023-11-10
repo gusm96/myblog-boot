@@ -64,7 +64,7 @@ public class InitDb {
 
         public Long initBoard(Member member, Category category, String title, String content) {
             BoardReqDto boardReqDto = BoardReqDto.builder().title(title).content(content).category(category.getId()).build();
-            return boardService.uploadBoard(boardReqDto, member.getId());
+            return boardService.uploadBoard(boardReqDto, member, category);
         }
 
         public void increment(Long boardId){

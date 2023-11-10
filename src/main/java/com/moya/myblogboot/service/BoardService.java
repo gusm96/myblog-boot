@@ -8,7 +8,6 @@ import com.moya.myblogboot.exception.DuplicateBoardLikeException;
 import com.moya.myblogboot.repository.*;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +19,7 @@ import java.util.NoSuchElementException;
 @Transactional(readOnly = true)
 public class BoardService {
 
-    private final CategoryService categoryService;
     private final BoardRepository boardRepository;
-    private final MemberRepository memberRepository;
-    private final CategoryRepository categoryRepository;
     private final UserBoardLikeRedisRepository userBoardLikeRedisRepository;
     private final BoardLikeCountRedisRepository boardLikeCountRedisRepository;
 
@@ -44,15 +40,11 @@ public class BoardService {
     }
 
     // 카테고리별 게시글 리스트
-    public BoardListResDto retrieveBoardListByCategory(String category, int page){
-        // 카테고리 유효성 검사
-        Category findCategorty = categoryRepository.findByName(category).orElseThrow(() ->
-                new NoResultException("존재하지 않는 카테고리입니다."));
-
-        List<Board> boardList = boardRepository.findByCategory(findCategorty.getName(), pagination(page), LIMIT);
+    public BoardListResDto retrieveBoardListByCategory(Category category, int page){
+        List<Board> boardList = boardRepository.findByCategory(category.getName(), pagination(page), LIMIT);
 
         // 해당하는 카테고리의 게시글 수
-        Long listCount = boardRepository.findByCategoryCount(findCategorty.getName());
+        Long listCount = boardRepository.findByCategoryCount(category.getName());
 
         List<BoardResDto> resultList = boardList.stream().map(BoardResDto::of).toList();
         BoardListResDto boardListResDto = BoardListResDto.builder()
@@ -86,11 +78,11 @@ public class BoardService {
     }
     // 게시글 수정
     @Transactional
-    public Long editBoard(Long boardId, BoardReqDto boardReqDto){
+    public Long editBoard(Long boardId, String modifiedTitle, String modifiedContent, Category modifiedCategory){
         Board board = retrieveBoardById(boardId);
-        Category category = categoryService.findCategory(boardReqDto.getCategory());
         // 변경 감지
-        board.updateBoard(category, boardReqDto.getTitle(), boardReqDto.getContent());
+        board.updateBoard(modifiedCategory, modifiedTitle, modifiedContent);
+
         return board.getId();
     }
     // 게시글 삭제
@@ -106,9 +98,7 @@ public class BoardService {
     }
     // 게시글 업로드
     @Transactional
-    public Long uploadBoard(BoardReqDto boardReqDto, Long memberId) {
-        Member member = retrieveMemberById(memberId);
-        Category category = categoryService.findCategory(boardReqDto.getCategory());
+    public Long uploadBoard(BoardReqDto boardReqDto, Member member, Category category) {
         Long boardId = boardRepository.upload(boardReqDto.toEntity(category, member));
         // BoardLikeCount 생성.
         createBoardLikeCount(boardId);
@@ -162,10 +152,6 @@ public class BoardService {
         }catch (NoSuchElementException e){
             return false;
         }
-    }
-    private Member retrieveMemberById(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow(
-                () -> new UsernameNotFoundException("존재하지 않는 회원입니다."));
     }
     public Board retrieveBoardById(Long boardId) {
         return boardRepository.findOne(boardId).orElseThrow(

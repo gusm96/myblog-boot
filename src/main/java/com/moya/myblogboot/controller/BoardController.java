@@ -1,11 +1,13 @@
 package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.board.*;
+import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.comment.CommentReqDto;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardService;
+import com.moya.myblogboot.service.CategoryService;
 import com.moya.myblogboot.service.CommentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -23,6 +25,7 @@ public class BoardController {
     private final BoardService boardService;
     private final AuthService authService;
     private final CommentService commentService;
+    private final CategoryService categoryService;
     // 모든 게시글 리스트
     @GetMapping("/api/v1/boards")
     public ResponseEntity<BoardListResDto> getAllBoards(@RequestParam(name = "p", defaultValue = "1") int page) {
@@ -30,11 +33,12 @@ public class BoardController {
     }
 
     // 카테고리별 게시글 리스트
-    @GetMapping("/api/v1/boards/{category}")
-    public ResponseEntity<BoardListResDto> thisTypeOfBoards(
-            @PathVariable("category") String category,
+    @GetMapping("/api/v1/boards/categories/{categoryId}")
+    public ResponseEntity<BoardListResDto>   requestCategoryOfBoards(
+            @PathVariable("categoryId") Long categoryId,
             @RequestParam(name = "p", defaultValue = "1") int page
     ) {
+        Category category = getCategory(categoryId);
         return ResponseEntity.ok().body(boardService.retrieveBoardListByCategory(category, page));
     }
 
@@ -47,13 +51,18 @@ public class BoardController {
     // 게시글 작성 Post
     @PostMapping("/api/v1/management/board")
     public ResponseEntity<Long> postBoard(HttpServletRequest request, @RequestBody @Valid BoardReqDto boardReqDto) {
-        return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, getTokenInfo(request).getMemberPrimaryKey()));
+        Member member = getMember(request);
+        Category category = getCategory(boardReqDto.getCategory());
+        return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, member, category));
     }
+
+
 
     // 게시글 수정
     @PutMapping("/api/v1/management/board/{boardId}")
     public ResponseEntity<Long> editBoard(@PathVariable("boardId") Long boardId, @RequestBody @Valid BoardReqDto boardReqDto) {
-        return ResponseEntity.ok().body(boardService.editBoard(boardId, boardReqDto));
+        Category category = getCategory(boardReqDto.getCategory());
+        return ResponseEntity.ok().body(boardService.editBoard(boardId, boardReqDto.getTitle(), boardReqDto.getContent(), category));
     }
 
     // 게시글 삭제
@@ -99,16 +108,27 @@ public class BoardController {
             @PathVariable("boardId") Long boardId,
             @RequestBody @Valid CommentReqDto commentReqDto) {
 
-        Member member = authService.retrieveMemberById(getTokenInfo(request).getMemberPrimaryKey());
-        Board board = boardService.retrieveBoardById(boardId);
+        Member member = getMember(request);
+        Board board = getRetrieveBoardById(boardId);
 
         return ResponseEntity.ok().body(commentService.writeComment(member, board, commentReqDto));
     }
     // 댓글 수정
     @PutMapping("/api/v1/boards/{boardId}/comments/{commentId}")
-    public ResponseEntity<?> editComment(@RequestBody @Valid CommentReqDto commentReqDTO) {
-        return ResponseEntity.ok().body(true);
+    public ResponseEntity<?> editComment(
+            HttpServletRequest request,
+            @PathVariable("boardId") Long boardId,
+            @PathVariable("commentId") Long commentId,
+            @RequestBody @Valid CommentReqDto commentReqDto) {
+        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+        Board board = getRetrieveBoardById(boardId);
+        return ResponseEntity.ok().body(commentService.updateComment(memberId, board, commentId, commentReqDto));
     }
+
+    private Board getRetrieveBoardById(Long boardId) {
+        return boardService.retrieveBoardById(boardId);
+    }
+
     // 댓글 삭제
     @DeleteMapping("/api/v1/boards/{boardId}/comments/{commentId}")
     public ResponseEntity<?> requestToDeleteComment(
@@ -116,7 +136,7 @@ public class BoardController {
             @PathVariable("boardId") Long boardId,
             @PathVariable("commentId") Long commentId) {
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
-        Board board = boardService.retrieveBoardById(boardId);
+        Board board = getRetrieveBoardById(boardId);
         return ResponseEntity.ok().body(commentService.deleteComment(memberId, commentId, board));
     }
 
@@ -124,4 +144,11 @@ public class BoardController {
         return authService.getTokenInfo(req.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1]);
     }
 
+    private Member getMember(HttpServletRequest request) {
+        return authService.retrieveMemberById(getTokenInfo(request).getMemberPrimaryKey());
+    }
+
+    private Category getCategory(Long categoryId) {
+        return categoryService.retrieveCategoryById(categoryId);
+    }
 }

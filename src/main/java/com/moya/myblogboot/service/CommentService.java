@@ -59,10 +59,12 @@ public class CommentService {
 
     }
 
-
     public Comment retrieveCommentById(Long commentId) {
         return commentRepository.findOne(commentId).orElseThrow(()
                 -> new IllegalStateException("해당 댓글은 삭제되었거나 존재하지 않습니다."));
     }
 
+    public String updateComment(Long memberId, Board board, Long commentId, CommentReqDto commentReqDto) {
+        return "result";
+    }
 }
