@@ -9,8 +9,8 @@ import org.springframework.data.redis.core.index.Indexed;
 @Getter
 @Builder
 @AllArgsConstructor
-@RedisHash(value = "userBoardLike")
-public class UserBoardLike {
+@RedisHash(value = "memberBoardLike")
+public class MemberBoardLike {
     @Id
     private Long id;
     @Indexed

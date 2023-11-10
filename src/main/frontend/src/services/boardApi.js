@@ -1,5 +1,5 @@
 import axios from "axios";
-import { BOARD_CUD, BOARD_LIKE_CRUD, BOARD_LIST } from "../apiConfig";
+import { BOARD_LIKE_CRUD, BOARD_LIST } from "../apiConfig";
 
 export const getBoardList = (page) => {
   return axios.get(`${BOARD_LIST}?${page}`).then((res) => res.data);

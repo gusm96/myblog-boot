@@ -66,4 +66,11 @@ public class Board {
     public void updateBoardStatus(BoardStatus boardStatus) {
         this.boardStatus = boardStatus;
     }
+
+    public void addComment (Comment comment){
+        this.comments.add(comment);
+    }
+    public void removeComment(Comment comment) {
+        this.comments.remove(comment);
+    }
 }

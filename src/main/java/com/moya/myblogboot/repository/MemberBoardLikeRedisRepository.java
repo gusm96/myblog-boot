@@ -3,7 +3,6 @@ package com.moya.myblogboot.repository;
 import com.moya.myblogboot.domain.board.MemberBoardLike;
 import org.springframework.data.repository.CrudRepository;
 
-
-public interface UserBoardLikeRedisRepository extends CrudRepository<MemberBoardLike, Long> {
+public interface MemberBoardLikeRedisRepository extends CrudRepository <MemberBoardLike,String> {
 
 }

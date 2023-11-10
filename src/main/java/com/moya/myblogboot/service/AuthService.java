@@ -3,17 +3,11 @@ package com.moya.myblogboot.service;
 import com.moya.myblogboot.domain.member.LoginReqDto;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
-import com.moya.myblogboot.domain.member.Role;
 import com.moya.myblogboot.domain.token.*;
-import com.moya.myblogboot.exception.DuplicateUsernameException;
-import com.moya.myblogboot.exception.ExpiredRefreshTokenException;
-import com.moya.myblogboot.exception.ExpiredTokenException;
-import com.moya.myblogboot.exception.InvalidateTokenException;
+import com.moya.myblogboot.exception.*;
 import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.repository.RefreshTokenRedisRepository;
-import com.moya.myblogboot.repository.RoleRepository;
 import com.moya.myblogboot.utils.JwtUtil;
-import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -22,7 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.NoSuchElementException;
 
 
 @Service
@@ -30,7 +24,6 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class AuthService {
     private final MemberRepository memberRepository;
-    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
     @Value("${jwt.secret}")
@@ -49,19 +42,19 @@ public class AuthService {
         validateUsername(memberJoinReqDto.getUsername());
         // 비밀번호 암호화
         memberJoinReqDto.passwordEncode(passwordEncoder.encode(memberJoinReqDto.getPassword()));
-        // Dto 객체 Entity화
+        // Member Entity 생성
         Member newMember = memberJoinReqDto.toEntity();
-        // 일반호원 권한 등록
-        addNormalRoleToMember(newMember);
-        // 회원 Persist
-        memberRepository.save(newMember);
-        return "회원가입을 축하드립니다.";
-    }
-    // 일반회원 권한 등록
-    private void addNormalRoleToMember(Member newMember) {
-        Role normalRole = roleRepository.findOne("NORMAL").orElseThrow(() ->
-                new NoResultException("존재하지 않는 권한입니다."));
-        newMember.addRole(normalRole);
+        // Member Persist
+        try {
+            Long result = memberRepository.save(newMember);
+            if (result > 0) {
+                return "회원가입을 성공했습니다.";
+            } else {
+                throw new MemberJoinFailedException("회원가입을 실패했습니다.");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("회원가입 중 오류가 발생했습니다.");
+        }
     }
 
     // 회원 아이디 유효성 검사.
@@ -90,6 +83,9 @@ public class AuthService {
                 .build();
     }
 
+    public Member retrieveMemberById(Long memberId) {
+            return memberRepository.findById(memberId).orElseThrow(() -> new NoSuchElementException("회원이 존재하지 않습니다."));
+    }
 
     public String reissuingAccessToken(Long refreshTokenKey) {
         // Refresh Token 찾는다.

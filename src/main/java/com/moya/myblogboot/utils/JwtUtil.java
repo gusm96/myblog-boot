@@ -39,7 +39,7 @@ public class JwtUtil {
         Claims claims = Jwts.claims();
         // JWT에 사용자의 많은 정보를 담으면 보안상 위험하다.
         claims.put("memberPrimaryKey", member.getId());
-        claims.put("role", member.getRole().getRoleName());
+        claims.put("role", member.getRole());
         String accessToken = Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date((System.currentTimeMillis())))

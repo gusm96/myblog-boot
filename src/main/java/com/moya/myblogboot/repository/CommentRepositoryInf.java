@@ -13,5 +13,5 @@ public interface CommentRepositoryInf {
     // 댓글 리스트
     List<Comment> commentList(Long boardId);
     // 댓글 삭제
-    void removeComment(Long replyId);
+    void removeComment(Comment comment);
 }

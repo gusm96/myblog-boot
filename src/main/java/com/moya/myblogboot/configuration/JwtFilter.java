@@ -66,13 +66,12 @@ public class JwtFilter extends OncePerRequestFilter {
         TokenInfo tokenInfo = JwtUtil.getTokenInfo(token, secret);
         Long memberPrimaryKey = tokenInfo.getMemberPrimaryKey();
         // 권한 지정
-        String role = tokenInfo.getRole().equals("ADMIN") ? "ROLE_ADMIN" : "ROLE_NORMAL";
         log.info("Member_Primary_Key : {}", memberPrimaryKey);
-        log.info("Role : {}", role);
+        log.info("Role : {}", tokenInfo.getRole());
 
         // 권한 부여
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(memberPrimaryKey, null, List.of(new SimpleGrantedAuthority(role)));
+                new UsernamePasswordAuthenticationToken(memberPrimaryKey, null, List.of(new SimpleGrantedAuthority(tokenInfo.getRole())));
 
         // Detail을 넣어준다.
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

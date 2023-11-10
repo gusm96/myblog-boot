@@ -2,6 +2,7 @@ package com.moya.myblogboot.domain.comment;
 
 import com.moya.myblogboot.domain.board.ModificationStatus;
 import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,18 +23,16 @@ public class Comment {
     private Long id;
 
     @Column(nullable = false)
-    private String writer;
-
-    @Column(nullable = false)
     private String comment;
-
-    @Column(nullable = false)
-    private CommentType commentType;
 
     private LocalDateTime write_date;
 
     @Enumerated(EnumType.STRING)
     private ModificationStatus modificationStatus;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "board_id")
@@ -48,12 +47,11 @@ public class Comment {
 
     // 댓글 작성
     @Builder
-    public Comment(String writer, CommentType commentType, String comment, Board board) {
-        this.writer = writer;
-        this.commentType = commentType;
+    public Comment(String comment, Member member , Board board) {
         this.comment = comment;
         this.write_date = LocalDateTime.now();
         this.modificationStatus = ModificationStatus.NOT_MODIFIED;
+        this.member = member;
         this.board = board;
     }
 

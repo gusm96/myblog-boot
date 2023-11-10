@@ -4,6 +4,7 @@ import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.exception.BoardNotFoundException;
+import com.moya.myblogboot.exception.DuplicateBoardLikeException;
 import com.moya.myblogboot.repository.*;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -122,6 +124,9 @@ public class BoardService {
 
     // 게시글 좋아요
     public Long addLikeToBoard(Long memberId, Long boardId){
+        if(checkBoardLikedStatus(memberId, boardId)){
+            throw new DuplicateBoardLikeException("이미 \"좋아요\"한 요청 입니다.");
+        }
         createUserBoardLike(memberId, boardId);
         incrementBoardLikeCount(boardId);
         return retrieveBoardLikeCountByBoardId(boardId).getCount();
@@ -133,30 +138,28 @@ public class BoardService {
     }
 
     private void createUserBoardLike(Long memberId, Long boardId) {
-        UserBoardLike userBoardLike = UserBoardLike.builder()
+        MemberBoardLike memberBoardLike = MemberBoardLike.builder()
                 .id(memberId)
                 .boardId(boardId)
                 .build();
-        userBoardLikeRedisRepository.save(userBoardLike);
+        userBoardLikeRedisRepository.save(memberBoardLike);
     }
 
     public boolean checkBoardLikedStatus(Long memberId, Long boardId) {
         try {
-            retrieveBoardLikeByMemberIdAndBoardId(memberId, boardId);
+            retrieveMemberBoardLikeByIdAndBoardId(memberId, boardId);
             return true;
-        }catch (NoResultException e) {
-            e.printStackTrace();
+        }catch (NoSuchElementException e) {
             return false;
         }
     }
 
     public boolean deleteBoardLike(Long memberId, Long boardId) {
         try {
-            userBoardLikeRedisRepository.delete(retrieveBoardLikeByMemberIdAndBoardId(memberId, boardId));
+            userBoardLikeRedisRepository.delete(retrieveMemberBoardLikeByIdAndBoardId(memberId, boardId));
             decrementBoardLikeCount(boardId);
             return true;
-        }catch (Exception e){
-            e.printStackTrace();
+        }catch (NoSuchElementException e){
             return false;
         }
     }
@@ -182,9 +185,14 @@ public class BoardService {
         }
     }
 
-    private UserBoardLike retrieveBoardLikeByMemberIdAndBoardId (Long memberId, Long boardId){
-        return userBoardLikeRedisRepository.findByIdAndBoardId(memberId, boardId).orElseThrow(
-                () -> new NoResultException("게시글 좋아요 결과 없음"));
+    private MemberBoardLike retrieveMemberBoardLikeByIdAndBoardId (Long memberId, Long boardId){
+        MemberBoardLike findMemberBoardLike = userBoardLikeRedisRepository.findById(memberId).orElseThrow(
+                () -> new NoSuchElementException("게시글 좋아요 결과 없음"));
+        if (findMemberBoardLike.getBoardId() == boardId) {
+            return findMemberBoardLike;
+        }else {
+            throw new NoSuchElementException("게시글 좋아요 결과 없음");
+        }
     }
     public void incrementBoardLikeCount(Long boardId) {
         BoardLikeCount boardLikeCount = retrieveBoardLikeCountByBoardId(boardId);

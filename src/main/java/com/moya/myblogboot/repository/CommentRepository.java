@@ -39,10 +39,7 @@ public class CommentRepository implements CommentRepositoryInf {
     }
 
     @Override
-    public void removeComment(Long replyId) {
-        Comment comment = em.find(Comment.class, replyId);
-        if (comment != null) {
+    public void removeComment(Comment comment) {
             em.remove(comment);
-        }
     }
 }

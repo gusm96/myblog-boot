@@ -1,10 +1,8 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.BoardReqDto;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.domain.member.Role;
 import com.moya.myblogboot.repository.*;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
@@ -18,20 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class InitDb {
     private final InitService initService;
-    private final BoardRepository boardRepository;
     private final CategoryRepository categoryRepository;
-    private final MemberRepository memberRepository;
-    private final RoleRepository roleRepository;
 
     @PostConstruct
     public void init() {
-        String roleAdmin = initService.initRole("ADMIN");
-        String roleNormal = initService.initRole("NORMAL");
-        Role role = roleRepository.findOne(roleAdmin).get();
-        String username = initService.initAdminMember("moyada123", "moyada123", "Moya", role);
+        Member adminMember = initService.initAdminMember();
         Long categoryId1 = initService.initCategory("Java");
         Long categoryId2 = initService.initCategory("Python");
-        Member adminMember = memberRepository.findByUsername(username).get();
         Category category1 = categoryRepository.findOne(categoryId1).get();
         Category category2 = categoryRepository.findOne(categoryId2).get();
 
@@ -39,8 +30,6 @@ public class InitDb {
         for (int i = 0; i < 10; i++) {
             Long boardId1 = initService.initBoard(adminMember, category1, "자바", "자바의 진짜 직이네~");
             Long boardId2 = initService.initBoard(adminMember, category2, "파이썬", "파이썬 진짜 멋지네~~");
-            Board board1 = boardRepository.findOne(boardId1).get();
-            Board board2 = boardRepository.findOne(boardId2).get();
             initService.increment(boardId1);
             initService.increment(boardId2);
         }
@@ -52,25 +41,18 @@ public class InitDb {
         private final EntityManager em;
         private final PasswordEncoder passwordEncoder;
         private final BoardService boardService;
-        public String initRole (String roleName){
-            Role role = Role.builder()
-                    .roleName(roleName)
-                    .build();
-            em.persist(role);
-            return role.getRoleName();
-        }
 
-        public String initAdminMember(String username, String password, String nickname, Role role){
+        public Member initAdminMember(){
             Member member = Member.builder()
-                    .username(username)
-                    .password(passwordEncoder.encode(password))
-                    .nickname(nickname)
+                    .username("moyada123")
+                    .password(passwordEncoder.encode("moyada123"))
+                    .nickname("Moya")
                     .build();
-            member.addRole(role);
-            em.persist(member);
-            return member.getUsername();
-        }
 
+            member.addRoleAdmin();
+            em.persist(member);
+            return member;
+        }
 
         public Long initCategory(String categoryName) {
             Category category = Category.builder()
@@ -79,6 +61,7 @@ public class InitDb {
             em.persist(category);
             return category.getId();
         }
+
         public Long initBoard(Member member, Category category, String title, String content) {
             BoardReqDto boardReqDto = BoardReqDto.builder().title(title).content(content).category(category.getId()).build();
             return boardService.uploadBoard(boardReqDto, member.getId());

@@ -21,8 +21,15 @@ public class GlobalExceptionTest {
     @Test
     void 아이디_중복() {
         // 아이디 등록
-        MemberJoinReqDto newMember1 = new MemberJoinReqDto("moyada123", "moyada123", "moyada");
-        MemberJoinReqDto newMember2 = new MemberJoinReqDto("moyada123", "moyada123", "moyada");
+        MemberJoinReqDto newMember1 = MemberJoinReqDto.builder()
+                .username("moyada123")
+                .password("moyada123")
+                .nickname("moyada").build();
+
+        MemberJoinReqDto newMember2 = MemberJoinReqDto.builder()
+                .username("moyada123")
+                .password("moyada123")
+                .nickname("moyada").build();
         authService.memberJoin(newMember1);
 
         Assertions.assertThrows(DuplicateUsernameException.class, () -> {

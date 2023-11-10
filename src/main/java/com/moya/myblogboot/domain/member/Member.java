@@ -6,7 +6,6 @@ import lombok.*;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,19 +13,18 @@ public class Member {
     private String username;
     private String password;
     private String nickname;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id")
+    @Enumerated(EnumType.STRING)
     private Role role;
 
     @Builder
-    public Member (String username, String password, String nickname){
+    public Member(String username, String password, String nickname) {
         this.username = username;
         this.password = password;
         this.nickname = nickname;
+        this.role = Role.ROLE_NORMAL;
     }
-    // 권한 부여
-    public void addRole(Role role) {
-        this.role = role;
+
+    public void addRoleAdmin (){
+        this.role = Role.ROLE_ADMIN;
     }
 }
