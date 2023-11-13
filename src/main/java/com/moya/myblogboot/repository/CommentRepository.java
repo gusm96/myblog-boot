@@ -23,12 +23,8 @@ public class CommentRepository implements CommentRepositoryInf {
     }
     @Override
     public Optional<Comment> findOne(Long commentId) {
-        try{
             Comment result = em.find(Comment.class, commentId);
             return Optional.ofNullable(result);
-        }catch (NoResultException e){
-            return Optional.empty();
-        }
     }
     @Override
     public List<Comment> commentList(Long boardId) {

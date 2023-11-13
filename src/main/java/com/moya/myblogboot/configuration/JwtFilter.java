@@ -4,6 +4,8 @@ import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.exception.ExpiredTokenException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.JwtUtil;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -45,20 +47,20 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = authorization.split(" ")[1];
         if(token.isEmpty()){
             log.error("Token is null");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 존재하지 않습니다.");
         }
 
         // Token Expired되었는지 여부
         try {
-            if (JwtUtil.isExpired(token, secret)) {
-                log.error("토큰이 만료되었습니다.");
-                filterChain.doFilter(request, response);
-                return;
-            }
+            JwtUtil.validateToken(token, secret);
         } catch (SignatureException e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 유효하지 않습니다.");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
             return;
-        } catch (ExpiredTokenException e){
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 만료되었습니다. JwtFilter 에용");
+        } catch (ExpiredTokenException e) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+            return;
+        } catch (MalformedJwtException e) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
             return;
         }
 
@@ -90,8 +92,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 "/api/v1/boards/search",
                 "/api/v1/board",
                 "/api/v1/categories",
-                "/api/v1/comment",
-                "/api/v1/comments",
                 "/api/v1/reissuing-token"
         };
 

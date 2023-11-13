@@ -1,8 +1,6 @@
 package com.moya.myblogboot;
 
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
-import com.moya.myblogboot.exception.DuplicateUsernameException;
-import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.service.AuthService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;

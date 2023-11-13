@@ -24,7 +24,6 @@ public class BoardController {
 
     private final BoardService boardService;
     private final AuthService authService;
-    private final CommentService commentService;
     private final CategoryService categoryService;
     // 모든 게시글 리스트
     @GetMapping("/api/v1/boards")

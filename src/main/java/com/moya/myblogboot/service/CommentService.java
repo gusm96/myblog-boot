@@ -5,14 +5,12 @@ import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.domain.comment.CommentReqDto;
 import com.moya.myblogboot.domain.comment.CommentResDto;
 import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.exception.CommentNotFoundException;
 import com.moya.myblogboot.exception.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.CommentRepository;
+import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -74,7 +72,7 @@ public class CommentService {
 
     public Comment retrieveCommentById(Long commentId) {
         return commentRepository.findOne(commentId).orElseThrow(()
-                -> new CommentNotFoundException("해당 댓글은 삭제되었거나 존재하지 않습니다."));
+                -> new NoResultException("해당 댓글은 삭제되었거나 존재하지 않습니다."));
     }
 
 

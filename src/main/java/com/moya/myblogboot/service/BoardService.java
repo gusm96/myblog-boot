@@ -3,11 +3,10 @@ package com.moya.myblogboot.service;
 import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.exception.BoardNotFoundException;
-import com.moya.myblogboot.exception.DuplicateBoardLikeException;
 import com.moya.myblogboot.repository.*;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -115,7 +114,7 @@ public class BoardService {
     // 게시글 좋아요
     public Long addLikeToBoard(Long memberId, Long boardId){
         if(checkBoardLikedStatus(memberId, boardId)){
-            throw new DuplicateBoardLikeException("이미 \"좋아요\"한 요청 입니다.");
+            throw new DuplicateKeyException("이미 \"좋아요\"한 요청 입니다.");
         }
         createUserBoardLike(memberId, boardId);
         incrementBoardLikeCount(boardId);
@@ -155,7 +154,7 @@ public class BoardService {
     }
     public Board retrieveBoardById(Long boardId) {
         return boardRepository.findOne(boardId).orElseThrow(
-                () -> new BoardNotFoundException("해당 게시글이 존재하지 않습니다.")
+                () -> new NoResultException("해당 게시글이 존재하지 않습니다.")
         );
     }
     private int pagination (int page){
@@ -173,11 +172,11 @@ public class BoardService {
 
     private MemberBoardLike retrieveMemberBoardLikeByIdAndBoardId (Long memberId, Long boardId){
         MemberBoardLike findMemberBoardLike = userBoardLikeRedisRepository.findById(memberId).orElseThrow(
-                () -> new NoSuchElementException("게시글 좋아요 결과 없음"));
+                () -> new NoResultException("게시글 좋아요 결과 없음"));
         if (findMemberBoardLike.getBoardId() == boardId) {
             return findMemberBoardLike;
         }else {
-            throw new NoSuchElementException("게시글 좋아요 결과 없음");
+            throw new NoResultException("게시글 좋아요 결과 없음");
         }
     }
     public void incrementBoardLikeCount(Long boardId) {

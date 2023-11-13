@@ -8,15 +8,18 @@ import com.moya.myblogboot.exception.*;
 import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.repository.RefreshTokenRedisRepository;
 import com.moya.myblogboot.utils.JwtUtil;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.NoSuchElementException;
 
 
 @Service
@@ -50,9 +53,9 @@ public class AuthService {
             if (result > 0) {
                 return "회원가입을 성공했습니다.";
             } else {
-                throw new MemberJoinFailedException("회원가입을 실패했습니다.");
+                throw new PersistenceException("회원가입을 실패했습니다.");
             }
-        } catch (Exception e) {
+        } catch (DataIntegrityViolationException e) {
             throw new RuntimeException("회원가입 중 오류가 발생했습니다.");
         }
     }
@@ -60,7 +63,7 @@ public class AuthService {
     // 회원 아이디 유효성 검사.
     private void validateUsername(String username) {
         if (memberRepository.findByUsername(username).isPresent()){
-            throw new DuplicateUsernameException("이미 존재하는 회원입니다.");
+            throw new DuplicateKeyException("이미 존재하는 회원입니다.");
         }
     }
 
@@ -84,7 +87,8 @@ public class AuthService {
     }
 
     public Member retrieveMemberById(Long memberId) {
-            return memberRepository.findById(memberId).orElseThrow(() -> new NoSuchElementException("회원이 존재하지 않습니다."));
+            return memberRepository.findById(memberId).orElseThrow(()
+                    -> new NoResultException("회원이 존재하지 않습니다."));
     }
 
     public String reissuingAccessToken(Long refreshTokenKey) {
@@ -92,8 +96,9 @@ public class AuthService {
         RefreshToken findRefreshToken = retrieveRefreshTokenById(refreshTokenKey);
         // Refresh Token 검증.
         try{
-            tokenIsExpired(findRefreshToken.getTokenValue());
+            JwtUtil.validateToken(findRefreshToken.getTokenValue(), secret);
         }catch (ExpiredTokenException e){
+            // RefreshToken 만료시 Data 삭제.
             refreshTokenRedisRepository.delete(findRefreshToken);
             throw new ExpiredRefreshTokenException("토큰이 만료되었습니다.");
         }
@@ -104,11 +109,6 @@ public class AuthService {
     private RefreshToken retrieveRefreshTokenById (Long id) {
         return refreshTokenRedisRepository.findById(id).orElseThrow(()
                 -> new InvalidateTokenException("존재하지 않는 토큰입니다."));
-    }
-
-    private void  tokenIsExpired(String token) {
-        if(JwtUtil.isExpired(token, secret))
-            throw new ExpiredTokenException("만료된 토큰입니다.");
     }
 
     private Token createToken(Member member) {
@@ -122,18 +122,8 @@ public class AuthService {
     }
 
     public TokenInfo getTokenInfo(String token) {
-        return JwtUtil.getTokenInfo(token, secret);
-    }
+            return JwtUtil.getTokenInfo(token, secret);
 
-    public String validateTokenAndExtractRole(String accessToken) {
-        // 토큰 유효성 검증
-        tokenIsExpired(accessToken);
-        return getTokenInfo(accessToken).getRole();
-    }
-
-    public boolean validateToken(String token) {
-        tokenIsExpired(token);
-        return true;
     }
     @Transactional
     public Long saveRefreshTokenToRedis(String refreshToken, Member member){
@@ -148,4 +138,6 @@ public class AuthService {
 
         return member.getId();
     }
+
+
 }

@@ -48,19 +48,14 @@ public class AuthController {
         return ResponseEntity.ok().body(HttpStatus.OK);
     }
 
-    // 토큰 검증
-    @GetMapping("/api/v1/token-validation")
-    public ResponseEntity<?> accessTokenValidation (HttpServletRequest request) {
-        return ResponseEntity.ok().body(authService.validateToken(getAccessToken(request)));
-
-    }
-
     // 토큰 권한 조회
     @GetMapping("/api/v1/token-role")
     public ResponseEntity<?> getTokenFromRole(HttpServletRequest request){
-        return ResponseEntity.ok().body(authService.validateTokenAndExtractRole(getAccessToken(request)));
-
+        return ResponseEntity.ok().body(authService.getTokenInfo(
+                request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1])
+                .getRole());
     }
+
     // Access Token 재발급
     @GetMapping("/api/v1/reissuing-token")
     public ResponseEntity<?> reissuingAccessToken (HttpServletRequest request){
@@ -68,9 +63,5 @@ public class AuthController {
         if(refreshTokenCookie == null)
             throw new InvalidateTokenException("토큰이 존재하지 않습니다.");
         return ResponseEntity.ok().body(authService.reissuingAccessToken(Long.parseLong(refreshTokenCookie.getValue())));
-    }
-
-    private static String getAccessToken(HttpServletRequest request) {
-        return request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
     }
 }

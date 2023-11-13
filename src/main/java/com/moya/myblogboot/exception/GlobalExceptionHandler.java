@@ -1,9 +1,13 @@
 package com.moya.myblogboot.exception;
 
 import com.moya.myblogboot.utils.CookieUtil;
+import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -12,15 +16,29 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.AccessDeniedException;
+import java.security.SignatureException;
 import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 아이디 중복
-    @ExceptionHandler(DuplicateUsernameException.class)
-    public ResponseEntity<?> handleDuplicateUsernameException(DuplicateUsernameException e) {
+    //Entity 등록 실패
+    @ExceptionHandler(PersistenceException.class)
+    public ResponseEntity<?> handlePersistenceException(PersistenceException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+
+    // 데이터 중복에 대한 예외처리
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<?> handleDuplicateKeyException(DuplicateKeyException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    // Entity NotFound에 대한 예외 처리
+    @ExceptionHandler(NoResultException.class)
+    public ResponseEntity<?> handleNoResultException(NoResultException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
     // 존재하지 않는 아이디
@@ -35,29 +53,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
-    // 회원가입 실패
-    @ExceptionHandler(MemberJoinFailedException.class)
-    public ResponseEntity<?> handleMemberJoinFailedException(MemberJoinFailedException e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-    }
-
     // 토큰 만료
     @ExceptionHandler(ExpiredTokenException.class)
     public ResponseEntity<?> handleExpiredTokenException(ExpiredTokenException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
-
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<?> handleExpiredJwtException(ExpiredJwtException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    }
     // 존재하지 않는 토큰
-    @ExceptionHandler(InvalidateTokenException.class)
-    public ResponseEntity<?> handleInvalidateTokenException(InvalidateTokenException e) {
+    @ExceptionHandler(SignatureException.class)
+    public ResponseEntity<?> handleInvalidateTokenException(SignatureException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
 
     // 권한이 없을 때.
-    @ExceptionHandler(UnauthorizedAccessException.class)
-    public ResponseEntity<?> handleUnauthorizedAccessException(UnauthorizedAccessException e) {
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleUnauthorizedAccessException(AccessDeniedException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getBindingResult().getAllErrors().get(0).getDefaultMessage());
@@ -66,12 +82,6 @@ public class GlobalExceptionHandler {
     // Element 찾지 못함
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<?> handleNoSuchElementException(NoSuchElementException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-    }
-
-    // 게시글 NotFound
-    @ExceptionHandler(BoardNotFoundException.class)
-    public ResponseEntity<?> handleBoardNotFoundException(BoardNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
@@ -89,9 +99,4 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 
-    // Comment Not Found Exception
-    @ExceptionHandler(CommentNotFoundException.class)
-    public ResponseEntity<?> handleCommentNotFoundException(CommentNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-    }
 }
