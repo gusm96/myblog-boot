@@ -14,7 +14,7 @@ public class CommentReqDto {
     @NotBlank(message = "댓글은 2글자 이상 500글자 이하로 작성하여야합니다.")
     @Size(min = 2, max = 500)
     private String comment;
-    private Long parent_id;
+    private Long parentId;
 
     public Comment toEntity (Member member, Board board){
         return Comment.builder()

@@ -96,50 +96,6 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.deleteBoardLike(getTokenInfo(request).getMemberPrimaryKey(), boardId));
     }
 
-    // 댓글 리스트
-    @GetMapping("/api/v1/boards/{boardId}/comments")
-    public ResponseEntity<List> reqToCommentList(@PathVariable Long boardId) {
-        return ResponseEntity.ok().body(commentService.getCommentList(boardId));
-    }
-    // 댓글 작성
-    @PostMapping("/api/v1/boards/{boardId}/comments")
-    public ResponseEntity<?> requestToWriteComment(
-            HttpServletRequest request,
-            @PathVariable("boardId") Long boardId,
-            @RequestBody @Valid CommentReqDto commentReqDto) {
-
-        Member member = getMember(request);
-        Board board = getRetrieveBoardById(boardId);
-
-        return ResponseEntity.ok().body(commentService.writeComment(member, board, commentReqDto));
-    }
-    // 댓글 수정
-    @PutMapping("/api/v1/boards/{boardId}/comments/{commentId}")
-    public ResponseEntity<?> editComment(
-            HttpServletRequest request,
-            @PathVariable("boardId") Long boardId,
-            @PathVariable("commentId") Long commentId,
-            @RequestBody @Valid CommentReqDto commentReqDto) {
-        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
-        Board board = getRetrieveBoardById(boardId);
-        return ResponseEntity.ok().body(commentService.updateComment(memberId, board, commentId, commentReqDto));
-    }
-
-    private Board getRetrieveBoardById(Long boardId) {
-        return boardService.retrieveBoardById(boardId);
-    }
-
-    // 댓글 삭제
-    @DeleteMapping("/api/v1/boards/{boardId}/comments/{commentId}")
-    public ResponseEntity<?> requestToDeleteComment(
-            HttpServletRequest request,
-            @PathVariable("boardId") Long boardId,
-            @PathVariable("commentId") Long commentId) {
-        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
-        Board board = getRetrieveBoardById(boardId);
-        return ResponseEntity.ok().body(commentService.deleteComment(memberId, commentId, board));
-    }
-
     private TokenInfo getTokenInfo(HttpServletRequest req){
         return authService.getTokenInfo(req.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1]);
     }
