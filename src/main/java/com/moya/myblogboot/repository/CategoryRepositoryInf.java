@@ -9,7 +9,7 @@ public interface CategoryRepositoryInf {
 
     Long create(Category category);
 
-    Optional<Category> findOne(Long categoryId);
+    Optional<Category> findById(Long categoryId);
 
     Optional<Category> findByName(String categoryName);
     List<Category> categories();

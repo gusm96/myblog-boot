@@ -12,7 +12,7 @@ public interface BoardRepositoryInf {
     Long upload(Board board);
 
     // 하나의 게시글 찾기
-    Optional<Board> findOne(Long idx);
+    Optional<Board> findById(Long idx);
 
     // 모든 게시글 찾기
     List<Board> findAll(int offset, int limit);

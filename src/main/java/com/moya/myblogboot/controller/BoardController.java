@@ -2,21 +2,17 @@ package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.comment.CommentReqDto;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardService;
 import com.moya.myblogboot.service.CategoryService;
-import com.moya.myblogboot.service.CommentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -42,32 +38,34 @@ public class BoardController {
     }
 
     // 선택한 게시글
-    @GetMapping("/api/v1/board/{boardId}")
-    public ResponseEntity<?> getBoard(@PathVariable Long boardId) {
+    @GetMapping("/api/v1/boards/{boardId}")
+    public ResponseEntity<BoardResDto> getBoard(@PathVariable Long boardId) {
         return ResponseEntity.ok().body(boardService.retrieveBoardResponseById(boardId));
     }
 
     // 게시글 작성 Post
-    @PostMapping("/api/v1/management/board")
-    public ResponseEntity<Long> postBoard(HttpServletRequest request, @RequestBody @Valid BoardReqDto boardReqDto) {
+    @PostMapping("/api/v1/management/boards")
+    public ResponseEntity<String> postBoard(HttpServletRequest request, @RequestBody @Valid BoardReqDto boardReqDto) {
         Member member = getMember(request);
         Category category = getCategory(boardReqDto.getCategory());
         return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, member, category));
     }
 
-
-
     // 게시글 수정
-    @PutMapping("/api/v1/management/board/{boardId}")
-    public ResponseEntity<Long> editBoard(@PathVariable("boardId") Long boardId, @RequestBody @Valid BoardReqDto boardReqDto) {
+    @PutMapping("/api/v1/management/boards/{boardId}")
+    public ResponseEntity<Long> editBoard(HttpServletRequest request,
+                                          @PathVariable("boardId") Long boardId,
+                                          @RequestBody @Valid BoardReqDto boardReqDto) {
+        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
         Category category = getCategory(boardReqDto.getCategory());
-        return ResponseEntity.ok().body(boardService.editBoard(boardId, boardReqDto.getTitle(), boardReqDto.getContent(), category));
+        return ResponseEntity.ok().body(boardService.editBoard(boardId, boardReqDto.getTitle(), boardReqDto.getContent(), memberId, category));
     }
 
     // 게시글 삭제
-    @DeleteMapping("/api/v1/management/board/{boardId}")
-    public ResponseEntity<Boolean> deleteBoard(@PathVariable("boardId") Long boardId) {
-        return ResponseEntity.ok().body(boardService.deleteBoard(boardId));
+    @DeleteMapping("/api/v1/management/boards/{boardId}")
+    public ResponseEntity<Boolean> deleteBoard(HttpServletRequest request, @PathVariable("boardId") Long boardId) {
+        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+        return ResponseEntity.ok().body(boardService.deleteBoard(boardId, memberId));
     }
 
     // 게시글 검색 기능 추가

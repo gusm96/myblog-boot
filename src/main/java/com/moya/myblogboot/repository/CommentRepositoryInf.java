@@ -9,7 +9,7 @@ public interface CommentRepositoryInf {
     // 댓글 작성
     Long write(Comment comment);
     // 댓글 찾기
-    Optional<Comment> findOne(Long replyId);
+    Optional<Comment> findById(Long replyId);
     // 댓글 리스트
     List<Comment> commentList(Long boardId);
     // 댓글 삭제

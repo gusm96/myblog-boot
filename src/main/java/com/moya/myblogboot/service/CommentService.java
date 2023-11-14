@@ -7,13 +7,15 @@ import com.moya.myblogboot.domain.comment.CommentResDto;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.exception.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.CommentRepository;
-import jakarta.persistence.NoResultException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -29,15 +31,21 @@ public class CommentService {
             comment.addParentComment(parent);
             parent.addChildComment(comment);
         }
-        Long result = commentRepository.write(comment);
-        // Board Entity에 Comment 추가 ( 변경감지 )
-        board.addComment(comment);
-        if (result > 0) {
-            return "댓글이 등록되었습니다.";
-        } else {
-            throw new RuntimeException("댓글 작성을 실패했습니다.");
+        try {
+            Long result = commentRepository.write(comment);
+            // Board Entity에 Comment 추가 ( 변경감지 )
+            board.addComment(comment);
+            if (result > 0) {
+                return "댓글이 등록되었습니다.";
+            }
+            return ("댓글 등록울 실패했습니다.");
+        } catch (Exception e) {
+            log.error("댓글 등록 중 에러 발생");
+            throw new RuntimeException("댓글 등록을 실패했습니다.");
         }
+        
     }
+    // 댓글 수정
     @Transactional
     public String updateComment(Long memberId, Long commentId, String comment) {
         Comment findComment = retrieveCommentById(commentId);
@@ -47,6 +55,7 @@ public class CommentService {
         findComment.updateComment(comment);
         return "result";
     }
+    // 댓글 삭제
     @Transactional
     public boolean deleteComment(Long memberId, Long commentId, Board board) {
         Comment findComment = retrieveCommentById(commentId);
@@ -58,10 +67,11 @@ public class CommentService {
             commentRepository.removeComment(findComment);
             return true;
         } catch (Exception e) {
-                throw new RuntimeException("댓글 삭제를 실패했습니다.");
+            log.error("댓글 삭제 중 에러 발생");
+            throw new RuntimeException("댓글 삭제를 실패했습니다.");
             }
     }
-
+    // 댓글 리스트
     public List<CommentResDto> getCommentList(Long boardId) {
         List<Comment> list = commentRepository.commentList(boardId);
         return list.stream()
@@ -69,10 +79,11 @@ public class CommentService {
                 .map(CommentResDto::of) // CommentResDto로 변환
                 .collect(Collectors.toList());
     }
-
+    
+    // 댓글 찾기
     public Comment retrieveCommentById(Long commentId) {
-        return commentRepository.findOne(commentId).orElseThrow(()
-                -> new NoResultException("해당 댓글은 삭제되었거나 존재하지 않습니다."));
+        return commentRepository.findById(commentId).orElseThrow(()
+                -> new EntityNotFoundException("해당 댓글은 삭제되었거나 존재하지 않습니다."));
     }
 
 

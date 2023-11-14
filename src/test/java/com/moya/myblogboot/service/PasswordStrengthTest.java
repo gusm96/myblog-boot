@@ -1,7 +1,6 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.PasswordStrength;
-import static org.junit.jupiter.api.Assertions.*;
+import com.moya.myblogboot.domain.member.PasswordStrength;
 
 import static org.assertj.core.api.Assertions.*;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +34,7 @@ public class PasswordStrengthTest {
         PasswordStrength strength = passwordLengthCheck.strengthCheck(password1);
         
         // then
-        assertThat(PasswordStrength.BAD).isEqualTo(strength);
+        assertThat(PasswordStrength.RISK).isEqualTo(strength);
     }
 
 }

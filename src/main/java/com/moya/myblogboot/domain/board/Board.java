@@ -5,6 +5,7 @@ import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -55,7 +56,7 @@ public class Board {
 
 
     // 게시글 수정
-    public void updateBoard(Category category, String title, String content) {
+    public void updateBoard(Category category, String title, String content ) {
         this.category = category;
         this.title = title;
         this.content = content;

@@ -21,10 +21,15 @@ public class MemberRepository implements MemberRepositoryInf {
 
     @Override
     public Optional<Member>  findByUsername (String username) {
+        try {
             Member findMember = em.createQuery("select m from Member m where m.username =: username", Member.class)
                     .setParameter("username", username)
                     .getSingleResult();
             return Optional.ofNullable(findMember);
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
+
     }
 
     @Override

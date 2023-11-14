@@ -1,6 +1,6 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.PasswordStrength;
+import com.moya.myblogboot.domain.member.PasswordStrength;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,13 +15,13 @@ public class PasswordStrengthCheck {
     private PasswordStrength getPasswordStrength(String password) {
         int count = passwordStrengthCount(password);
         if (count == 2) {
-            return PasswordStrength.LOW;
+            return PasswordStrength.RISK;
         } else if (count == 3) {
-            return PasswordStrength.MID;
+            return PasswordStrength.SAFE;
         } else if (count == 4) {
-            return PasswordStrength.HIGH;
+            return PasswordStrength.VERY_SAFE;
         }else {
-            return PasswordStrength.BAD;
+            return PasswordStrength.HIGH_RISK;
         }
     }
 

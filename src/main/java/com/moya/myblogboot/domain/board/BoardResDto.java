@@ -22,14 +22,15 @@ public class BoardResDto {
         this.content = board.getContent();
         this.category = board.getCategory().getName();
         this.upload_date = board.getUpload_date();
-        this.edit_date = getEdit_date();
+        this.edit_date = board.getEdit_date();
         this.likes = likes;
     }
 
     // List<Board> to List<BoardResDto>
-    public static BoardResDto of(Board board) {
+    public static BoardResDto of(Board board, Long likes) {
         return BoardResDto.builder()
                 .board(board)
+                .likes(likes)
                 .build();
     }
 }

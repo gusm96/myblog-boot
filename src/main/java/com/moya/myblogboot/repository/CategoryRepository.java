@@ -6,6 +6,7 @@ import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,17 +22,25 @@ public class CategoryRepository implements CategoryRepositoryInf {
     }
 
     @Override
-    public Optional<Category> findOne(Long categoryId) {
+    public Optional<Category> findById(Long categoryId) {
+        try {
             Category category = em.find(Category.class, categoryId);
             return Optional.ofNullable(category);
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 
     @Override
     public Optional<Category> findByName(String categoryName) {
+        try {
             Category result = em.createQuery("select c from Category c where c.name =:categoryName", Category.class)
                     .setParameter("categoryName", categoryName)
                     .getSingleResult();
             return Optional.ofNullable(result);
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 
     @Override

@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "category_id")
     private Long id;
 
     private String name;
@@ -27,4 +28,6 @@ public class Category {
     public void editCategory(String name){
         this.name = name;
     }
+
+
 }

@@ -2,6 +2,7 @@ package com.moya.myblogboot.exception;
 
 import com.moya.myblogboot.utils.CookieUtil;
 import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceException;
 import jakarta.servlet.http.Cookie;
@@ -36,8 +37,8 @@ public class GlobalExceptionHandler {
     }
 
     // Entity NotFound에 대한 예외 처리
-    @ExceptionHandler(NoResultException.class)
-    public ResponseEntity<?> handleNoResultException(NoResultException e) {
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 

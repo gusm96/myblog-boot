@@ -23,15 +23,13 @@ public class InitDb {
         Member adminMember = initService.initAdminMember();
         Long categoryId1 = initService.initCategory("Java");
         Long categoryId2 = initService.initCategory("Python");
-        Category category1 = categoryRepository.findOne(categoryId1).get();
-        Category category2 = categoryRepository.findOne(categoryId2).get();
+        Category category1 = categoryRepository.findById(categoryId1).get();
+        Category category2 = categoryRepository.findById(categoryId2).get();
 
       // Board 카테고리별로 10개씩
         for (int i = 0; i < 10; i++) {
-            Long boardId1 = initService.initBoard(adminMember, category1, "자바", "자바의 진짜 직이네~");
-            Long boardId2 = initService.initBoard(adminMember, category2, "파이썬", "파이썬 진짜 멋지네~~");
-            initService.increment(boardId1);
-            initService.increment(boardId2);
+            initService.initBoard(adminMember, category1, "자바", "자바의 진짜 직이네~");
+            initService.initBoard(adminMember, category2, "파이썬", "파이썬 진짜 멋지네~~");
         }
     }
     @Component
@@ -62,13 +60,10 @@ public class InitDb {
             return category.getId();
         }
 
-        public Long initBoard(Member member, Category category, String title, String content) {
+        public void initBoard(Member member, Category category, String title, String content) {
             BoardReqDto boardReqDto = BoardReqDto.builder().title(title).content(content).category(category.getId()).build();
-            return boardService.uploadBoard(boardReqDto, member, category);
+            boardService.uploadBoard(boardReqDto, member, category);
         }
 
-        public void increment(Long boardId){
-            boardService.incrementBoardLikeCount(boardId);
-        }
     }
 }

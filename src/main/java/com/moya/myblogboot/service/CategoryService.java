@@ -2,7 +2,7 @@ package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.repository.CategoryRepository;
-import jakarta.persistence.NoResultException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
@@ -35,6 +35,12 @@ public class CategoryService {
         }
     }
 
+    public Long updateCategory(Long categoryId, String categoryName) {
+        Category category = retrieveCategoryById(categoryId);
+        category.editCategory(categoryName);
+        return category.getId();
+    }
+    // 카테고리 삭제
     @Transactional
     public boolean deleteCategory(Long categoryId) {
         Category category = retrieveCategoryById(categoryId);
@@ -48,13 +54,7 @@ public class CategoryService {
     }
 
     public Category retrieveCategoryById(Long categoryId) {
-        return categoryRepository.findOne(categoryId).orElseThrow(()
-                -> new NoResultException("해당 카테고리를 찾을 수 없습니다."));
-    }
-
-    public Category retrieveCategoryByName(String name) {
-        return categoryRepository.findByName(name).orElseThrow(
-                () -> new NoResultException("해당 카테고리를 찾을 수 없습니다.")
-        );
+        return categoryRepository.findById(categoryId).orElseThrow(()
+                -> new EntityNotFoundException("해당 카테고리를 찾을 수 없습니다."));
     }
 }

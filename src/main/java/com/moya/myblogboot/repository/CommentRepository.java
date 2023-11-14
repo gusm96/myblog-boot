@@ -22,9 +22,13 @@ public class CommentRepository implements CommentRepositoryInf {
         return comment.getId();
     }
     @Override
-    public Optional<Comment> findOne(Long commentId) {
+    public Optional<Comment> findById(Long commentId) {
+        try {
             Comment result = em.find(Comment.class, commentId);
             return Optional.ofNullable(result);
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
     @Override
     public List<Comment> commentList(Long boardId) {

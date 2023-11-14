@@ -23,7 +23,7 @@ public class BoardRepository implements BoardRepositoryInf {
     }
 
     @Override
-    public Optional<Board> findOne(Long id) {
+    public Optional<Board> findById(Long id) {
         try{
             Board board = em.find(Board.class, id);
             return Optional.ofNullable(board);
@@ -43,7 +43,6 @@ public class BoardRepository implements BoardRepositoryInf {
                 .setFirstResult(offset)
                 .setMaxResults(limit)
                 .getResultList();
-
     }
 
     @Override

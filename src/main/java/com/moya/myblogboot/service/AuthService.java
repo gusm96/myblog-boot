@@ -8,7 +8,7 @@ import com.moya.myblogboot.exception.*;
 import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.repository.RefreshTokenRedisRepository;
 import com.moya.myblogboot.utils.JwtUtil;
-import jakarta.persistence.NoResultException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -88,7 +88,7 @@ public class AuthService {
 
     public Member retrieveMemberById(Long memberId) {
             return memberRepository.findById(memberId).orElseThrow(()
-                    -> new NoResultException("회원이 존재하지 않습니다."));
+                    -> new EntityNotFoundException("회원이 존재하지 않습니다."));
     }
 
     public String reissuingAccessToken(Long refreshTokenKey) {
