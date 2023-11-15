@@ -139,5 +139,11 @@ public class AuthService {
         return member.getId();
     }
 
+    public Long saveRefreshTokenToRedisVersionTwo(String refreshToken, Long memberId) {
+        String key = "refreshToken::" + memberId;
+        String value = refreshToken;
+        return memberId;
+    }
+
 
 }

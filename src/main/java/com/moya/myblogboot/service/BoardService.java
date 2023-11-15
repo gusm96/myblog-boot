@@ -9,10 +9,13 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -21,8 +24,9 @@ import java.util.List;
 public class BoardService {
 
     private final BoardRepository boardRepository;
-    private final MemberBoardLikeRedisRepository memberBoardLikeRedisRepository;
-    private final BoardLikeCountRedisRepository boardLikeCountRedisRepository;
+    private final RedisTemplate<String,Object> redisTemplate;
+    private static final String MEMBER_BOARD_LIKE_KEY = "memberBoardLike:";
+    private static final String BOARD_LIKE_COUNT_KEY = "boardLikeCount:";
 
     // 페이지별 최대 게시글 수
     public static final int LIMIT = 10;
@@ -32,7 +36,7 @@ public class BoardService {
         List<Board> boardList = boardRepository.findAll(pagination(page), LIMIT);
         Long listCount = boardRepository.findAllCount();
         List<BoardResDto> resultList = boardList.stream().map(board
-                -> BoardResDto.of(board, retrieveBoardLikeCountByBoardId(board.getId()).getCount()))
+                -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
 
         BoardListResDto boardListResDto = BoardListResDto.builder()
@@ -49,7 +53,7 @@ public class BoardService {
         Long listCount = boardRepository.findByCategoryCount(category.getName());
 
         List<BoardResDto> resultList = boardList.stream().map(board
-                        -> BoardResDto.of(board, retrieveBoardLikeCountByBoardId(board.getId()).getCount()))
+                        -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
 
         BoardListResDto boardListResDto = BoardListResDto.builder()
@@ -65,7 +69,7 @@ public class BoardService {
         Long listCount = boardRepository.findBySearchCount(searchType, searchContents);
 
         List<BoardResDto> resultList = boardList.stream().map(board
-                        -> BoardResDto.of(board, retrieveBoardLikeCountByBoardId(board.getId()).getCount()))
+                        -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
 
         BoardListResDto boardListResDto = BoardListResDto.builder()
@@ -80,7 +84,7 @@ public class BoardService {
     public BoardResDto retrieveBoardResponseById(Long boardId){
             return BoardResDto.builder()
                     .board(retrieveBoardById(boardId))
-                    .likes(retrieveBoardLikeCountByBoardId(boardId).getCount())
+                    .likes(getBoardLikeCount(boardId))
                     .build();
     }
     // 게시글 수정
@@ -126,60 +130,65 @@ public class BoardService {
         }
     }
 
+
     private void createBoardLikeCount(Long boardId) {
-        BoardLikeCount boardLikeCount = BoardLikeCount.builder()
-                .id(boardId)
-                .build();
-        try {
-            boardLikeCountRedisRepository.save(boardLikeCount);
-        } catch (Exception e) {
-            log.error("게시글 좋아요 정보 생성 중 에러 발생");
-            throw new RuntimeException("게시글 정보 생성을 실패했습니다.");
+        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
+        String key = BOARD_LIKE_COUNT_KEY + boardId;
+        String hashKey = "count";
+        if(hashOperations.get(key,hashKey) == null){
+            hashOperations.put(key, hashKey, 0L);
         }
     }
 
     // 게시글 좋아요
+    @Transactional
     public Long addLikeToBoard(Long memberId, Long boardId){
-        if(checkBoardLikedStatus(memberId, boardId)){
+        if(checkBoardLikedStatus(memberId, boardId))
             throw new DuplicateKeyException("이미 \"좋아요\"했습니다.");
-        }
-        createUserBoardLike(memberId, boardId);
+        createMemberBoardLike(memberId, boardId);
         incrementBoardLikeCount(boardId);
-        return retrieveBoardLikeCountByBoardId(boardId).getCount();
+        return getBoardLikeCount(boardId);
     }
 
-    private BoardLikeCount retrieveBoardLikeCountByBoardId(Long boardId) {
-        return boardLikeCountRedisRepository.findById(boardId).orElseThrow(
-                () -> new EntityNotFoundException("게시글 \"좋아요\"가 존재하지 않습니다."));
+    private Long getBoardLikeCount(Long boardId) {
+        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
+        String key = BOARD_LIKE_COUNT_KEY + boardId;
+        String hashKey = "count";
+        return (Long) hashOperations.get(key, hashKey);
     }
-
-    private void createUserBoardLike(Long memberId, Long boardId) {
-        MemberBoardLike memberBoardLike = MemberBoardLike.builder()
-                .id(memberId)
-                .boardId(boardId)
-                .build();
-        memberBoardLikeRedisRepository.save(memberBoardLike);
+    private void createMemberBoardLike(Long memberId, Long boardId) {
+        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
+        String key = MEMBER_BOARD_LIKE_KEY + memberId;
+        String hashKey = "boardId";
+        hashOperations.put(key, hashKey, boardId);
     }
 
     public boolean checkBoardLikedStatus(Long memberId, Long boardId) {
-        try {
-            return retrieveMemberBoardLikeByIdAndBoardId(memberId, boardId) != null ? true : false;
-        } catch (EntityNotFoundException e) {
-            return false;
+        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
+        String key = MEMBER_BOARD_LIKE_KEY + memberId;
+        String hashKey = "boardId";
+        if(hashOperations.get(key,hashKey) == boardId){
+            return true;
         }
+        return false;
     }
 
     public boolean deleteBoardLike(Long memberId, Long boardId) {
-        MemberBoardLike memberBoardLike = retrieveMemberBoardLikeByIdAndBoardId(memberId, boardId);
+        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
+        String key = MEMBER_BOARD_LIKE_KEY + memberId;
+        String hashKey = "boardId";
+
         try {
-            memberBoardLikeRedisRepository.delete(memberBoardLike);
             decrementBoardLikeCount(boardId);
+            hashOperations.delete(key, hashKey, boardId);
             return true;
         }catch (Exception e){
             log.error("게시글 좋아요 삭제 중 에러 발생");
             throw new RuntimeException("게시글 \"좋아요\" 정보를 조회 및 삭제할 수 없습니다.");
         }
     }
+
+
     public Board retrieveBoardById(Long boardId) {
         return boardRepository.findById(boardId).orElseThrow(
                 () -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다.")
@@ -198,26 +207,24 @@ public class BoardService {
         }
     }
 
-    private MemberBoardLike retrieveMemberBoardLikeByIdAndBoardId (Long memberId, Long boardId){
-        MemberBoardLike findMemberBoardLike = memberBoardLikeRedisRepository.findById(memberId).orElseThrow(
-                () -> new EntityNotFoundException("게시글 \"좋아요\" 결과 없음"));
-        if (findMemberBoardLike.getBoardId() == boardId) {
-            return findMemberBoardLike;
-        }else {
-            throw new EntityNotFoundException("게시글 \"좋아요\" 결과 없음");
+    private void updateBoardLikeCount(Long boardId, Long delta) {
+        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
+        String key = BOARD_LIKE_COUNT_KEY + boardId;
+        String hashKey = "count";
+
+        Object countObject = hashOperations.get(key, hashKey);
+        if (countObject != null) {
+            Long currentCount = (Long) countObject;
+            Long newCount = currentCount + delta;
+            hashOperations.put(key, hashKey, newCount);
         }
     }
-    public void incrementBoardLikeCount(Long boardId) {
-        BoardLikeCount boardLikeCount = retrieveBoardLikeCountByBoardId(boardId);
-        boardLikeCount.increment();
-        // 변경된 내용 저장
-        boardLikeCountRedisRepository.save(boardLikeCount);
+
+    private void incrementBoardLikeCount(Long boardId) {
+        updateBoardLikeCount(boardId, 1L);
     }
 
-    public void decrementBoardLikeCount(Long boardId) {
-        BoardLikeCount boardLikeCount = retrieveBoardLikeCountByBoardId(boardId);
-        boardLikeCount.decrement();
-        // 변경된 내용 저장
-        boardLikeCountRedisRepository.save(boardLikeCount);
+    private void decrementBoardLikeCount(Long boardId) {
+        updateBoardLikeCount(boardId, -1L);
     }
 }
