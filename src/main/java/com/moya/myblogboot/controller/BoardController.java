@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -90,7 +91,8 @@ public class BoardController {
 
     @DeleteMapping("/api/v1/boards/{boardId}/likes")
     public ResponseEntity<?> requestToDeleteBoardLike (HttpServletRequest request, @PathVariable("boardId") Long boardId){
-        return ResponseEntity.ok().body(boardService.deleteBoardLike(getTokenInfo(request).getMemberPrimaryKey(), boardId));
+        boardService.deleteBoardLike(getTokenInfo(request).getMemberPrimaryKey(), boardId);
+        return ResponseEntity.ok().body(HttpStatus.OK);
     }
 
     private TokenInfo getTokenInfo(HttpServletRequest req){

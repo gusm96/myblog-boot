@@ -6,7 +6,6 @@ import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.token.*;
 import com.moya.myblogboot.exception.*;
 import com.moya.myblogboot.repository.MemberRepository;
-import com.moya.myblogboot.repository.RefreshTokenRedisRepository;
 import com.moya.myblogboot.utils.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
@@ -14,12 +13,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 
 @Service
@@ -28,19 +28,25 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RefreshTokenRedisRepository refreshTokenRedisRepository;
+
+    private static final String REFRESH_TOKEN_KEY = "refreshToken:";
+    private static final String REFRESH_TOKEN_HASH_KEY = "tokenValue";
+
     @Value("${jwt.secret}")
-    private  String secret;
+    private String secret;
 
     @Value("${jwt.access-token-expiration}")
-    private  Long accessTokenExpiration;
+    private Long accessTokenExpiration;
 
     @Value("${jwt.refresh-token-expiration}")
-    private  Long refreshTokenExpiration;
+    private Long refreshTokenExpiration;
+
+    private final RedisTemplate<String, String> redisTemplate;
 
     // 회원 가입
     @Transactional
-    public String memberJoin (MemberJoinReqDto memberJoinReqDto){
+
+    public String memberJoin(MemberJoinReqDto memberJoinReqDto) {
         // 아이디 중복 체크
         validateUsername(memberJoinReqDto.getUsername());
         // 비밀번호 암호화
@@ -62,7 +68,7 @@ public class AuthService {
 
     // 회원 아이디 유효성 검사.
     private void validateUsername(String username) {
-        if (memberRepository.findByUsername(username).isPresent()){
+        if (memberRepository.findByUsername(username).isPresent()) {
             throw new DuplicateKeyException("이미 존재하는 회원입니다.");
         }
     }
@@ -78,7 +84,7 @@ public class AuthService {
         // Token 생성
         Token newToken = createToken(findMember);
         // Redis RefreshToken 저장.
-        Long refreshTokenKey = saveRefreshTokenToRedis(newToken.getRefresh_token(), findMember);
+        Long refreshTokenKey = saveRefreshTokenToRedis(newToken.getRefresh_token(), findMember.getId());
 
         return TokenResDto.builder()
                 .access_token(newToken.getAccess_token())
@@ -87,28 +93,33 @@ public class AuthService {
     }
 
     public Member retrieveMemberById(Long memberId) {
-            return memberRepository.findById(memberId).orElseThrow(()
-                    -> new EntityNotFoundException("회원이 존재하지 않습니다."));
+        return memberRepository.findById(memberId).orElseThrow(()
+                -> new EntityNotFoundException("회원이 존재하지 않습니다."));
     }
 
     public String reissuingAccessToken(Long refreshTokenKey) {
         // Refresh Token 찾는다.
-        RefreshToken findRefreshToken = retrieveRefreshTokenById(refreshTokenKey);
+        String findRefreshToken = retrieveRefreshTokenByKey(refreshTokenKey);
         // Refresh Token 검증.
-        try{
-            JwtUtil.validateToken(findRefreshToken.getTokenValue(), secret);
-        }catch (ExpiredTokenException e){
+        try {
+            JwtUtil.validateToken(findRefreshToken, secret);
+        } catch (ExpiredTokenException e) {
             // RefreshToken 만료시 Data 삭제.
-            refreshTokenRedisRepository.delete(findRefreshToken);
+            deleteRefreshToken(refreshTokenKey);
             throw new ExpiredRefreshTokenException("토큰이 만료되었습니다.");
         }
         // Access Token 재발급
-        return JwtUtil.reissuingToken(getTokenInfo(findRefreshToken.getTokenValue()), secret, accessTokenExpiration);
+        return JwtUtil.reissuingToken(getTokenInfo(findRefreshToken), secret, accessTokenExpiration);
     }
 
-    private RefreshToken retrieveRefreshTokenById (Long id) {
-        return refreshTokenRedisRepository.findById(id).orElseThrow(()
-                -> new InvalidateTokenException("존재하지 않는 토큰입니다."));
+    private String retrieveRefreshTokenByKey(Long refreshTokenKey) {
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        String key = REFRESH_TOKEN_KEY + refreshTokenKey;
+        Object refreshToken = hashOperations.get(key, REFRESH_TOKEN_HASH_KEY);
+        if (refreshToken == null) {
+            return null;
+        }
+        return refreshToken.toString();
     }
 
     private Token createToken(Member member) {
@@ -116,34 +127,44 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(Long refreshTokenKey) {
-        RefreshToken refreshToken = retrieveRefreshTokenById(refreshTokenKey);
-        refreshTokenRedisRepository.delete(refreshToken);
+    public boolean logout(Long refreshTokenKey) {
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        String key = REFRESH_TOKEN_KEY + refreshTokenKey;
+        if (hashOperations.get(key, REFRESH_TOKEN_HASH_KEY) == null) {
+            return true;
+        }
+        try {
+            hashOperations.delete(key, REFRESH_TOKEN_HASH_KEY);
+            return true;
+        }catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("로그아웃 중 에러가 발생했습니다");
+        }
     }
 
     public TokenInfo getTokenInfo(String token) {
-            return JwtUtil.getTokenInfo(token, secret);
+        return JwtUtil.getTokenInfo(token, secret);
 
+    }
+
+    @Transactional
+    public void deleteRefreshToken(Long refreshTokenKey) {
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        String key = REFRESH_TOKEN_KEY + refreshTokenKey;
+        if (hashOperations.get(key, REFRESH_TOKEN_HASH_KEY) != null)
+            hashOperations.delete(key, REFRESH_TOKEN_HASH_KEY);
     }
     @Transactional
-    public Long saveRefreshTokenToRedis(String refreshToken, Member member){
-        // Redis에 저장.
-        RefreshToken token = RefreshToken.builder()
-                .id(member.getId())
-                .username(member.getUsername())
-                .tokenValue(refreshToken)
-                .expiration(refreshTokenExpiration)
-                .build();
-        refreshTokenRedisRepository.save(token);
-
-        return member.getId();
-    }
-
-    public Long saveRefreshTokenToRedisVersionTwo(String refreshToken, Long memberId) {
-        String key = "refreshToken::" + memberId;
-        String value = refreshToken;
+    public Long saveRefreshTokenToRedis(String refreshToken, Long memberId) {
+        HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+        String key = REFRESH_TOKEN_KEY + memberId;
+        // 이미 토큰이 저장되어 있다면, 삭제하고 새로 저장.
+        if (hashOperations.get(key, REFRESH_TOKEN_HASH_KEY) == null) {
+            hashOperations.put(key, REFRESH_TOKEN_HASH_KEY, refreshToken);
+        } else {
+            hashOperations.delete(key, REFRESH_TOKEN_HASH_KEY);
+            hashOperations.put(key, REFRESH_TOKEN_HASH_KEY, refreshToken);
+        }
         return memberId;
     }
-
-
 }

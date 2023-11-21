@@ -5,8 +5,6 @@ import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.LastModifiedDate;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

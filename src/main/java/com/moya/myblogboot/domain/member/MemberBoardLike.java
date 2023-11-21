@@ -1,4 +1,4 @@
-package com.moya.myblogboot.domain.board;
+package com.moya.myblogboot.domain.member;
 
 import jakarta.persistence.Id;
 import lombok.*;

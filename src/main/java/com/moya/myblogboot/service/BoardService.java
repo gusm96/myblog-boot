@@ -3,6 +3,7 @@ package com.moya.myblogboot.service;
 import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
+import com.moya.myblogboot.domain.member.MemberBoardLike;
 import com.moya.myblogboot.exception.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -14,8 +15,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @Service
@@ -24,7 +25,8 @@ import java.util.Objects;
 public class BoardService {
 
     private final BoardRepository boardRepository;
-    private final RedisTemplate<String,Object> redisTemplate;
+    private final RedisTemplate<String,Long> redisTemplate;
+    private final MemberBoardLikeRedisRepositoryInf memberBoardLikeRedisRepositoryInf;
     private static final String MEMBER_BOARD_LIKE_KEY = "memberBoardLike:";
     private static final String BOARD_LIKE_COUNT_KEY = "boardLikeCount:";
 
@@ -35,14 +37,17 @@ public class BoardService {
     public BoardListResDto retrieveBoardList(int page) {
         List<Board> boardList = boardRepository.findAll(pagination(page), LIMIT);
         Long listCount = boardRepository.findAllCount();
-        List<BoardResDto> resultList = boardList.stream().map(board
-                -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
-                .toList();
-
-        BoardListResDto boardListResDto = BoardListResDto.builder()
-                .list(resultList)
-                .pageCount(pageCount(listCount)).build();
-        return boardListResDto;
+        try {
+            List<BoardResDto> resultList = boardList.stream().map(board
+                            -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
+                    .toList();
+            return BoardListResDto.builder()
+                    .list(resultList)
+                    .pageCount(pageCount(listCount)).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("게시물 리스트를 가져오는데 실패했습니다.");
+        }
     }
 
     // 카테고리별 게시글 리스트
@@ -56,11 +61,10 @@ public class BoardService {
                         -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
 
-        BoardListResDto boardListResDto = BoardListResDto.builder()
+        return BoardListResDto.builder()
                 .list(resultList)
                 .pageCount(pageCount(listCount))
                 .build();
-        return boardListResDto;
     }
     
     // 검색한 게시글 리스트
@@ -72,12 +76,10 @@ public class BoardService {
                         -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
 
-        BoardListResDto boardListResDto = BoardListResDto.builder()
+        return BoardListResDto.builder()
                 .list(resultList)
                 .pageCount(pageCount(listCount))
                 .build();
-
-        return boardListResDto;
     }
     
     // 선택한 게시글 가져오기
@@ -145,49 +147,41 @@ public class BoardService {
     public Long addLikeToBoard(Long memberId, Long boardId){
         if(checkBoardLikedStatus(memberId, boardId))
             throw new DuplicateKeyException("이미 \"좋아요\"했습니다.");
-        createMemberBoardLike(memberId, boardId);
-        incrementBoardLikeCount(boardId);
-        return getBoardLikeCount(boardId);
+        try {
+            createMemberBoardLike(memberId, boardId);
+            incrementBoardLikeCount(boardId);
+            return getBoardLikeCount(boardId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("게시글 \"좋아요\"를 실패했습니다.");
+        }
     }
 
     private Long getBoardLikeCount(Long boardId) {
         HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
         String key = BOARD_LIKE_COUNT_KEY + boardId;
         String hashKey = "count";
-        return (Long) hashOperations.get(key, hashKey);
+        try {
+            return ((Number) hashOperations.get(key, hashKey)).longValue();
+        } catch (NullPointerException e) {
+            return 0L;
+        }
     }
     private void createMemberBoardLike(Long memberId, Long boardId) {
-        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
         String key = MEMBER_BOARD_LIKE_KEY + memberId;
-        String hashKey = "boardId";
-        hashOperations.put(key, hashKey, boardId);
+        redisTemplate.opsForSet().add(key, boardId);
     }
 
     public boolean checkBoardLikedStatus(Long memberId, Long boardId) {
-        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
         String key = MEMBER_BOARD_LIKE_KEY + memberId;
-        String hashKey = "boardId";
-        if(hashOperations.get(key,hashKey) == boardId){
-            return true;
-        }
-        return false;
+        return redisTemplate.opsForSet().isMember(key, boardId);
     }
 
-    public boolean deleteBoardLike(Long memberId, Long boardId) {
-        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
+    @Transactional
+    public void deleteBoardLike(Long memberId, Long boardId) {
         String key = MEMBER_BOARD_LIKE_KEY + memberId;
-        String hashKey = "boardId";
-
-        try {
-            decrementBoardLikeCount(boardId);
-            hashOperations.delete(key, hashKey, boardId);
-            return true;
-        }catch (Exception e){
-            log.error("게시글 좋아요 삭제 중 에러 발생");
-            throw new RuntimeException("게시글 \"좋아요\" 정보를 조회 및 삭제할 수 없습니다.");
-        }
+        redisTemplate.opsForSet().remove(key, boardId);
     }
-
 
     public Board retrieveBoardById(Long boardId) {
         return boardRepository.findById(boardId).orElseThrow(
@@ -214,7 +208,7 @@ public class BoardService {
 
         Object countObject = hashOperations.get(key, hashKey);
         if (countObject != null) {
-            Long currentCount = (Long) countObject;
+            Long currentCount = ((Number) countObject).longValue();
             Long newCount = currentCount + delta;
             hashOperations.put(key, hashKey, newCount);
         }
