@@ -3,19 +3,15 @@ package com.moya.myblogboot.service;
 import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.domain.member.MemberBoardLike;
 import com.moya.myblogboot.exception.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -23,12 +19,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BoardService {
-
     private final BoardRepository boardRepository;
-    private final RedisTemplate<String,Long> redisTemplate;
-    private final MemberBoardLikeRedisRepositoryInf memberBoardLikeRedisRepositoryInf;
-    private static final String MEMBER_BOARD_LIKE_KEY = "memberBoardLike:";
-    private static final String BOARD_LIKE_COUNT_KEY = "boardLikeCount:";
+    private final MemberBoardLikeRedisRepository memberBoardLikeRedisRepository;
+    private final BoardLikeCountRedisRepository boardLikeCountRedisRepository;
 
     // 페이지별 최대 게시글 수
     public static final int LIMIT = 10;
@@ -134,11 +127,11 @@ public class BoardService {
 
 
     private void createBoardLikeCount(Long boardId) {
-        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
-        String key = BOARD_LIKE_COUNT_KEY + boardId;
-        String hashKey = "count";
-        if(hashOperations.get(key,hashKey) == null){
-            hashOperations.put(key, hashKey, 0L);
+        try {
+            boardLikeCountRedisRepository.save(boardId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("게시글 \"좋아요 수\"정보 생성 중 오류발생");
         }
     }
 
@@ -158,29 +151,40 @@ public class BoardService {
     }
 
     private Long getBoardLikeCount(Long boardId) {
-        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
-        String key = BOARD_LIKE_COUNT_KEY + boardId;
-        String hashKey = "count";
         try {
-            return ((Number) hashOperations.get(key, hashKey)).longValue();
+            return boardLikeCountRedisRepository.findBoardLikeCount(boardId);
         } catch (NullPointerException e) {
             return 0L;
         }
     }
     private void createMemberBoardLike(Long memberId, Long boardId) {
-        String key = MEMBER_BOARD_LIKE_KEY + memberId;
-        redisTemplate.opsForSet().add(key, boardId);
+        if (checkBoardLikedStatus(memberId, boardId)) {
+            throw new DuplicateKeyException("이미 \"좋아요\"한 게시글 입니다");
+        }
+        try {
+            memberBoardLikeRedisRepository.save(memberId, boardId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("게시글 \"좋아요\"정보 저장을 실패했습니다");
+        }
     }
 
     public boolean checkBoardLikedStatus(Long memberId, Long boardId) {
-        String key = MEMBER_BOARD_LIKE_KEY + memberId;
-        return redisTemplate.opsForSet().isMember(key, boardId);
+        return memberBoardLikeRedisRepository.isMember(memberId, boardId);
     }
 
     @Transactional
     public void deleteBoardLike(Long memberId, Long boardId) {
-        String key = MEMBER_BOARD_LIKE_KEY + memberId;
-        redisTemplate.opsForSet().remove(key, boardId);
+        if (!checkBoardLikedStatus(memberId, boardId)) {
+            throw new RuntimeException("존재하지 않는다.");
+        }
+        try {
+            memberBoardLikeRedisRepository.delete(memberId, boardId);
+            decrementBoardLikeCount(boardId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("게시글 \"좋아요\"정보 삭제를 실패했습니다");
+        }
     }
 
     public Board retrieveBoardById(Long boardId) {
@@ -202,15 +206,11 @@ public class BoardService {
     }
 
     private void updateBoardLikeCount(Long boardId, Long delta) {
-        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
-        String key = BOARD_LIKE_COUNT_KEY + boardId;
-        String hashKey = "count";
-
-        Object countObject = hashOperations.get(key, hashKey);
-        if (countObject != null) {
-            Long currentCount = ((Number) countObject).longValue();
+        Long boardLikeCount = boardLikeCountRedisRepository.findBoardLikeCount(boardId);
+        if (boardLikeCount != null) {
+            Long currentCount = boardLikeCount;
             Long newCount = currentCount + delta;
-            hashOperations.put(key, hashKey, newCount);
+            boardLikeCountRedisRepository.update(boardId, newCount);
         }
     }
 
