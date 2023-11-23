@@ -6,7 +6,6 @@ import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.token.*;
 import com.moya.myblogboot.exception.*;
 import com.moya.myblogboot.repository.MemberRepository;
-import com.moya.myblogboot.repository.RefreshTokenRedisRepository;
 import com.moya.myblogboot.utils.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
@@ -27,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RefreshTokenRedisRepository refreshTokenRedisRepository;
 
     @Value("${jwt.secret}")
     private String secret;
@@ -69,7 +67,7 @@ public class AuthService {
     }
 
     // 회원 로그인
-    public TokenResDto memberLogin(LoginReqDto loginReqDto) {
+    public Token memberLogin(LoginReqDto loginReqDto) {
         // username으로 회원 찾기
         Member findMember = memberRepository.findByUsername(loginReqDto.getUsername()).orElseThrow(()
                 -> new UsernameNotFoundException("존재하지 않는 아이디 입니다."));
@@ -77,81 +75,33 @@ public class AuthService {
         if (!passwordEncoder.matches(loginReqDto.getPassword(), findMember.getPassword()))
             throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
         // Token 생성
-        Token newToken = createToken(findMember);
-        // Redis RefreshToken 저장.
-        Long memberId = saveRefreshTokenToRedis(newToken.getRefresh_token(), findMember.getId());
-
-        return TokenResDto.builder()
-                .access_token(newToken.getAccess_token())
-                .refresh_token_key(memberId)
-                .build();
+        return createToken(findMember);
     }
+
 
     public Member retrieveMemberById(Long memberId) {
         return memberRepository.findById(memberId).orElseThrow(()
                 -> new EntityNotFoundException("회원이 존재하지 않습니다."));
     }
 
-    public String reissuingAccessToken(Long memberId) {
-        // Refresh Token 찾는다.
-        String findRefreshToken = retrieveRefreshTokenById(memberId);
+    public String reissuingAccessToken(String refreshToken) {
         // Refresh Token 검증.
         try {
-            JwtUtil.validateToken(findRefreshToken, secret);
+            JwtUtil.validateToken(refreshToken, secret);
         } catch (ExpiredTokenException e) {
             // RefreshToken 만료시 Data 삭제.
-            deleteRefreshToken(memberId);
             throw new ExpiredRefreshTokenException("토큰이 만료되었습니다.");
         }
         // Access Token 재발급
-        return JwtUtil.reissuingToken(getTokenInfo(findRefreshToken), secret, accessTokenExpiration);
-    }
-
-    private String retrieveRefreshTokenById(Long memberId) {
-        try {
-            return refreshTokenRedisRepository.findRefreshTokenById(memberId);
-        } catch (NullPointerException e) {
-            return null;
-        }
+        return JwtUtil.reissuingToken(getTokenInfo(refreshToken), secret, accessTokenExpiration);
     }
 
     private Token createToken(Member member) {
         return JwtUtil.createToken(member, secret, accessTokenExpiration, refreshTokenExpiration);
     }
 
-    @Transactional
-    public boolean logout(Long memberId) {
-        if (retrieveRefreshTokenById(memberId) == null) {
-            return true;
-        }
-        try {
-            deleteRefreshToken(memberId);
-            return true;
-        }catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("로그아웃 중 에러가 발생했습니다");
-        }
-    }
-
     public TokenInfo getTokenInfo(String token) {
         return JwtUtil.getTokenInfo(token, secret);
-
     }
 
-    @Transactional
-    public void deleteRefreshToken(Long memberId) {
-        try {
-            refreshTokenRedisRepository.delete(memberId);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("RefreshToken 삭제를 실패했습니다.");
-        }
-    }
-    @Transactional
-    public Long saveRefreshTokenToRedis(String refreshToken, Long memberId) {
-        // 이미 토큰이 저장되어 있다면, 삭제하고 새로 저장.
-        if (retrieveRefreshTokenById(memberId) != null)
-            deleteRefreshToken(memberId);
-        return refreshTokenRedisRepository.save(memberId, refreshToken);
-    }
 }
