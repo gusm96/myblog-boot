@@ -104,4 +104,15 @@ public class AuthService {
         return JwtUtil.getTokenInfo(token, secret);
     }
 
+    public boolean tokenIsExpired(String token) {
+        try {
+            JwtUtil.validateToken(token, secret);
+            return true;
+        } catch (ExpiredTokenException e) {
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

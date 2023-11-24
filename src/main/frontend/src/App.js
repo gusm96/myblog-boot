@@ -50,7 +50,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="boards" element={<Home />} />
           {/* <Route path=":categoryName" /> */}
-          <Route path="board/:boardId" element={<BoardDetail />} />
+          <Route path="boards/:boardId" element={<BoardDetail />} />
           <Route
             path="login"
             element={isLoggedIn ? <NavigateBack /> : <LoginForm />}

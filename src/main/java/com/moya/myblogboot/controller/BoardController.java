@@ -48,7 +48,8 @@ public class BoardController {
     @PostMapping("/api/v1/management/boards")
     public ResponseEntity<String> postBoard(HttpServletRequest request, @RequestBody @Valid BoardReqDto boardReqDto) {
         Member member = getMember(request);
-        Category category = getCategory(boardReqDto.getCategory());
+        System.out.println(boardReqDto.getCategory());
+        Category category = getCategory( boardReqDto.getCategory());
         return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, member, category));
     }
 

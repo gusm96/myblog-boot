@@ -10,14 +10,22 @@ import {
 } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { selectIsLoggedIn } from "../../redux/userSlice";
+import { addComment } from "../../services/boardApi";
 
-export const Comment = () => {
+export const Comment = ({ boardId, accessToken }) => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const [isLoggedInModal, setIsLoggedInModal] = useState(false);
-  const [commentData, setCommentData] = useState("");
+  const [commentData, setCommentData] = useState({
+    comment: "",
+    parentId: "",
+  });
 
   const handleChange = (e) => {
-    setCommentData(e.target.value);
+    const { name, value } = e.target;
+    setCommentData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleCommentBoxClick = (e) => {
@@ -30,9 +38,12 @@ export const Comment = () => {
   const handleOnSubmit = (e) => {
     e.preventDefault();
     // textarea의 값이 0 or null or " "이 아닌지 확인
-    if (commentData.trim() === "") {
+    if (commentData.comment.trim() === "") {
       alert("댓글의 내용을 입력하세요.");
     } else {
+      addComment(boardId, commentData, accessToken)
+        .then((data) => console.log(data))
+        .catch((error) => console.log(error));
     }
   };
 
@@ -40,7 +51,7 @@ export const Comment = () => {
     setIsLoggedInModal(false);
   };
   return (
-    <div
+    <form
       onSubmit={handleOnSubmit}
       style={{
         display: "flex",
@@ -50,7 +61,7 @@ export const Comment = () => {
         onClick={handleCommentBoxClick}
         name="comment"
         placeholder="댓글을 입력하세요."
-        value={commentData}
+        value={commentData.comment}
         onChange={handleChange}
         style={{
           width: "70%",
@@ -85,6 +96,6 @@ export const Comment = () => {
         <ModalBody></ModalBody>
         <ModalFooter>회원가입</ModalFooter>
       </Modal>
-    </div>
+    </form>
   );
 };

@@ -26,10 +26,10 @@ export const ProtectedRoute = () => {
 
   if (!isLoggedIn) {
     return <Navigate to="/login" state={{ from: location }} />;
-  } else if (role === "NORMAL") {
+  } else if (role === "ROLE_NORMAL") {
     alert("접근 권한이 없습니다.");
     return <Navigate to="/" />;
-  } else if (role === "ADMIN") {
+  } else if (role === "ROLE_ADMIN") {
     return (
       <div>
         <header>

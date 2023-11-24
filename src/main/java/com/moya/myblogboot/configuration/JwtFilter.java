@@ -92,7 +92,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 "/api/v1/boards/search",
                 "/api/v1/categories",
                 "/api/v1/reissuing-token",
-                "/api/v1/password-strength-check"
+                "/api/v1/password-strength-check",
         };
 
         String path = request.getRequestURI();

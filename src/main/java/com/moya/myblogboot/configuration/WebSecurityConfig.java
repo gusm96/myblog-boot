@@ -39,7 +39,6 @@ public class WebSecurityConfig {
                 .csrf().disable() // Cross Site Request Forgery (사이트간 위조요청) Non-browser clients service에선 disable 가능 (Spring security 에선 기본 설정이 protection)
                 .cors().and() // Cross Origin Resource Sharing (교차 출처 리소스 공유)
                 .authorizeHttpRequests()
-                .requestMatchers(new AntPathRequestMatcher("/management/**")).hasRole("ADMIN")
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/management/**")).hasRole("ADMIN")
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/comment/**")).hasAnyRole("NORMAL", "ADMIN")
                 .anyRequest().permitAll()

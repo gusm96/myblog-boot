@@ -8,6 +8,7 @@ import com.moya.myblogboot.exception.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.PasswordStrengthCheck;
 import com.moya.myblogboot.utils.CookieUtil;
+import com.moya.myblogboot.utils.JwtUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,9 +25,10 @@ public class AuthController {
 
     private final AuthService authService;
     private final PasswordStrengthCheck passwordStrengthCheck;
+
     // 회원 가입
     @PostMapping("/api/v1/join")
-    public ResponseEntity<String> join(@RequestBody @Valid MemberJoinReqDto memberJoinReqDto){
+    public ResponseEntity<String> join(@RequestBody @Valid MemberJoinReqDto memberJoinReqDto) {
         return ResponseEntity.ok().body(authService.memberJoin(memberJoinReqDto));
     }
 
@@ -56,18 +58,24 @@ public class AuthController {
 
     // 토큰 권한 조회
     @GetMapping("/api/v1/token-role")
-    public ResponseEntity<String> getTokenFromRole(HttpServletRequest request){
+    public ResponseEntity<String> getTokenFromRole(HttpServletRequest request) {
         return ResponseEntity.ok().body(authService.getTokenInfo(
-                request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1])
+                        request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1])
                 .getRole());
     }
 
     // Access Token 재발급
     @GetMapping("/api/v1/reissuing-token")
-    public ResponseEntity<String> reissuingAccessToken (HttpServletRequest request){
+    public ResponseEntity<String> reissuingAccessToken(HttpServletRequest request) {
         Cookie refreshTokenCookie = CookieUtil.findCookie(request, "refresh_token");
-        if(refreshTokenCookie == null)
+        if (refreshTokenCookie == null)
             throw new InvalidateTokenException("토큰이 존재하지 않습니다.");
         return ResponseEntity.ok().body(authService.reissuingAccessToken(refreshTokenCookie.getValue()));
+    }
+
+    @GetMapping("/api/v1/token-validation")
+    public ResponseEntity<Boolean> tokenValidate(HttpServletRequest request) {
+        String token = request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
+        return ResponseEntity.ok().body(authService.tokenIsExpired(token));
     }
 }

@@ -5,7 +5,7 @@ import draftjsToHtml from "draftjs-to-html";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import axios from "axios";
-import { BOARD_CUD, CATEGORY_LIST } from "../../apiConfig";
+import { BOARD_CRUD, CATEGORY_LIST } from "../../apiConfig";
 import { useSelector } from "react-redux";
 import { selectAccessToken } from "../../redux/userSlice";
 export const BoardForm = () => {
@@ -18,7 +18,6 @@ export const BoardForm = () => {
     category: "",
     content: "",
   });
-
   useEffect(() => {
     axios
       .get(`${CATEGORY_LIST}`)
@@ -26,20 +25,37 @@ export const BoardForm = () => {
       .then((data) => setCategories(data))
       .catch((error) => console.log(error));
   }, []);
-
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
   const updateTextDescription = async (state) => {
     await setEditorState(state);
     const html = draftjsToHtml(convertToRaw(editorState.getCurrentContent()));
     setHtmlString(html);
   };
   const handleSubmit = async (e) => {
+    alert(accessToken);
     e.preventDefault();
-    await axios.post(`${BOARD_CUD}`, {
-      headers: {
-        Authonrization: `bearer ${accessToken}`,
+    await axios.post(
+      `http://localhost:8080/api/v1/management/boards`,
+      {
+        title: formData.title,
+        content: htmlString,
+        category: formData.category,
       },
-      body: {},
-    });
+      {
+        headers: {
+          Authorization: `bearer ${accessToken}`,
+        },
+      },
+      {
+        withCredentials: true,
+      }
+    );
   };
   const uploadCallback = () => {
     // 추가 예정
@@ -52,8 +68,16 @@ export const BoardForm = () => {
           aria-label="Default"
           aria-describedby="inputGroup-sizing-default"
           placeholder="제목을 입력하세요."
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
         />
-        <Form.Select aria-label="Default select example">
+        <Form.Select
+          aria-label="Default select example"
+          name="category"
+          value={formData.category}
+          onChange={handleChange}
+        >
           <option>카테고리</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
@@ -64,6 +88,8 @@ export const BoardForm = () => {
       </InputGroup>
       <Editor
         placeholder="게시글을 작성해주세요"
+        name="content"
+        value={formData.content}
         editorState={editorState}
         onEditorStateChange={updateTextDescription}
         toolbar={{

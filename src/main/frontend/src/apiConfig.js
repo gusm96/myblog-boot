@@ -8,8 +8,9 @@ export const CATEGORY_CUD = `${BASE_URL}/api/v1/category`;
 // 카테고리 리스트
 export const CATEGORY_LIST = `${BASE_URL}/api/v1/categories`;
 
+export const BOARD_GET = `${BASE_URL}/api/v1/boards`;
 // 게시글 등록/수정/삭제  HTTP Method GET POST DELETE
-export const BOARD_CUD = `${BASE_URL}/api/v1/board`;
+export const BOARD_CUD = `${BASE_URL}/api/v1/management/boards`;
 // 게시글 리스트
 export const BOARD_LIST = `${BASE_URL}/api/v1/boards`;
 
@@ -19,9 +20,11 @@ export const BOARD_LIKE_CRUD = `${BASE_URL}/api/v1/board-like`;
 export const BOARD_LIKE_CHECK = `${BASE_URL}/api/v1/board-like/check`;
 
 // 댓글 등록/수정/삭제 HTTP Method GET POST DELETE
-export const COMMENT_CUD = `${BASE_URL}/api/v1/comment`;
+export const COMMENT_CUD = `${BASE_URL}/api/v1/comments`;
 // 댓글 리스트
-export const COMMENT_LIST = `${BASE_URL}/api/v1/comments`;
+export const COMMENT_LIST = (boardId) => {
+  return `${BASE_URL}/api/v1/boards/${boardId}/comments`;
+};
 
 // 토큰 유효 검증
 export const TOKEN_VALIDATION = `${BASE_URL}/api/v1/token-validation`;
