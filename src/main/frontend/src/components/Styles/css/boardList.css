@@ -1,0 +1,36 @@
+.board-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.board-title {
+  display: block;
+  overflow: hidden;
+  max-width: 95%;
+  margin-bottom: 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.25em;
+  font-weight: bolder;
+  line-height: 1.4;
+  color: #555;
+}
+
+.board-content {
+  overflow: hidden;
+  max-width: 95%;
+  margin-bottom: 18px;
+  text-overflow: ellipsis;
+  font-size: 0.875em;
+  line-height: 1.5rem;
+  color: #999;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.board-date {
+  display: block;
+  font-size: 0.75em;
+  color: #999;
+}

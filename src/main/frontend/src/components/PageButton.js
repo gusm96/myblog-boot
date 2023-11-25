@@ -1,8 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
-export const PageButton = ({ pageCount }) => {
+export const PageButton = ({ categoryName, pageCount }) => {
   const handleOnClick = (page) => {
-    window.location.href = `/boards?p=${page}`;
+    window.location.href = categoryName
+      ? `/${categoryName}?p=${page}`
+      : `/boards?p=${page}`;
   };
   const pageButton = () => {
     const buttons = [];

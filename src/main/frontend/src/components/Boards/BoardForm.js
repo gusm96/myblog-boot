@@ -5,9 +5,10 @@ import draftjsToHtml from "draftjs-to-html";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import axios from "axios";
-import { BOARD_CRUD, CATEGORY_LIST } from "../../apiConfig";
+import { CATEGORY_LIST } from "../../apiConfig";
 import { useSelector } from "react-redux";
 import { selectAccessToken } from "../../redux/userSlice";
+import { uploadBoard } from "../../services/boardApi";
 export const BoardForm = () => {
   const [categories, setCategories] = useState([]);
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
@@ -38,24 +39,10 @@ export const BoardForm = () => {
     setHtmlString(html);
   };
   const handleSubmit = async (e) => {
-    alert(accessToken);
     e.preventDefault();
-    await axios.post(
-      `http://localhost:8080/api/v1/management/boards`,
-      {
-        title: formData.title,
-        content: htmlString,
-        category: formData.category,
-      },
-      {
-        headers: {
-          Authorization: `bearer ${accessToken}`,
-        },
-      },
-      {
-        withCredentials: true,
-      }
-    );
+    uploadBoard(formData, htmlString, accessToken)
+      .then((data) => console.log(data))
+      .catch((error) => console.log(error));
   };
   const uploadCallback = () => {
     // 추가 예정

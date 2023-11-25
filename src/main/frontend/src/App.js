@@ -49,7 +49,7 @@ function App() {
         <Route path="/" element={<UserLayout />}>
           <Route index element={<Home />} />
           <Route path="boards" element={<Home />} />
-          {/* <Route path=":categoryName" /> */}
+          <Route path=":categoryName" element={<Home />} />
           <Route path="boards/:boardId" element={<BoardDetail />} />
           <Route
             path="login"

@@ -1,0 +1,14 @@
+#header {
+  border-bottom: 1px solid #eee;
+  background-color: gainsboro;
+  font-weight: bolder;
+}
+#header h1 {
+  font-family: "Playfair Display", serif;
+}
+.inner {
+  position: relative;
+  max-width: 1080px;
+  margin: 0 auto;
+  text-decoration: none;
+}

@@ -14,10 +14,13 @@ export const BOARD_CUD = `${BASE_URL}/api/v1/management/boards`;
 // 게시글 리스트
 export const BOARD_LIST = `${BASE_URL}/api/v1/boards`;
 
+export const CATEGORY_OF_BOARD_LIST = (categoryName) => {
+  return `${BASE_URL}/api/v1/boards/categories/${categoryName}`;
+};
 // 게시글 좋아요 CRRUD
-export const BOARD_LIKE_CRUD = `${BASE_URL}/api/v1/board-like`;
-// 게시글 좋아요 확인
-export const BOARD_LIKE_CHECK = `${BASE_URL}/api/v1/board-like/check`;
+export const BOARD_LIKE_CRUD = (boardId) => {
+  return `${BASE_URL}/api/v1/likes/${boardId}`;
+};
 
 // 댓글 등록/수정/삭제 HTTP Method GET POST DELETE
 export const COMMENT_CUD = `${BASE_URL}/api/v1/comments`;
