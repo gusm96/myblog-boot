@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,12 +28,12 @@ public class BoardController {
     }
 
     // 카테고리별 게시글 리스트
-    @GetMapping("/api/v1/boards/categories/{categoryId}")
+    @GetMapping("/api/v1/boards/categories/{categoryName}")
     public ResponseEntity<BoardListResDto>   requestCategoryOfBoards(
-            @PathVariable("categoryId") Long categoryId,
+            @PathVariable("categoryName") String categoryName,
             @RequestParam(name = "p", defaultValue = "1") int page
     ) {
-        Category category = getCategory(categoryId);
+        Category category = getCategoryByName(categoryName);
         return ResponseEntity.ok().body(boardService.retrieveBoardListByCategory(category, page));
     }
 
@@ -80,20 +79,19 @@ public class BoardController {
     }
 
     // 게시글 좋아요 여부
-    @GetMapping("/api/v1/boards/{boardId}/likes")
+    @GetMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToCheckBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
         return ResponseEntity.ok().body(boardService.checkBoardLikedStatus(getTokenInfo(request).getMemberPrimaryKey(), boardId));
     }
     // 게시글 좋아요 추가 기능
-    @PostMapping("/api/v1/boards/{boardId}/likes")
+    @PostMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToAddBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
         return ResponseEntity.ok().body(boardService.addLikeToBoard(getTokenInfo(request).getMemberPrimaryKey(), boardId));
     }
 
-    @DeleteMapping("/api/v1/boards/{boardId}/likes")
+    @DeleteMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToDeleteBoardLike (HttpServletRequest request, @PathVariable("boardId") Long boardId){
-        boardService.deleteBoardLike(getTokenInfo(request).getMemberPrimaryKey(), boardId);
-        return ResponseEntity.ok().body(HttpStatus.OK);
+        return ResponseEntity.ok().body(boardService.deleteBoardLike(getTokenInfo(request).getMemberPrimaryKey(), boardId));
     }
 
     private TokenInfo getTokenInfo(HttpServletRequest req){
@@ -106,5 +104,8 @@ public class BoardController {
 
     private Category getCategory(Long categoryId) {
         return categoryService.retrieveCategoryById(categoryId);
+    }
+    private Category getCategoryByName (String categoryName) {
+        return categoryService.retrieveCategoryByName(categoryName);
     }
 }

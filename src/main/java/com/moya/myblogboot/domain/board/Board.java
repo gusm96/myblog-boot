@@ -20,8 +20,7 @@ public class Board {
     private Long id;
     @Column(nullable = false)
     private String title;
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
     private LocalDateTime upload_date;
     private LocalDateTime edit_date;

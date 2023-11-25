@@ -57,4 +57,9 @@ public class CategoryService {
         return categoryRepository.findById(categoryId).orElseThrow(()
                 -> new EntityNotFoundException("해당 카테고리를 찾을 수 없습니다."));
     }
+
+    public Category retrieveCategoryByName(String categoryName) {
+        return categoryRepository.findByName(categoryName).orElseThrow(()
+                -> new EntityNotFoundException("해당 카테고리를 찾을 수 없습니다."));
+    }
 }

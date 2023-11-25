@@ -173,13 +173,14 @@ public class BoardService {
     }
 
     @Transactional
-    public void deleteBoardLike(Long memberId, Long boardId) {
+    public Long deleteBoardLike(Long memberId, Long boardId) {
         if (!checkBoardLikedStatus(memberId, boardId)) {
             throw new RuntimeException("존재하지 않는다.");
         }
         try {
             memberBoardLikeRedisRepository.delete(memberId, boardId);
             decrementBoardLikeCount(boardId);
+            return getBoardLikeCount(boardId);
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("게시글 \"좋아요\"정보 삭제를 실패했습니다");
