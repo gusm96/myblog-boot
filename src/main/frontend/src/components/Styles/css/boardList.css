@@ -34,3 +34,10 @@
   font-size: 0.75em;
   color: #999;
 }
+.board-item {
+  padding: 20px;
+}
+.board-item:hover {
+  box-shadow: 5px 10px 10px 2px rgb(0, 0, 0, 0.6);
+  border-radius: 10px;
+}

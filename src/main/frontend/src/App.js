@@ -32,7 +32,10 @@ function App() {
               dispatch(updateUserAccessToken(data));
             })
             .catch((error) => {
-              if (error.response.status === 401) {
+              if (
+                error.response.status === 401 ||
+                error.response.status === 500
+              ) {
                 alert("토큰이 만료되어 로그아웃 합니다.");
                 dispatch(userLogout());
               }

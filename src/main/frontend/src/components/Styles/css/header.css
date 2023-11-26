@@ -12,3 +12,11 @@
   margin: 0 auto;
   text-decoration: none;
 }
+.nav-link {
+  padding: 10px;
+  margin-right: 10px;
+  margin-bottom: 0px;
+}
+.nav-link:hover {
+  border-bottom: 5px solid black;
+}

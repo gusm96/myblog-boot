@@ -26,6 +26,10 @@ const BoardDetail = () => {
   });
   const handleBoardLike = (e) => {
     e.preventDefault();
+    if (!isLoggedIn) {
+      alert("로그인이 필요한 서비스입니다."); // 로그인하지 않은 경우 경고 메시지 표시
+      return; // 이벤트 핸들러 종료
+    }
     addBoardLike(boardId, accessToken)
       .then((data) => {
         setBoard((prevBoard) => ({ ...prevBoard, likes: data }));
@@ -35,6 +39,10 @@ const BoardDetail = () => {
   };
   const handleBoardLikeCancel = (e) => {
     e.preventDefault();
+    if (!isLoggedIn) {
+      alert("로그인이 필요한 서비스입니다."); // 로그인하지 않은 경우 경고 메시지 표시
+      return; // 이벤트 핸들러 종료
+    }
     cancelBoardLike(boardId, accessToken).then((data) => {
       setBoard((prevBoard) => ({ ...prevBoard, likes: data }));
       setIsBoardLiked(false);
@@ -49,10 +57,12 @@ const BoardDetail = () => {
         likes: data.likes,
       });
     });
-    getBoardLikeStatus(boardId, accessToken)
-      .then((data) => setIsBoardLiked(data))
-      .catch((error) => console.log(error));
-  }, [boardId, accessToken]);
+    if (isLoggedIn) {
+      getBoardLikeStatus(boardId, accessToken)
+        .then((data) => setIsBoardLiked(data))
+        .catch((error) => console.log(error));
+    }
+  }, [isLoggedIn, boardId, accessToken]);
   const uploadDateFormat = moment(board.uploadDate).format("YYYY-MM-DD");
   return (
     <div>
@@ -76,7 +86,6 @@ const BoardDetail = () => {
         </div>
         <span>{uploadDateFormat}</span>
       </div>
-
       <hr></hr>
       {isLoggedIn ? (
         <Comment boardId={boardId} accessToken={accessToken} />

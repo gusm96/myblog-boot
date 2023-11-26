@@ -2,9 +2,8 @@ package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.exception.ExpiredTokenException;
-import com.moya.myblogboot.service.AuthService;
+import com.moya.myblogboot.service.AuthServiceImpl;
 import com.moya.myblogboot.utils.JwtUtil;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.FilterChain;
@@ -12,14 +11,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -29,10 +25,10 @@ import java.util.List;
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
     private String secret;
-    private AuthService authService;
+    private AuthServiceImpl authServiceImpl;
 
-    public JwtFilter(AuthService authService, String secret) {
-        this.authService = authService;
+    public JwtFilter(AuthServiceImpl authServiceImpl, String secret) {
+        this.authServiceImpl = authServiceImpl;
         this.secret = secret;
     }
     @Override

@@ -6,12 +6,13 @@ import { Col, Container, Row } from "react-bootstrap";
 import { AdminNavBar } from "../Navbar/AdminNavBar";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { Header } from "./Header";
 
 export const ProtectedRoute = () => {
   const [role, setRole] = useState(null);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const accessToken = useSelector(selectAccessToken);
-
+  const headerTitle = "admin";
   const location = useLocation();
   useEffect(() => {
     if (isLoggedIn) {
@@ -32,11 +33,13 @@ export const ProtectedRoute = () => {
   } else if (role === "ROLE_ADMIN") {
     return (
       <div>
-        <header>
-          <h1>관리자 모드</h1>
-          <hr></hr>
-        </header>
-        <main>
+        <Header headerTitle={headerTitle} isLoggedIn={isLoggedIn} />
+        <main
+          className="inner"
+          style={{
+            marginTop: "100px",
+          }}
+        >
           <Container>
             <Row>
               <Col xs="3">

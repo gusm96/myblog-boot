@@ -37,3 +37,6 @@ jwt:
   access-token-expiration: 300000
   refresh-token-expiration: 1209600000
 
+## Image File Path
+file:
+  upload-dir: C:/Users/gusm9/Documents/workspace/myblog-boot/images

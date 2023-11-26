@@ -23,7 +23,7 @@ public class BoardServiceImpl implements BoardService {
     private final BoardLikeCountRedisRepository boardLikeCountRedisRepository;
 
     // 페이지별 최대 게시글 수
-    public static final int LIMIT = 10;
+    public static final int LIMIT = 4;
 
     // 모든 게시글 리스트
     @Override

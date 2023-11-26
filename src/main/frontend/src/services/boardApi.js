@@ -4,9 +4,11 @@ import {
   BOARD_GET,
   BOARD_LIKE_CRUD,
   BOARD_LIST,
+  CATEGORY_LIST,
   CATEGORY_OF_BOARD_LIST,
   COMMENT_CUD,
   COMMENT_LIST,
+  IMAGE_FILE_CRUD,
 } from "../apiConfig";
 export const getBoard = (boardId) => {
   return axios.get(`${BOARD_GET}/${boardId}`).then((res) => res.data);
@@ -14,32 +16,59 @@ export const getBoard = (boardId) => {
 export const getBoardList = (page) => {
   return axios.get(`${BOARD_LIST}?${page}`).then((res) => res.data);
 };
+export const getCategories = () => {
+  return axios.get(`${CATEGORY_LIST}`).then((res) => res.data);
+};
 export const getCategoryOfBoardList = (categoryName, page) => {
   return axios
     .get(`${CATEGORY_OF_BOARD_LIST(categoryName)}?${page}`)
     .then((res) => res.data);
 };
 export const uploadBoard = (formData, htmlString, accessToken) => {
+  return axios.post(
+    `${BOARD_CUD}`,
+    {
+      title: formData.title,
+      content: htmlString,
+      category: formData.category,
+    },
+    {
+      headers: {
+        Authorization: getToken(accessToken),
+      },
+    },
+    {
+      withCredentials: true,
+    }
+  );
+};
+export const editBoard = (boardId, board, htmlString, accessToken) => {
   return axios
-    .post(
-      `${BOARD_CUD}`,
+    .put(
+      `${BOARD_CUD}/${boardId}`,
       {
-        title: formData.title,
+        title: board.title,
         content: htmlString,
-        category: formData.category,
+        category: board.category,
       },
       {
         headers: {
           Authorization: getToken(accessToken),
         },
-      },
-      {
-        withCredentials: true,
       }
     )
     .then((res) => res.data);
 };
 
+export const deleteBoard = (boardId, accessToken) => {
+  return axios
+    .delete(`${BOARD_CUD}/${boardId}`, {
+      headers: {
+        Authorization: getToken(accessToken),
+      },
+    })
+    .then((res) => res.data);
+};
 export const addBoardLike = (boardId, accessToken) => {
   return axios
     .post(
@@ -99,6 +128,22 @@ export const getBoardLikeStatus = (boardId, accessToken) => {
         Authorization: getToken(accessToken),
       },
     })
+    .then((res) => res.data);
+};
+
+export const uploadImageFile = (boardId, imageFile, accessToken) => {
+  return axios
+    .post(
+      `${IMAGE_FILE_CRUD}/${boardId}`,
+      {
+        imageFile: imageFile,
+      },
+      {
+        headers: {
+          Authorization: getToken(accessToken),
+        },
+      }
+    )
     .then((res) => res.data);
 };
 

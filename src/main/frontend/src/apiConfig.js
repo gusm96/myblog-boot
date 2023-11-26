@@ -22,6 +22,9 @@ export const BOARD_LIKE_CRUD = (boardId) => {
   return `${BASE_URL}/api/v1/likes/${boardId}`;
 };
 
+// 이미지 파일 CRUD
+export const IMAGE_FILE_CRUD = `${BASE_URL}/api/v1/images`;
+
 // 댓글 등록/수정/삭제 HTTP Method GET POST DELETE
 export const COMMENT_CUD = `${BASE_URL}/api/v1/comments`;
 // 댓글 리스트

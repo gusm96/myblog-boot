@@ -27,6 +27,5 @@ public interface BoardService {
     Long deleteBoardLike(Long memberId, Long boardId);
 
     Board retrieveBoardById(Long boardId);
-
 }
 

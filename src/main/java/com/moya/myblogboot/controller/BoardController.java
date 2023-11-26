@@ -51,6 +51,8 @@ public class BoardController {
         return ResponseEntity.ok().body(boardServiceImpl.uploadBoard(boardReqDto, member, category));
     }
 
+
+
     // 게시글 수정
     @PutMapping("/api/v1/management/boards/{boardId}")
     public ResponseEntity<Long> editBoard(HttpServletRequest request,

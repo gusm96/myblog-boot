@@ -26,6 +26,9 @@ public class Board {
     private LocalDateTime edit_date;
     private LocalDateTime delete_date;
 
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ImageFile> imageFiles;
+
     @Enumerated(EnumType.STRING)
     private BoardStatus boardStatus; // VIEW, HIDE
 
@@ -70,5 +73,12 @@ public class Board {
     }
     public void removeComment(Comment comment) {
         this.comments.remove(comment);
+    }
+
+    public void addImageFile(ImageFile file) {
+        this.imageFiles.add(file);
+    }
+    public void removeImageFile(ImageFile file) {
+        this.imageFiles.remove(file);
     }
 }

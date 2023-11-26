@@ -4,11 +4,9 @@ import { Editor } from "react-draft-wysiwyg";
 import draftjsToHtml from "draftjs-to-html";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import { Button, Form, InputGroup } from "react-bootstrap";
-import axios from "axios";
-import { CATEGORY_LIST } from "../../apiConfig";
 import { useSelector } from "react-redux";
 import { selectAccessToken } from "../../redux/userSlice";
-import { uploadBoard } from "../../services/boardApi";
+import { getCategories, uploadBoard } from "../../services/boardApi";
 export const BoardForm = () => {
   const [categories, setCategories] = useState([]);
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
@@ -19,10 +17,10 @@ export const BoardForm = () => {
     category: "",
     content: "",
   });
+  const [fileData, setFileData] = useState({ file: "" });
+
   useEffect(() => {
-    axios
-      .get(`${CATEGORY_LIST}`)
-      .then((res) => res.data)
+    getCategories()
       .then((data) => setCategories(data))
       .catch((error) => console.log(error));
   }, []);
@@ -33,18 +31,23 @@ export const BoardForm = () => {
       [name]: value,
     }));
   };
-  const updateTextDescription = async (state) => {
-    await setEditorState(state);
+  const updateTextDescription = (state) => {
+    setEditorState(state);
     const html = draftjsToHtml(convertToRaw(editorState.getCurrentContent()));
     setHtmlString(html);
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
     uploadBoard(formData, htmlString, accessToken)
-      .then((data) => console.log(data))
+      .then((res) => {
+        if (res.status === 200) {
+          alert("게시글을 등록하였습니다.");
+          window.location.href = `/management/boards/${res.data}`;
+        }
+      })
       .catch((error) => console.log(error));
   };
-  const uploadCallback = () => {
+  const handleImageUpload = () => {
     // 추가 예정
   };
   return (
@@ -80,7 +83,7 @@ export const BoardForm = () => {
         editorState={editorState}
         onEditorStateChange={updateTextDescription}
         toolbar={{
-          image: { uploadCallback: uploadCallback },
+          image: { uploadCallback: handleImageUpload },
         }}
         localization={{ locale: "ko" }}
         editorStyle={{
@@ -90,7 +93,7 @@ export const BoardForm = () => {
           padding: "20px",
         }}
       />
-      <Button type="submit">작성하기.</Button>
+      <Button type="submit">작성하기</Button>
     </Form>
   );
 };
