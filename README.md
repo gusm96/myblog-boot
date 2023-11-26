@@ -41,16 +41,16 @@
 
 ### 2. 프로젝트 구조
 
-![architecture](https://github.com/gusm96/myblog-boot/tree/master/images/Architecture.png)
+<img width="573" alt="Architecture" src="https://github.com/gusm96/myblog-boot/assets/77833389/498b2261-bab6-41c7-95c4-216a7f64b096">
 
 - Client-Server Architecture를 적용하여 클라이언트와 서버간 HTTP통신으로 요청과 응답을 처리하고 있습니다.
 - Server는 모든 구성요소와 기능이 하나의 서비스로 통합된 **Monolithic Architecture**로 구성되어 있어, 각 기능의 상호작용이 원활하며, 개발과 테스트, 배포가 간편합니다.
 - 관계형 데이터들은 JPA를 통해 관리하고 엑세스 합니다.
 - "게시글 좋아요"와 같은 빠른 조회가 필요한 데이터는 **Redis**를 사용하여 **메모리**에 저장하고 관리하고 있습니다.
 
-### 데이터 모델링
+#### 데이터 모델링
 
-![ERD](https://github.com/gusm96/myblog-boot/tree/master/images/ERD.png)
+<img width="928" alt="ERD" src="https://github.com/gusm96/myblog-boot/assets/77833389/3c6beff5-9523-4bdb-8c8a-2038a652fb31">
 
 ### 🛠️ 사용된 기술
 
