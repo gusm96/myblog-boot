@@ -19,7 +19,7 @@ public class CategoryController {
     // 카테고리 리스트
     @GetMapping("/api/v1/categories")
     public ResponseEntity<List> getCategoryList() {
-        return ResponseEntity.ok(categoryService.categoryList());
+        return ResponseEntity.ok(categoryService.getCategoryList());
     }
 
     // 카테고리 작성

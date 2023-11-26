@@ -8,7 +8,6 @@ import com.moya.myblogboot.exception.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.PasswordStrengthCheck;
 import com.moya.myblogboot.utils.CookieUtil;
-import com.moya.myblogboot.utils.JwtUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

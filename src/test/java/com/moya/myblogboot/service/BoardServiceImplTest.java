@@ -2,8 +2,8 @@ package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.SearchType;
-import com.moya.myblogboot.repository.BoardRepository;
-import com.moya.myblogboot.repository.CategoryRepository;
+import com.moya.myblogboot.repository.BoardRepositoryImpl;
+import com.moya.myblogboot.repository.CategoryRepositoryImpl;
 import static org.assertj.core.api.Assertions.*;
 
 import org.junit.jupiter.api.DisplayName;
@@ -16,13 +16,13 @@ import java.util.List;
 
 @SpringBootTest
 @Transactional
-class BoardServiceTest {
+class BoardServiceImplTest {
     @Autowired
-    BoardRepository boardRepository;
+    BoardRepositoryImpl boardRepositoryImpl;
     @Autowired
-    BoardService boardService;
+    BoardServiceImpl boardServiceImpl;
     @Autowired
-    CategoryRepository categoryRepository;
+    CategoryRepositoryImpl categoryRepositoryImpl;
     @Autowired
     InitDb initDb;
     /*public Admin createAdmin(){
@@ -136,7 +136,7 @@ class BoardServiceTest {
         SearchType type = SearchType.TITLE;
         String searchContents = "제목";
         // when
-        List<Board> result = boardRepository.findBySearch(type, searchContents, 1, 5);
+        List<Board> result = boardRepositoryImpl.findBySearch(type, searchContents, 1, 5);
         // then
         assertThat(result).isNotEmpty();
     }

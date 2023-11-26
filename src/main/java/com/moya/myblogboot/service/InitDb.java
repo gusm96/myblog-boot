@@ -38,7 +38,7 @@ public class InitDb {
     static class InitService {
         private final EntityManager em;
         private final PasswordEncoder passwordEncoder;
-        private final BoardService boardService;
+        private final BoardServiceImpl boardServiceImpl;
 
         public Member initAdminMember(){
             Member member = Member.builder()
@@ -62,7 +62,7 @@ public class InitDb {
 
         public void initBoard(Member member, Category category, String title, String content) {
             BoardReqDto boardReqDto = BoardReqDto.builder().title(title).content(content).category(category.getId()).build();
-            boardService.uploadBoard(boardReqDto, member, category);
+            boardServiceImpl.uploadBoard(boardReqDto, member, category);
         }
 
     }
