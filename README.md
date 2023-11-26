@@ -41,7 +41,7 @@
 
 ### 2. 프로젝트 구조
 
-![](https://github.com/gusm96/myblog-boot/tree/master/images/Architecture.png)
+![architecture](https://github.com/gusm96/myblog-boot/tree/master/images/Architecture.png)
 
 - Client-Server Architecture를 적용하여 클라이언트와 서버간 HTTP통신으로 요청과 응답을 처리하고 있습니다.
 - Server는 모든 구성요소와 기능이 하나의 서비스로 통합된 **Monolithic Architecture**로 구성되어 있어, 각 기능의 상호작용이 원활하며, 개발과 테스트, 배포가 간편합니다.
@@ -50,7 +50,7 @@
 
 ### 데이터 모델링
 
-![](https://github.com/gusm96/myblog-boot/tree/master/images/ERD.png)
+![ERD](https://github.com/gusm96/myblog-boot/tree/master/images/ERD.png)
 
 ### 🛠️ 사용된 기술
 
