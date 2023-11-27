@@ -11,7 +11,8 @@ public class ImageFileRepositoryImpl implements ImageFileRepository {
         this.em = em;
     }
     @Override
-    public void save(ImageFile file) {
+    public ImageFile save(ImageFile file) {
         em.persist(file);
+        return file;
     }
 }

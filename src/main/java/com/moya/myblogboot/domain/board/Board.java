@@ -27,7 +27,7 @@ public class Board {
     private LocalDateTime delete_date;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ImageFile> imageFiles;
+    private List<ImageFile> imageFiles =  new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private BoardStatus boardStatus; // VIEW, HIDE

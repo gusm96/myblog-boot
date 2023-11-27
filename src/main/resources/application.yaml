@@ -39,4 +39,4 @@ jwt:
 
 ## Image File Path
 file:
-  upload-dir: C:/Users/gusm9/Documents/workspace/myblog-boot/images
+  upload-dir: C:/Users/gusm9/Documents/workspace/myblog-boot/images/

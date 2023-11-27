@@ -2,7 +2,10 @@ package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.domain.category.Category;
+import com.moya.myblogboot.domain.file.ImageFileDto;
 import com.moya.myblogboot.domain.member.Member;
+
+import java.util.List;
 
 public interface BoardService {
 
@@ -27,5 +30,7 @@ public interface BoardService {
     Long deleteBoardLike(Long memberId, Long boardId);
 
     Board retrieveBoardById(Long boardId);
+
+    void saveImageFile(List<ImageFileDto> images, Board board);
 }
 

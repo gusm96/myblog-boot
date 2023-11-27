@@ -61,7 +61,11 @@ public class InitDb {
         }
 
         public void initBoard(Member member, Category category, String title, String content) {
-            BoardReqDto boardReqDto = BoardReqDto.builder().title(title).content(content).category(category.getId()).build();
+            BoardReqDto boardReqDto = BoardReqDto.builder()
+                    .title(title)
+                    .content(content)
+                    .category(category.getId())
+                    .build();
             boardServiceImpl.uploadBoard(boardReqDto, member, category);
         }
 

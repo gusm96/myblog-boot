@@ -6,7 +6,11 @@ import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { selectAccessToken } from "../../redux/userSlice";
-import { getCategories, uploadBoard } from "../../services/boardApi";
+import {
+  getCategories,
+  uploadBoard,
+  uploadImageFile,
+} from "../../services/boardApi";
 export const BoardForm = () => {
   const [categories, setCategories] = useState([]);
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
@@ -16,9 +20,8 @@ export const BoardForm = () => {
     title: "",
     category: "",
     content: "",
+    images: [],
   });
-  const [fileData, setFileData] = useState({ file: "" });
-
   useEffect(() => {
     getCategories()
       .then((data) => setCategories(data))
@@ -47,8 +50,27 @@ export const BoardForm = () => {
       })
       .catch((error) => console.log(error));
   };
-  const handleImageUpload = () => {
-    // 추가 예정
+  const uploadImageCallBack = (file) => {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      // 'YOUR_IMAGE_UPLOAD_ENDPOINT'를 이미지 업로드를 처리하는 실제 서버 엔드포인트로 교체합니다.
+      uploadImageFile(formData, accessToken)
+        .then((data) => {
+          setFormData((prevState) => ({
+            ...prevState,
+            images: [...prevState.images, data],
+          }));
+          // 서버가 이미지 파일 경로로 응답하는 것으로 가정합니다.
+          const imagePath = data.filePath;
+          resolve({ data: { link: imagePath } });
+        })
+        .catch((error) => {
+          console.error("이미지 업로드 중 오류 발생:", error);
+          reject("이미지 업로드 중 오류 발생");
+        });
+    });
   };
   return (
     <Form onSubmit={handleSubmit}>
@@ -83,7 +105,17 @@ export const BoardForm = () => {
         editorState={editorState}
         onEditorStateChange={updateTextDescription}
         toolbar={{
-          image: { uploadCallback: handleImageUpload },
+          image: {
+            uploadenabled: true,
+            uploadCallback: uploadImageCallBack,
+            previewimage: true,
+            inputaccept: "image/gif,image/jpeg,image/jpg,image/png,image/svg",
+            alt: { present: false, mandatory: false },
+            defaultsize: {
+              height: "auto",
+              width: "auto",
+            },
+          },
         }}
         localization={{ locale: "ko" }}
         editorStyle={{

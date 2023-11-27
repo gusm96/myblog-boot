@@ -2,6 +2,7 @@ package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.domain.category.Category;
+import com.moya.myblogboot.domain.file.ImageFileDto;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.exception.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.*;
@@ -11,7 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -19,6 +22,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class BoardServiceImpl implements BoardService {
     private final BoardRepository boardRepository;
+    private final ImageFileRepository imageFileRepository;
     private final MemberBoardLikeRedisRepository memberBoardLikeRedisRepository;
     private final BoardLikeCountRedisRepository boardLikeCountRedisRepository;
 
@@ -118,7 +122,12 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     public Long uploadBoard(BoardReqDto boardReqDto, Member member, Category category) {
         try {
-            Long boardId = boardRepository.upload(boardReqDto.toEntity(category, member));
+            Board newBoard = boardReqDto.toEntity(category, member);
+            if (boardReqDto.getImages() != null && boardReqDto.getImages().size() > 0 ) {
+                saveImageFile(boardReqDto.getImages(), newBoard);
+            }
+            Long boardId = boardRepository.upload(newBoard);
+
             // BoardLikeCount RedisHash 생성 및 저장
             if (boardId > 0) {
                 createBoardLikeCount(boardId);
@@ -127,11 +136,22 @@ public class BoardServiceImpl implements BoardService {
             return 0L;
         } catch (Exception e) {
             log.error("게시글 등록 중 에러 발생");
+            e.printStackTrace();
             throw new RuntimeException("게시글 등록을 실패했습니다");
         }
     }
 
+    @Override
+    @Transactional
+    public void saveImageFile(List<ImageFileDto> images, Board board) {
+        List<ImageFile> imageFiles = images.stream()
+                .map(image -> imageFileRepository.save(image.toEntity(board))).collect(Collectors.toList());
+
+        imageFiles.forEach(board::addImageFile);
+    }
+
     // 게시글 좋아요
+    @Override
     @Transactional
     public Long addLikeToBoard(Long memberId, Long boardId){
         if(checkBoardLikedStatus(memberId, boardId))
@@ -145,10 +165,11 @@ public class BoardServiceImpl implements BoardService {
             throw new RuntimeException("게시글 \"좋아요\"를 실패했습니다.");
         }
     }
+    @Override
     public boolean checkBoardLikedStatus(Long memberId, Long boardId) {
         return memberBoardLikeRedisRepository.isMember(memberId, boardId);
     }
-
+    @Override
     @Transactional
     public Long deleteBoardLike(Long memberId, Long boardId) {
         if (!checkBoardLikedStatus(memberId, boardId)) {
@@ -163,7 +184,7 @@ public class BoardServiceImpl implements BoardService {
             throw new RuntimeException("게시글 \"좋아요\"정보 삭제를 실패했습니다");
         }
     }
-
+    @Override
     public Board retrieveBoardById(Long boardId) {
         return boardRepository.findById(boardId).orElseThrow(
                 () -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다.")
@@ -178,9 +199,6 @@ public class BoardServiceImpl implements BoardService {
         }
     }
     private void createMemberBoardLike(Long memberId, Long boardId) {
-        if (checkBoardLikedStatus(memberId, boardId)) {
-            throw new DuplicateKeyException("이미 \"좋아요\"한 게시글 입니다");
-        }
         try {
             memberBoardLikeRedisRepository.save(memberId, boardId);
         } catch (Exception e) {

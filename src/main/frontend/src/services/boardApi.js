@@ -31,6 +31,7 @@ export const uploadBoard = (formData, htmlString, accessToken) => {
       title: formData.title,
       content: htmlString,
       category: formData.category,
+      images: formData.images,
     },
     {
       headers: {
@@ -131,19 +132,14 @@ export const getBoardLikeStatus = (boardId, accessToken) => {
     .then((res) => res.data);
 };
 
-export const uploadImageFile = (boardId, imageFile, accessToken) => {
+export const uploadImageFile = (formData, accessToken) => {
   return axios
-    .post(
-      `${IMAGE_FILE_CRUD}/${boardId}`,
-      {
-        imageFile: imageFile,
+    .post(`${IMAGE_FILE_CRUD}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: getToken(accessToken),
       },
-      {
-        headers: {
-          Authorization: getToken(accessToken),
-        },
-      }
-    )
+    })
     .then((res) => res.data);
 };
 
