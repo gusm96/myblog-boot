@@ -1,19 +1,17 @@
-package com.moya.myblogboot.service;
+package com.moya.myblogboot.service.implementation;
 
-import com.moya.myblogboot.domain.board.ImageFile;
 import com.moya.myblogboot.domain.file.ImageFileDto;
+import com.moya.myblogboot.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 @Slf4j
 @Service

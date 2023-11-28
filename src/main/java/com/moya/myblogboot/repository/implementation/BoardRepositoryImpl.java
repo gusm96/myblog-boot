@@ -1,7 +1,8 @@
-package com.moya.myblogboot.repository;
+package com.moya.myblogboot.repository.implementation;
 
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.SearchType;
+import com.moya.myblogboot.repository.BoardRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;

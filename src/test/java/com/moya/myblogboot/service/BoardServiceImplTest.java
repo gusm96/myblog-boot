@@ -1,11 +1,13 @@
 package com.moya.myblogboot.service;
 
+import com.moya.myblogboot.configuration.InitDb;
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.SearchType;
-import com.moya.myblogboot.repository.BoardRepositoryImpl;
-import com.moya.myblogboot.repository.CategoryRepositoryImpl;
+import com.moya.myblogboot.repository.implementation.BoardRepositoryImpl;
+import com.moya.myblogboot.repository.implementation.CategoryRepositoryImpl;
 import static org.assertj.core.api.Assertions.*;
 
+import com.moya.myblogboot.service.implementation.BoardServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package com.moya.myblogboot.service;
+package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.domain.member.LoginReqDto;
 import com.moya.myblogboot.domain.member.Member;
@@ -6,6 +6,7 @@ import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.token.*;
 import com.moya.myblogboot.exception.*;
 import com.moya.myblogboot.repository.MemberRepository;
+import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
@@ -23,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AuthServiceImpl implements AuthService{
+public class AuthServiceImpl implements AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
 

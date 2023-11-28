@@ -1,6 +1,7 @@
-package com.moya.myblogboot.repository;
+package com.moya.myblogboot.repository.implementation;
 
 import com.moya.myblogboot.domain.comment.Comment;
+import com.moya.myblogboot.repository.CommentRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;

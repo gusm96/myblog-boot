@@ -1,7 +1,6 @@
 package com.moya.myblogboot.domain.file;
 
 import com.moya.myblogboot.domain.board.Board;
-import com.moya.myblogboot.domain.board.ImageFile;
 import lombok.*;
 
 @Getter

@@ -1,4 +1,4 @@
-package com.moya.myblogboot.service;
+package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.comment.Comment;
@@ -7,6 +7,7 @@ import com.moya.myblogboot.domain.comment.CommentResDto;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.exception.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.CommentRepository;
+import com.moya.myblogboot.service.CommentService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class CommentServiceImpl implements CommentService{
+public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     @Override
     @Transactional

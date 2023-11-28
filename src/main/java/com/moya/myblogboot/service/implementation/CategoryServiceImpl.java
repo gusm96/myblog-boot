@@ -1,9 +1,10 @@
-package com.moya.myblogboot.service;
+package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.category.CategoryReqDto;
 import com.moya.myblogboot.domain.category.CategoryResDto;
 import com.moya.myblogboot.repository.CategoryRepository;
+import com.moya.myblogboot.service.CategoryService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class CategoryServiceImpl implements CategoryService{
+public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
 
     @Override

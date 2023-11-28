@@ -1,5 +1,6 @@
-package com.moya.myblogboot.repository;
+package com.moya.myblogboot.repository.implementation;
 
+import com.moya.myblogboot.repository.MemberBoardLikeRedisRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;

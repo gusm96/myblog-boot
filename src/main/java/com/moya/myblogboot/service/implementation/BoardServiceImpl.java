@@ -1,11 +1,13 @@
-package com.moya.myblogboot.service;
+package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.domain.category.Category;
+import com.moya.myblogboot.domain.file.ImageFile;
 import com.moya.myblogboot.domain.file.ImageFileDto;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.exception.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.*;
+import com.moya.myblogboot.service.BoardService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

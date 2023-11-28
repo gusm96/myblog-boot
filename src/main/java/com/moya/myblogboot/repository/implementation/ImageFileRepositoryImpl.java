@@ -1,6 +1,7 @@
-package com.moya.myblogboot.repository;
+package com.moya.myblogboot.repository.implementation;
 
-import com.moya.myblogboot.domain.board.ImageFile;
+import com.moya.myblogboot.domain.file.ImageFile;
+import com.moya.myblogboot.repository.ImageFileRepository;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Repository;
 

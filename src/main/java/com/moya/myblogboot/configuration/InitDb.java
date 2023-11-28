@@ -1,9 +1,10 @@
-package com.moya.myblogboot.service;
+package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.domain.board.BoardReqDto;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.repository.*;
+import com.moya.myblogboot.service.implementation.BoardServiceImpl;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;

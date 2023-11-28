@@ -1,5 +1,6 @@
-package com.moya.myblogboot.domain.board;
+package com.moya.myblogboot.domain.file;
 
+import com.moya.myblogboot.domain.board.Board;
 import jakarta.persistence.*;
 import lombok.*;
 

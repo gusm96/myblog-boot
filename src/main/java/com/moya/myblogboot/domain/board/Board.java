@@ -2,6 +2,7 @@ package com.moya.myblogboot.domain.board;
 
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.comment.Comment;
+import com.moya.myblogboot.domain.file.ImageFile;
 import com.moya.myblogboot.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;

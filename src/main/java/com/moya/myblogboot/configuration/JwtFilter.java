@@ -2,7 +2,7 @@ package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.exception.ExpiredTokenException;
-import com.moya.myblogboot.service.AuthServiceImpl;
+import com.moya.myblogboot.service.implementation.AuthServiceImpl;
 import com.moya.myblogboot.utils.JwtUtil;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureException;
