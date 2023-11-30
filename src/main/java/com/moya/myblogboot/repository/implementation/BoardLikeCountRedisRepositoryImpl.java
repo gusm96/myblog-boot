@@ -34,4 +34,18 @@ public class BoardLikeCountRedisRepositoryImpl implements BoardLikeCountRedisRep
         String key = BOARD_LIKE_COUNT_KEY + boardId;
         hashOperations.put(key, BOARD_LIKE_COUNT_HASH_KEY, count);
     }
+
+    @Override
+    public Long incrementBoardLikeCount(Long boardId) {
+        String key = BOARD_LIKE_COUNT_KEY + boardId;
+        hashOperations.increment(key, BOARD_LIKE_COUNT_HASH_KEY, 1L);
+        return ((Number) hashOperations.get(key, BOARD_LIKE_COUNT_HASH_KEY)).longValue();
+    }
+
+    @Override
+    public Long decrementBoardLikeCount(Long boardId) {
+        String key = BOARD_LIKE_COUNT_KEY + boardId;
+        hashOperations.increment(key, BOARD_LIKE_COUNT_HASH_KEY, -1L);
+        return ((Number) hashOperations.get(key, BOARD_LIKE_COUNT_HASH_KEY)).longValue();
+    }
 }

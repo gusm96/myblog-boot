@@ -32,5 +32,7 @@ public interface BoardService {
     Board retrieveBoardById(Long boardId);
 
     void saveImageFile(List<ImageFileDto> images, Board board);
+
+    Long addBoardLikeVersion2(Long boardId, Member member);
 }
 

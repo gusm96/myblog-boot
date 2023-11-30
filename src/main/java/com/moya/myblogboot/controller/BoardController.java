@@ -88,6 +88,14 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.addLikeToBoard(getTokenInfo(request).getMemberPrimaryKey(), boardId));
     }
 
+    // 게시글 좋아요 Version2
+    @PostMapping("/api/v2/likes/{boardId}")
+    public ResponseEntity<Long> requestToAddBoardLikeVersion2(HttpServletRequest request, @PathVariable("boardId") Long boardId) {
+        // Transaction A
+        Member member = getMember(request);
+        return ResponseEntity.ok().body(boardService.addBoardLikeVersion2(boardId, member));
+    }
+
     @DeleteMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToDeleteBoardLike (HttpServletRequest request, @PathVariable("boardId") Long boardId){
         return ResponseEntity.ok().body(boardService.deleteBoardLike(getTokenInfo(request).getMemberPrimaryKey(), boardId));

@@ -9,6 +9,7 @@ import com.moya.myblogboot.exception.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.*;
 import com.moya.myblogboot.service.BoardService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -21,18 +22,19 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class BoardServiceImpl implements BoardService {
     private final BoardRepository boardRepository;
     private final ImageFileRepository imageFileRepository;
     private final MemberBoardLikeRedisRepository memberBoardLikeRedisRepository;
     private final BoardLikeCountRedisRepository boardLikeCountRedisRepository;
+    private final BoardLikeRepository boardLikeRepository;
 
     // 페이지별 최대 게시글 수
     public static final int LIMIT = 4;
 
     // 모든 게시글 리스트
     @Override
+    @Transactional(readOnly = true)
     public BoardListResDto retrieveBoardList(int page) {
         List<Board> boardList = boardRepository.findAll(pagination(page), LIMIT);
         Long listCount = boardRepository.findAllCount();
@@ -51,6 +53,7 @@ public class BoardServiceImpl implements BoardService {
 
     // 카테고리별 게시글 리스트
     @Override
+    @Transactional(readOnly = true)
     public BoardListResDto retrieveBoardListByCategory(Category category, int page){
         List<Board> boardList = boardRepository.findByCategory(category.getName(), pagination(page), LIMIT);
 
@@ -69,6 +72,7 @@ public class BoardServiceImpl implements BoardService {
     
     // 검색한 게시글 리스트
     @Override
+    @Transactional(readOnly = true)
     public BoardListResDto retrieveBoardListBySearch (SearchType searchType, String searchContents, int page) {
         List<Board> boardList = boardRepository.findBySearch(searchType, searchContents, pagination(page), LIMIT);
         Long listCount = boardRepository.findBySearchCount(searchType, searchContents);
@@ -85,6 +89,7 @@ public class BoardServiceImpl implements BoardService {
     
     // 선택한 게시글 가져오기
     @Override
+    @Transactional(readOnly = true)
     public BoardResDto retrieveBoardResponseById(Long boardId){
             return BoardResDto.builder()
                     .board(retrieveBoardById(boardId))
@@ -128,6 +133,10 @@ public class BoardServiceImpl implements BoardService {
             if (boardReqDto.getImages() != null && boardReqDto.getImages().size() > 0 ) {
                 saveImageFile(boardReqDto.getImages(), newBoard);
             }
+            // test
+            BoardLike boardLike = BoardLike.builder().board(newBoard).build();
+            newBoard.setBoardLike(boardLike);
+            //
             Long boardId = boardRepository.upload(newBoard);
 
             // BoardLikeCount RedisHash 생성 및 저장
@@ -148,25 +157,36 @@ public class BoardServiceImpl implements BoardService {
     public void saveImageFile(List<ImageFileDto> images, Board board) {
         List<ImageFile> imageFiles = images.stream()
                 .map(image -> imageFileRepository.save(image.toEntity(board))).collect(Collectors.toList());
-
         imageFiles.forEach(board::addImageFile);
     }
 
     // 게시글 좋아요
     @Override
-    @Transactional
     public Long addLikeToBoard(Long memberId, Long boardId){
         if(checkBoardLikedStatus(memberId, boardId))
             throw new DuplicateKeyException("이미 \"좋아요\"했습니다.");
         try {
             createMemberBoardLike(memberId, boardId);
-            incrementBoardLikeCount(boardId);
-            return getBoardLikeCount(boardId);
+            return boardLikeCountRedisRepository.incrementBoardLikeCount(boardId);
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("게시글 \"좋아요\"를 실패했습니다.");
         }
     }
+
+    @Override
+    @Transactional
+    public Long addBoardLikeVersion2(Long boardId, Member member) {
+        BoardLike boardLike = boardLikeRepository.findByBoardId(boardId).orElseThrow(()
+                -> new NoResultException("게시글 좋아요 정보를 불러오던 중 오류가 발생했습니다."));
+        if(boardLike.getMembers() != null && boardLike.getMembers().contains(member)){
+            throw new DuplicateKeyException("이미 \"좋아요\"한 게시글 입니다.");
+        }
+        boardLike.addMember(member);
+        boardLike.incrementLike();
+        return boardLike.getCount();
+    }
+
     @Override
     public boolean checkBoardLikedStatus(Long memberId, Long boardId) {
         return memberBoardLikeRedisRepository.isMember(memberId, boardId);
@@ -179,8 +199,7 @@ public class BoardServiceImpl implements BoardService {
         }
         try {
             memberBoardLikeRedisRepository.delete(memberId, boardId);
-            decrementBoardLikeCount(boardId);
-            return getBoardLikeCount(boardId);
+            return boardLikeCountRedisRepository.decrementBoardLikeCount(boardId);
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("게시글 \"좋아요\"정보 삭제를 실패했습니다");
@@ -193,13 +212,6 @@ public class BoardServiceImpl implements BoardService {
         );
     }
 
-    private Long getBoardLikeCount(Long boardId) {
-        try {
-            return boardLikeCountRedisRepository.findBoardLikeCount(boardId);
-        } catch (NullPointerException e) {
-            return 0L;
-        }
-    }
     private void createMemberBoardLike(Long memberId, Long boardId) {
         try {
             memberBoardLikeRedisRepository.save(memberId, boardId);
@@ -231,21 +243,11 @@ public class BoardServiceImpl implements BoardService {
             return 1;
         }
     }
-
-    private void updateBoardLikeCount(Long boardId, Long delta) {
-        Long boardLikeCount = boardLikeCountRedisRepository.findBoardLikeCount(boardId);
-        if (boardLikeCount != null) {
-            Long currentCount = boardLikeCount;
-            Long newCount = currentCount + delta;
-            boardLikeCountRedisRepository.update(boardId, newCount);
+    private Long getBoardLikeCount(Long boardId) {
+        try {
+            return boardLikeCountRedisRepository.findBoardLikeCount(boardId);
+        } catch (NullPointerException e) {
+            return 0L;
         }
-    }
-
-    private void incrementBoardLikeCount(Long boardId) {
-        updateBoardLikeCount(boardId, 1L);
-    }
-
-    private void decrementBoardLikeCount(Long boardId) {
-        updateBoardLikeCount(boardId, -1L);
     }
 }

@@ -2,6 +2,7 @@ package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.SearchType;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,5 +32,4 @@ public interface BoardRepository {
     Long findBySearchCount(SearchType type, String searchContents);
 
     Long findByCategoryCount(String categoryName);
-
 }

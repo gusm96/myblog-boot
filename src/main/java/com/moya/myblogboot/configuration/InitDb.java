@@ -26,7 +26,7 @@ public class InitDb {
         Long categoryId2 = initService.initCategory("Python");
         Category category1 = categoryRepository.findById(categoryId1).get();
         Category category2 = categoryRepository.findById(categoryId2).get();
-
+        initService.initTestMember();
       // Board 카테고리별로 10개씩
         for (int i = 0; i < 10; i++) {
             initService.initBoard(adminMember, category1, "자바", "자바의 진짜 직이네~");
@@ -51,6 +51,16 @@ public class InitDb {
             member.addRoleAdmin();
             em.persist(member);
             return member;
+        }
+        public void initTestMember(){
+            for (int i = 1; i <= 100; i++) {
+                Member member = Member.builder()
+                        .username("liketest123" + i)
+                        .password(passwordEncoder.encode("a12345678"))
+                        .nickname("테스터" + i)
+                        .build();
+                em.persist(member);
+            }
         }
 
         public Long initCategory(String categoryName) {

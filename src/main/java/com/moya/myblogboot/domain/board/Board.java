@@ -23,6 +23,9 @@ public class Board {
     private String title;
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "board_like_id")
+    private BoardLike boardlike;
     private LocalDateTime upload_date;
     private LocalDateTime edit_date;
     private LocalDateTime delete_date;
@@ -82,4 +85,9 @@ public class Board {
     public void removeImageFile(ImageFile file) {
         this.imageFiles.remove(file);
     }
+
+    public void setBoardLike(BoardLike boardLike) {
+        this.boardlike = boardLike;
+    }
+
 }
