@@ -91,7 +91,6 @@ public class BoardController {
     // 게시글 좋아요 Version2
     @PostMapping("/api/v2/likes/{boardId}")
     public ResponseEntity<Long> requestToAddBoardLikeVersion2(HttpServletRequest request, @PathVariable("boardId") Long boardId) {
-        // Transaction A
         Member member = getMember(request);
         return ResponseEntity.ok().body(boardService.addBoardLikeVersion2(boardId, member));
     }
@@ -102,13 +101,13 @@ public class BoardController {
     }
 
     private TokenInfo getTokenInfo(HttpServletRequest req){
+
         return authService.getTokenInfo(req.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1]);
     }
 
     private Member getMember(HttpServletRequest request) {
         return authService.retrieveMemberById(getTokenInfo(request).getMemberPrimaryKey());
     }
-
     private Category getCategory(Long categoryId) {
         return categoryService.retrieveCategoryById(categoryId);
     }

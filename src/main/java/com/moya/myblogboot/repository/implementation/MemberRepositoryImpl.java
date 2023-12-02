@@ -3,8 +3,10 @@ package com.moya.myblogboot.repository.implementation;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.repository.MemberRepository;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

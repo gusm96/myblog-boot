@@ -34,15 +34,12 @@ public class BoardLike {
         this.count = 0L;
         this.board = board;
     }
-    public void addMember(Member member){
+    public Long incrementLike(Member member){
         this.members.add(member);
+        return ++this.count;
     }
-
-    public void incrementLike(){
-        this.count++;
-    }
-    public void decrementLike(){
-        if(this.count - 1 <= 0) return;
-        this.count--;
+    public Long decrementLike(){
+        if(this.count - 1 <= 0) return 0L;
+        return --this.count;
     }
 }

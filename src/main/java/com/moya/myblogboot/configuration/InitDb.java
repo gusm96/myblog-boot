@@ -7,11 +7,11 @@ import com.moya.myblogboot.repository.*;
 import com.moya.myblogboot.service.implementation.BoardServiceImpl;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.FlushModeType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 
 @Component
 @RequiredArgsConstructor
@@ -34,13 +34,13 @@ public class InitDb {
         }
     }
     @Component
-    @Transactional
     @RequiredArgsConstructor
     static class InitService {
         private final EntityManager em;
         private final PasswordEncoder passwordEncoder;
         private final BoardServiceImpl boardServiceImpl;
 
+        @Transactional
         public Member initAdminMember(){
             Member member = Member.builder()
                     .username("moyada123")
@@ -52,17 +52,24 @@ public class InitDb {
             em.persist(member);
             return member;
         }
+        @Transactional
         public void initTestMember(){
-            for (int i = 1; i <= 100; i++) {
+            em.setFlushMode(FlushModeType.COMMIT); // Flush 모드를 COMMIT으로 설정
+            String password = passwordEncoder.encode("a12345678");
+            for (int i = 1; i <= 1000; i++) {
                 Member member = Member.builder()
-                        .username("liketest123" + i)
-                        .password(passwordEncoder.encode("a12345678"))
+                        .username("liketest" + i)
+                        .password(password)
                         .nickname("테스터" + i)
                         .build();
                 em.persist(member);
+                if (i % 20 == 0) { // 일정 갯수마다 Flush 및 Clear 실행
+                    em.flush();
+                    em.clear();
+                }
             }
         }
-
+        @Transactional
         public Long initCategory(String categoryName) {
             Category category = Category.builder()
                     .name(categoryName)
@@ -70,7 +77,7 @@ public class InitDb {
             em.persist(category);
             return category.getId();
         }
-
+        @Transactional
         public void initBoard(Member member, Category category, String title, String content) {
             BoardReqDto boardReqDto = BoardReqDto.builder()
                     .title(title)

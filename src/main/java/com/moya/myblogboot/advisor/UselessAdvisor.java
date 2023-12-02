@@ -18,6 +18,7 @@ public class UselessAdvisor {
         StopWatch stopWatch = new StopWatch();
         try{
             stopWatch.start();
+            log.info("Current Thread {}", Thread.currentThread().getName());
             return joinPoint.proceed();
         }finally {
             stopWatch.stop();

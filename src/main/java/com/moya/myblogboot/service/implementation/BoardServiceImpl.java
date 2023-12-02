@@ -5,15 +5,17 @@ import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.file.ImageFile;
 import com.moya.myblogboot.domain.file.ImageFileDto;
 import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.exception.UnauthorizedAccessException;
+import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.*;
 import com.moya.myblogboot.service.BoardService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -25,8 +27,8 @@ import java.util.stream.Collectors;
 public class BoardServiceImpl implements BoardService {
     private final BoardRepository boardRepository;
     private final ImageFileRepository imageFileRepository;
-    private final MemberBoardLikeRedisRepository memberBoardLikeRedisRepository;
     private final BoardLikeCountRedisRepository boardLikeCountRedisRepository;
+    private final MemberBoardLikeRedisRepository memberBoardLikeRedisRepository;
     private final BoardLikeRepository boardLikeRepository;
 
     // 페이지별 최대 게시글 수
@@ -163,12 +165,13 @@ public class BoardServiceImpl implements BoardService {
     // 게시글 좋아요
     @Override
     public Long addLikeToBoard(Long memberId, Long boardId){
-        if(checkBoardLikedStatus(memberId, boardId))
-            throw new DuplicateKeyException("이미 \"좋아요\"했습니다.");
+        if (checkBoardLikedStatus(memberId, boardId)) {
+            throw new RuntimeException("이미 \"좋아요\"한 게시글 입니다.");
+        }
         try {
-            createMemberBoardLike(memberId, boardId);
+            memberBoardLikeRedisRepository.save(memberId, boardId);
             return boardLikeCountRedisRepository.incrementBoardLikeCount(boardId);
-        } catch (Exception e) {
+        }catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("게시글 \"좋아요\"를 실패했습니다.");
         }
@@ -179,12 +182,11 @@ public class BoardServiceImpl implements BoardService {
     public Long addBoardLikeVersion2(Long boardId, Member member) {
         BoardLike boardLike = boardLikeRepository.findByBoardId(boardId).orElseThrow(()
                 -> new NoResultException("게시글 좋아요 정보를 불러오던 중 오류가 발생했습니다."));
-        if(boardLike.getMembers() != null && boardLike.getMembers().contains(member)){
+        if (!boardLike.getMembers().contains(member)) {
+            return   boardLike.incrementLike(member);
+        }else{
             throw new DuplicateKeyException("이미 \"좋아요\"한 게시글 입니다.");
         }
-        boardLike.addMember(member);
-        boardLike.incrementLike();
-        return boardLike.getCount();
     }
 
     @Override
@@ -192,7 +194,6 @@ public class BoardServiceImpl implements BoardService {
         return memberBoardLikeRedisRepository.isMember(memberId, boardId);
     }
     @Override
-    @Transactional
     public Long deleteBoardLike(Long memberId, Long boardId) {
         if (!checkBoardLikedStatus(memberId, boardId)) {
             throw new RuntimeException("존재하지 않는다.");
@@ -211,17 +212,6 @@ public class BoardServiceImpl implements BoardService {
                 () -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다.")
         );
     }
-
-    private void createMemberBoardLike(Long memberId, Long boardId) {
-        try {
-            memberBoardLikeRedisRepository.save(memberId, boardId);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("게시글 \"좋아요\"정보 저장을 실패했습니다");
-        }
-    }
-
-
     private void createBoardLikeCount(Long boardId) {
         try {
             boardLikeCountRedisRepository.save(boardId);
@@ -232,17 +222,13 @@ public class BoardServiceImpl implements BoardService {
     }
 
     private int pagination (int page){
-        if (page == 1) return 0;
-        return (page - 1) * LIMIT;
+        return page == 1 ? 0 : (page - 1) * LIMIT;
     }
 
     private int pageCount (Long listCount){
-        if(listCount > LIMIT){
-            return (int) Math.ceil((double) listCount / LIMIT);
-        }else{
-            return 1;
-        }
+        return listCount > LIMIT ? (int) Math.ceil((double) listCount / LIMIT) : 1;
     }
+
     private Long getBoardLikeCount(Long boardId) {
         try {
             return boardLikeCountRedisRepository.findBoardLikeCount(boardId);

@@ -13,19 +13,16 @@ public class MemberBoardLikeRedisRepositoryImpl implements MemberBoardLikeRedisR
     private static final String MEMBER_BOARD_LIKE_KEY = "memberBoardLike:";
     @Override
     public void save(Long memberId, Long boardId) {
-        String key = MEMBER_BOARD_LIKE_KEY + memberId;
-        redisTemplate.opsForSet().add(key, boardId);
+        redisTemplate.opsForSet().add(MEMBER_BOARD_LIKE_KEY + memberId, boardId);
     }
 
     @Override
     public boolean isMember(Long memberId, Long boardId) {
-        String key = MEMBER_BOARD_LIKE_KEY + memberId;
-        return redisTemplate.opsForSet().isMember(key, boardId);
+        return redisTemplate.opsForSet().isMember(MEMBER_BOARD_LIKE_KEY + memberId, boardId);
     }
 
     @Override
     public void delete(Long memberId, Long boardId) {
-        String key = MEMBER_BOARD_LIKE_KEY + memberId;
-        redisTemplate.opsForSet().remove(key, boardId);
+        redisTemplate.opsForSet().remove(MEMBER_BOARD_LIKE_KEY + memberId, boardId);
     }
 }

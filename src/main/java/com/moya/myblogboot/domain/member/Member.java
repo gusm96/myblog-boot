@@ -1,6 +1,5 @@
 package com.moya.myblogboot.domain.member;
 
-import com.moya.myblogboot.domain.board.BoardLike;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,10 +17,6 @@ public class Member {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    /*@ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "board_like_id")
-    private BoardLike boardLike;*/
-
     @Builder
     public Member(String username, String password, String nickname) {
 
@@ -34,7 +29,4 @@ public class Member {
     public void addRoleAdmin (){
         this.role = Role.ROLE_ADMIN;
     }
-    /*public void setBoardLike (BoardLike boardLike){
-        this.setBoardLike(boardLike);
-    }*/
 }

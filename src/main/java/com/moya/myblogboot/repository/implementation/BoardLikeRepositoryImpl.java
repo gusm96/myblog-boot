@@ -3,8 +3,10 @@ package com.moya.myblogboot.repository.implementation;
 import com.moya.myblogboot.domain.board.BoardLike;
 import com.moya.myblogboot.repository.BoardLikeRepository;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -20,6 +22,7 @@ public class BoardLikeRepositoryImpl implements BoardLikeRepository {
     }
 
     @Override
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     public Optional<BoardLike> findByBoardId(Long boardId) {
         try {
             BoardLike boardLike = em.createQuery("select b from BoardLike b where b.board.id =: boardId", BoardLike.class)

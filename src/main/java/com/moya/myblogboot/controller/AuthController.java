@@ -4,7 +4,7 @@ import com.moya.myblogboot.domain.member.LoginReqDto;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.member.PwStrengthCheckReqDto;
 import com.moya.myblogboot.domain.token.Token;
-import com.moya.myblogboot.exception.InvalidateTokenException;
+import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.PasswordStrengthCheck;
 import com.moya.myblogboot.utils.CookieUtil;
