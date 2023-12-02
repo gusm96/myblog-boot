@@ -3,7 +3,7 @@ package com.moya.myblogboot.utils;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.domain.token.TokenInfo;
-import com.moya.myblogboot.exception.ExpiredTokenException;
+import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 

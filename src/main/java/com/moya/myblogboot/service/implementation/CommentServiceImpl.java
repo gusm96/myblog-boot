@@ -5,7 +5,7 @@ import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.domain.comment.CommentReqDto;
 import com.moya.myblogboot.domain.comment.CommentResDto;
 import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.exception.UnauthorizedAccessException;
+import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.CommentRepository;
 import com.moya.myblogboot.service.CommentService;
 import jakarta.persistence.EntityNotFoundException;

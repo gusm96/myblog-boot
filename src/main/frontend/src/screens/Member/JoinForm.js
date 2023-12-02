@@ -48,7 +48,9 @@ export const JoinForm = () => {
     join(formData)
       .then(() => {
         if (window.confirm("바로 로그인 하시겠습니까?")) {
-          // page 이동
+          window.location.href = "/login";
+        } else {
+          window.location.href = "/";
         }
       })
       .catch((error) => {
