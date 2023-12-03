@@ -38,7 +38,7 @@ public class BoardRepositoryImpl implements BoardRepository {
         try {
             Board board = em.createQuery("select distinct b from Board b " +
                     "join fetch b.category " +
-                    "join fetch b.comments where b.id =: boardId", Board.class)
+                    "left join fetch b.comments where b.id =: boardId", Board.class)
                     .setParameter("boardId", boardId)
                     .getSingleResult();
             return Optional.ofNullable(board);
