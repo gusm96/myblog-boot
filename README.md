@@ -5,9 +5,9 @@
 ### 목차
 
 1. 프로젝트 개요
-2. 프로젝트 구조
-3. 주요 기능 소개
-4. 배운 점 / 앞으로의 계획
+2. 주요 기능 소개 
+3. 기술적 문제 및 해결
+4. 앞으로의 계획
 
 ---
 
@@ -19,38 +19,15 @@
   - 서버 개발 측면에서는, 단순한 게시판 CRUD 구현을 넘어서서, Spring Boot와 Spring Data JPA를 깊이 있게 학습하고 숙련도를 향상시키는 것을 목표로 했습니다. 또한, RestAPI 개발, Spring Security를 활용한 보안 및 인증 인가 서비스 구현, 그리고 인메모리 데이터베이스인 Redis의 활용 경험을 쌓는 것 또한 중요한 목표였습니다.
   - 클라이언트 개발에서는 JavaScript 언어의 숙련도 향상과 React.js 라이브러리의 활용을 위한 학습을 집중적으로 진행하였습니다. 더불어, 클라이언트-서버 아키텍처를 직접 구현하면서, 클라이언트와 서버 간의 네트워크 통신에 대한 깊은 이해와 경험을 쌓는 것을 목표로 설정하였습니다.
 
-  
 
-- **프로젝트 목적**
-
-  - Java 언어 숙련도 향상.
-  - RDB, NoSql 사용 숙련도 향상.
-  - Spring boot , Spring Data JPA (ORM)동작 원리 학습 및 사용 숙련도 향상.
-  - Rest API 이해와 응용
-  - Spring Security 보안 학습
-    - JWT(Json Web Token)를 사용한 인증 인가 구현
-    - Bcrypt를 사용한 비밀번호 암호화 구현
-  - FrontEnd 학습
-    - Javascript 언어 숙련도 향상.
-    - React.js 라이브러리 동작 원리 학습 및 사용 숙련도 향상.
-    - Redux ( 상태 관리 )
-  - Clinet - Server간 네트워크 통신 학습
-  - Docker 컨테이너 배포 경험.
-
----
-
-### 2. 프로젝트 구조
+- **프로젝트 구조**
 
 <img width="573" alt="Architecture" src="https://github.com/gusm96/myblog-boot/assets/77833389/498b2261-bab6-41c7-95c4-216a7f64b096">
 
 - Client-Server Architecture를 적용하여 클라이언트와 서버간 HTTP통신으로 요청과 응답을 처리하고 있습니다.
-- Server는 모든 구성요소와 기능이 하나의 서비스로 통합된 **Monolithic Architecture**로 구성되어 있어, 각 기능의 상호작용이 원활하며, 개발과 테스트, 배포가 간편합니다.
-- 관계형 데이터들은 JPA를 통해 관리하고 엑세스 합니다.
-- "게시글 좋아요"와 같은 빠른 조회가 필요한 데이터는 **Redis**를 사용하여 **메모리**에 저장하고 관리하고 있습니다.
-
-#### 데이터 모델링
-
-<img width="928" alt="ERD" src="https://github.com/gusm96/myblog-boot/assets/77833389/3c6beff5-9523-4bdb-8c8a-2038a652fb31">
+- Server는 모든 구성요소와 기능이 하나의 서비스로 통합된 **Monolithic Architecture**로 구성되어 있습니다.
+- 관계형 데이터들은 JPA를 통해 엑세스하고 관리합니다.
+- "게시글 좋아요"와 같은 빠른 조회 및 수정이 필요한 데이터는 **Redis**를 사용하여 **메모리**에 저장하고 관리하고 있습니다.
 
 ### 🛠️ 사용된 기술
 
@@ -58,10 +35,8 @@
   - Java 17, Spring Boot, Spring Data JPA, MariaDB, Redis
 - **Frontend**
   - JavaScript, React.js, Redux
-- **DevOps**
-  - Docker
 - **Tools**
-  - Intellj
+  - Intellj, Jmeter, Postman
 
 ---
 
@@ -141,5 +116,33 @@
 
    - 클라이언트는 반환 받은 좋아요 수를 바탕으로 업데이트를 진행합니다.
 
+-----
 
+### 4. 기술적 문제 및 해결
+
+1. 동시성 문제
+
+   ‘게시글 좋아요’기능을 구현하면서 JPA와 Redis를 사용해 각각의 기능을 구현하고 테스트를 진행했었습니다. 각각의 비즈니스 로직을 구현하고서 처리 속도를 테스트하기 위해 Jmeter로 테스트를 진행했더니 동시성 이슈가 발견되었습니다.
+
+   Redis로 구현한 기능은 간단히 복잡한 로직을 리팩터링 하였더니 1000건의 동시 요청에도 문제없이 잘 수행되었습니다. 그러나 JPA로 구현한 기능은 해결하기 위해 동시성 제어가 필요했습니다. Java는 멀티 스레트 프로그래밍이 가능한 언어로 동기화를 하지 않으면 Race Condition이 발생해 로직의 수행 결과가 기대와 다를 수 있기 때문입니다.
+
+   이를 해결하기 위해 메서드 특정 영역에 synchronized를 사용해 임계 영역을 설정해 주고 wait(), notify() 메서드를 사용해 하나의 스레드가 작업 중일 때 다른 스레드의 접근을 제어하도록 해보았지만 대기열이 길어지면서 데드락(교착상태)가 발생하는 문제가 있었습니다.  그래서 Lock 클래스를 사용해 명시적으로 락을 걸어보았지만, 여전히 원하는 결과를 얻을 수 없었습니다. 결론적으로 Redis를 사용해 기능을 구현했지만, 계속해서 멀티 스레드 동시성을 제어하기 위해 동기화 방법을 학습하고 Thread safe하게 기능을 구현해 볼 것입니다.
+
+   [ Redis를 사용해 회원 로그인 및 게시글 좋아요 요청 1000 건 동시 요청 ]
+
+   <img width="754" alt="스크린샷 2023-12-02 011938" src="https://github.com/gusm96/myblog-boot/assets/77833389/0fed3ad7-c01d-4b1b-bf72-214d1317184f">
+
+   <img width="514" alt="스크린샷 2023-12-02 004755" src="https://github.com/gusm96/myblog-boot/assets/77833389/3fa2edd7-3998-4d24-b8e7-bf2a09190800">
+
+   - 평균 로그인 요청 4초 이내, 좋아요 요청 4초 이내
+
+   - 오류 0%
+
+2. Token 저장소
+
+   JWT를 사용해 Access Token과 Refresh Token을 생성하여 사용자 인증을 하는 기능을 구현했습니다. 이 과정에서 Token의 저장소를 지정하는 것에 있어 많은 고민을 했습니다.  처음은  Access Token은  클라이언트에 전달하여 Redux Store에 저장해 관리하고, Refresh Token은 Redis를 사용해 Memory에 저장해 관리하려 했습니다.
+
+   하지만 이 방법은 Stateless하지 않은 방법이기에 서버가 상태를 관리하지 않을 방법을 생각했습니다. 그래서 결정한 방법은 Access Token은 Redux Store로 동일하게 관리하고, Refresh Token은 Cookie에 저장하는 방법을 택했습니다. Session Storage와 Local Storage와 같은 저장소도 있었지만. 각각의 장단점과 사용성을 고려했을 때, Http Only를 설정한 Cookie에 저장하는 것이 XSS 공격에도 비교적 안전하다 생각하여 선택했습니다.
+
+   사용자 인증과 같이 정보 탈취에 민감한 기능을 구현하기 위해서 보안에 대한 추가적인 학습이 필요하다고 느꼈습니다.
 
