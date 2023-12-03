@@ -34,6 +34,20 @@ public class BoardRepositoryImpl implements BoardRepository {
     }
 
     @Override
+    public Optional<Board> findByIdVersion2(Long boardId) {
+        try {
+            Board board = em.createQuery("select distinct b from Board b " +
+                    "join fetch b.category " +
+                    "join fetch b.comments where b.id =: boardId", Board.class)
+                    .setParameter("boardId", boardId)
+                    .getSingleResult();
+            return Optional.ofNullable(board);
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
+    }
+
+    @Override
     public List<Board> findByCategory(String categoryName,int offset, int limit) {
         return  em.createQuery(
                         "select b from Board b " +

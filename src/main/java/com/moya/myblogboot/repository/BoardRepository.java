@@ -32,4 +32,6 @@ public interface BoardRepository {
     Long findBySearchCount(SearchType type, String searchContents);
 
     Long findByCategoryCount(String categoryName);
+
+    Optional<Board> findByIdVersion2(Long boardId);
 }

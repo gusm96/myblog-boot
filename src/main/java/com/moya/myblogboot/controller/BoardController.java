@@ -43,6 +43,11 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.retrieveBoardResponseById(boardId));
     }
 
+    @GetMapping("/api/v2/boards/{boardId}")
+    public ResponseEntity<BoardDetailResDto> getBoardDetail(@PathVariable("boardId") Long boardId) {
+        return ResponseEntity.ok().body(boardService.retrieveBoardByIdVersion2(boardId));
+    }
+
     // 게시글 작성 Post
     @PostMapping("/api/v1/management/boards")
     public ResponseEntity<Long> postBoard(HttpServletRequest request, @RequestBody @Valid BoardReqDto boardReqDto) {
@@ -90,7 +95,7 @@ public class BoardController {
 
     // 게시글 좋아요 Version2
     @PostMapping("/api/v2/likes/{boardId}")
-    public ResponseEntity<Long> requestToAddBoardLikeVersion2(HttpServletRequest request, @PathVariable("boardId") Long boardId) {
+    public ResponseEntity<Long>  requestToAddBoardLikeVersion2(HttpServletRequest request, @PathVariable("boardId") Long boardId) {
         Member member = getMember(request);
         return ResponseEntity.ok().body(boardService.addBoardLikeVersion2(boardId, member));
     }

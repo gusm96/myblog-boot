@@ -12,10 +12,8 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -38,34 +36,34 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional(readOnly = true)
     public BoardListResDto retrieveBoardList(int page) {
+        // 페이지 별 게시글 조회
         List<Board> boardList = boardRepository.findAll(pagination(page), LIMIT);
+        // 모든 게시글 총 개수 조회
         Long listCount = boardRepository.findAllCount();
-        try {
-            List<BoardResDto> resultList = boardList.stream().map(board
-                            -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
-                    .toList();
-            return BoardListResDto.builder()
-                    .list(resultList)
-                    .pageCount(pageCount(listCount)).build();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("게시물 리스트를 가져오는데 실패했습니다.");
-        }
+        // 조회한 Board Entity List를 DTO 객체로 변환.
+        List<BoardResDto> resultList = boardList.stream().map(board
+                        -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
+                .toList();
+        // 화면에 보여질 List와 개시글 총 개수 반환.
+        return BoardListResDto.builder()
+                .list(resultList)
+                .pageCount(pageCount(listCount))
+                .build();
     }
 
     // 카테고리별 게시글 리스트
     @Override
     @Transactional(readOnly = true)
     public BoardListResDto retrieveBoardListByCategory(Category category, int page){
+        // 카테고리 + 페이지 게시글 조회
         List<Board> boardList = boardRepository.findByCategory(category.getName(), pagination(page), LIMIT);
 
         // 해당하는 카테고리의 게시글 수
         Long listCount = boardRepository.findByCategoryCount(category.getName());
-
+        // DTO 객체로 변환
         List<BoardResDto> resultList = boardList.stream().map(board
                         -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
-
         return BoardListResDto.builder()
                 .list(resultList)
                 .pageCount(pageCount(listCount))
@@ -76,32 +74,45 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional(readOnly = true)
     public BoardListResDto retrieveBoardListBySearch (SearchType searchType, String searchContents, int page) {
+        // 검색어 + 페이지 게시글 조회
         List<Board> boardList = boardRepository.findBySearch(searchType, searchContents, pagination(page), LIMIT);
+        // 검색된 게시글의 수
         Long listCount = boardRepository.findBySearchCount(searchType, searchContents);
-
+        // DTO 객체로 변환
         List<BoardResDto> resultList = boardList.stream().map(board
                         -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
-
         return BoardListResDto.builder()
                 .list(resultList)
                 .pageCount(pageCount(listCount))
                 .build();
     }
     
-    // 선택한 게시글 가져오기
+    // 게시글 상세
     @Override
-    @Transactional(readOnly = true)
     public BoardResDto retrieveBoardResponseById(Long boardId){
             return BoardResDto.builder()
                     .board(retrieveBoardById(boardId))
                     .likes(getBoardLikeCount(boardId))
                     .build();
     }
+    // 게시글 상세 v2
+    @Override
+    @Transactional(readOnly = true)
+    public BoardDetailResDto retrieveBoardByIdVersion2(Long boardId) {
+        Board findBoard = boardRepository.findByIdVersion2(boardId).orElseThrow(()
+         -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
+        return BoardDetailResDto.builder()
+                .board(findBoard)
+                .likes(getBoardLikeCount(boardId))
+                .build();
+    }
+
     // 게시글 수정
     @Override
     @Transactional
     public Long editBoard(Long memberId, Long boardId, String modifiedTitle, String modifiedContent, Category modifiedCategory){
+        // Entity 조회
         Board board = retrieveBoardById(boardId);
         if(board.getMember().getId() != memberId)
             throw new UnauthorizedAccessException("권한이 없습니다");
@@ -113,6 +124,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public boolean deleteBoard(Long boardId, Long memberId){
+        // Entity 조회
         Board board = retrieveBoardById(boardId);
         if (board.getMember().getId() == memberId) {
             try {
@@ -207,6 +219,7 @@ public class BoardServiceImpl implements BoardService {
         }
     }
     @Override
+    @Transactional(readOnly = true)
     public Board retrieveBoardById(Long boardId) {
         return boardRepository.findById(boardId).orElseThrow(
                 () -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다.")
