@@ -40,7 +40,7 @@ public class FileUploadServiceImpl implements FileUploadService {
                     .filePath(filePath)
                     .build();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("이미지 파일 저장 실패");
             throw new RuntimeException("이미지 파일 저장을 실패했습니다.");
         }
     }

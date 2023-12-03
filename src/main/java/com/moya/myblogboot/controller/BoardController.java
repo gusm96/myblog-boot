@@ -36,13 +36,21 @@ public class BoardController {
         Category category = getCategoryByName(categoryName);
         return ResponseEntity.ok().body(boardService.retrieveBoardListByCategory(category, page));
     }
+    // 검색 결과 게시글 리스트
+    @GetMapping("/api/v1/boards/search")
+    public ResponseEntity<BoardListResDto> searchBoards(
+            @RequestParam("type") SearchType searchType,
+            @RequestParam("contents") String searchContents,
+            @RequestParam(name = "p", defaultValue = "1") int page) {
+        return ResponseEntity.ok().body(boardService.retrieveBoardListBySearch(searchType, searchContents, page));
+    }
 
-    // 선택한 게시글
+    // 게시글 상세
     @GetMapping("/api/v1/boards/{boardId}")
     public ResponseEntity<BoardResDto> getBoard(@PathVariable Long boardId) {
         return ResponseEntity.ok().body(boardService.retrieveBoardResponseById(boardId));
     }
-
+    // 게시글 상세v2
     @GetMapping("/api/v2/boards/{boardId}")
     public ResponseEntity<BoardDetailResDto> getBoardDetail(@PathVariable("boardId") Long boardId) {
         return ResponseEntity.ok().body(boardService.retrieveBoardByIdVersion2(boardId));
@@ -73,46 +81,43 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.deleteBoard(boardId, memberId));
     }
 
-    // 게시글 검색 기능 추가
-    @GetMapping("/api/v1/boards/search")
-    public ResponseEntity<BoardListResDto> searchBoards(
-            @RequestParam("type") SearchType searchType,
-            @RequestParam("contents") String searchContents,
-            @RequestParam(name = "p", defaultValue = "1") int page) {
-        return ResponseEntity.ok().body(boardService.retrieveBoardListBySearch(searchType, searchContents, page));
-    }
-
-    // 게시글 좋아요 여부
+    // Redis-게시글 좋아요 여부 확인
     @GetMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToCheckBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
-        return ResponseEntity.ok().body(boardService.checkBoardLikedStatus(getTokenInfo(request).getMemberPrimaryKey(), boardId));
+        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+        return ResponseEntity.ok().body(boardService.checkBoardLikedStatus(memberId, boardId));
     }
-    // 게시글 좋아요 추가 기능
+    // Redis-게시글 좋아요 추가 기능
     @PostMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToAddBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
-        return ResponseEntity.ok().body(boardService.addLikeToBoard(getTokenInfo(request).getMemberPrimaryKey(), boardId));
+        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+        return ResponseEntity.ok().body(boardService.addLikeToBoard(memberId, boardId));
     }
 
-    // 게시글 좋아요 Version2
+    // 게시글 좋아요 JPA 실험중.
     @PostMapping("/api/v2/likes/{boardId}")
     public ResponseEntity<Long>  requestToAddBoardLikeVersion2(HttpServletRequest request, @PathVariable("boardId") Long boardId) {
         Member member = getMember(request);
         return ResponseEntity.ok().body(boardService.addBoardLikeVersion2(boardId, member));
     }
-
+    // Redis-게시글 좋아요 취소
     @DeleteMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToDeleteBoardLike (HttpServletRequest request, @PathVariable("boardId") Long boardId){
-        return ResponseEntity.ok().body(boardService.deleteBoardLike(getTokenInfo(request).getMemberPrimaryKey(), boardId));
+        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+        return ResponseEntity.ok().body(boardService.deleteBoardLike(memberId, boardId));
     }
 
+    // 토큰 정보 조회
     private TokenInfo getTokenInfo(HttpServletRequest req){
-
         return authService.getTokenInfo(req.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1]);
     }
 
+    // Member Entity 조회
     private Member getMember(HttpServletRequest request) {
         return authService.retrieveMemberById(getTokenInfo(request).getMemberPrimaryKey());
     }
+
+    // Category Entity 조회
     private Category getCategory(Long categoryId) {
         return categoryService.retrieveCategoryById(categoryId);
     }

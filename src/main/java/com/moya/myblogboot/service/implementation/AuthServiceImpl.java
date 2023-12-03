@@ -49,13 +49,9 @@ public class AuthServiceImpl implements AuthService {
         Member newMember = memberJoinReqDto.toEntity();
         // Member Persist
         try {
-            Long result = memberRepository.save(newMember);
-            if (result > 0) {
-                return "회원가입을 성공했습니다.";
-            } else {
-                throw new PersistenceException("회원가입을 실패했습니다.");
-            }
-        } catch (DataIntegrityViolationException e) {
+            memberRepository.save(newMember);
+            return "회원가입을 성공했습니다.";
+        } catch (Exception e) {
             throw new RuntimeException("회원가입 중 오류가 발생했습니다.");
         }
     }
@@ -98,7 +94,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public boolean tokenIsExpired(String token) {
         try {
-            JwtUtil.validateToken(token, secret);
+            JwtUtil.validateToken(token, secret); // 토큰 검증
             return true;
         } catch (ExpiredTokenException e) {
             return false;

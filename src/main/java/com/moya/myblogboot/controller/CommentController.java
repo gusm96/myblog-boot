@@ -23,15 +23,9 @@ public class CommentController {
     private final BoardService boardService;
     private final AuthService authService;
 
-    // read
-    // get Comment List
-    @GetMapping("/api/v1/boards/{boardId}/comments")
-    public ResponseEntity<List> reqToCommentList(@PathVariable Long boardId) {
-        return ResponseEntity.ok().body(commentService.getCommentList(boardId));
-    }
-    // write
+    // 댓글 작성
     @PostMapping("/api/v1/comments/{boardId}")
-    public ResponseEntity<?> createComment (HttpServletRequest request,
+    public ResponseEntity<String> createComment (HttpServletRequest request,
                                             @PathVariable("boardId") Long boardId,
                                             @RequestBody CommentReqDto commentReqDto ){
         Board board = getBoard(boardId);
@@ -41,7 +35,7 @@ public class CommentController {
 
     // update
     @PutMapping("/api/v1/comments/{commentId}")
-    public ResponseEntity<?> modifiedComment(HttpServletRequest request,
+    public ResponseEntity<String> modifiedComment(HttpServletRequest request,
                                              @PathVariable("commentId") Long commentId,
                                              @RequestBody CommentReqDto commentReqDto) {
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
@@ -50,7 +44,7 @@ public class CommentController {
 
     // delete
     @DeleteMapping("/api/v1/boards/{boardId}/comments/{commentId}")
-    public ResponseEntity<?> requestToDeleteComment(
+    public ResponseEntity<String> requestToDeleteComment(
             HttpServletRequest request,
             @PathVariable("boardId") Long boardId,
             @PathVariable("commentId") Long commentId) {

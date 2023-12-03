@@ -16,10 +16,10 @@ import java.util.Optional;
 public class MemberRepositoryImpl implements MemberRepository {
 
     private final EntityManager em;
+
     @Override
-    public Long save(Member member) {
+    public void save(Member member) {
         em.persist(member);
-        return member.getId();
     }
 
     @Override

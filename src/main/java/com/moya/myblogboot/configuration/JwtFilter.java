@@ -89,6 +89,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 "/api/v1/login",
                 "/api/v1/logout",
                 "/api/v1/boards",
+                "/api/v2/boards",
                 "/api/v1/boards/search",
                 "/api/v1/categories",
                 "/api/v1/reissuing-token",

@@ -16,9 +16,8 @@ public class CategoryRepositoryImpl implements CategoryRepository {
 
     private final EntityManager em;
     @Override
-    public Long create(Category category) {
+    public void save(Category category) {
         em.persist(category);
-        return category.getId();
     }
 
     @Override

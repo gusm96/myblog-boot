@@ -34,7 +34,7 @@ public class BoardLike {
         this.count = 0L;
         this.board = board;
     }
-    public Long incrementLike(Member member){
+    public synchronized Long incrementLike(Member member){
         this.members.add(member);
         return ++this.count;
     }

@@ -8,12 +8,14 @@ import com.moya.myblogboot.service.CategoryService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -22,40 +24,46 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryResDto> getCategoryList() {
-        return categoryRepository.categories().stream().map(category -> CategoryResDto.of(category)).toList();
+        return categoryRepository.categories().stream().map(CategoryResDto::of).toList();
     }
     @Override
     @Transactional
     public String createCategory(String categoryName){
         // Category 중복 검사
         if(categoryRepository.findByName(categoryName).isPresent()){
-            throw new DuplicateKeyException("이미 존재하는 카테고리명입니다.");
+            throw new DuplicateKeyException("이미 존재하는 카테고리입니다.");
         }
         Category category = Category.builder().name(categoryName).build();
-        Long result = categoryRepository.create(category);
-        if(result > 0){
-            return "success";
-        }else{
+        try {
+            categoryRepository.save(category);
+            return "카테고리가 정상적으로 등록되었습니다.";
+        } catch (Exception e) {
+            log.error("카테고리 등록 실패.");
             throw new PersistenceException("카테고리 등록을 실패했습니다.");
         }
     }
     @Override
     public Long updateCategory(Long categoryId, String modifiedCategoryName) {
         Category category = retrieveCategoryById(categoryId);
-        category.editCategory(modifiedCategoryName);
-        return category.getId();
+        try {
+            category.editCategory(modifiedCategoryName);
+            return category.getId();
+        } catch (Exception e) {
+            log.error("카테고리 수정 실패");
+            throw new RuntimeException("카테고리 수정 중 오류가 발생했습니다.");
+        }
     }
     // 카테고리 삭제
     @Override
     @Transactional
-    public boolean deleteCategory(Long categoryId) {
+    public String deleteCategory(Long categoryId) {
         Category category = retrieveCategoryById(categoryId);
         try {
             categoryRepository.removeCategory(category);
-            return true;
+            return "카테고리가 삭제되었습니다.";
         } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+            log.error("카테고리 삭제 실패");
+            throw new RuntimeException("카테고리 삭제 중 오류가 발생했습니다.");
         }
     }
     @Override

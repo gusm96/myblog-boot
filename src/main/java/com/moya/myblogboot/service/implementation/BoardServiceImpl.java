@@ -87,57 +87,7 @@ public class BoardServiceImpl implements BoardService {
                 .pageCount(pageCount(listCount))
                 .build();
     }
-    
-    // 게시글 상세
-    @Override
-    public BoardResDto retrieveBoardResponseById(Long boardId){
-            return BoardResDto.builder()
-                    .board(retrieveBoardById(boardId))
-                    .likes(getBoardLikeCount(boardId))
-                    .build();
-    }
-    // 게시글 상세 v2
-    @Override
-    @Transactional(readOnly = true)
-    public BoardDetailResDto retrieveBoardByIdVersion2(Long boardId) {
-        Board findBoard = boardRepository.findByIdVersion2(boardId).orElseThrow(()
-         -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
-        return BoardDetailResDto.builder()
-                .board(findBoard)
-                .likes(getBoardLikeCount(boardId))
-                .build();
-    }
 
-    // 게시글 수정
-    @Override
-    @Transactional
-    public Long editBoard(Long memberId, Long boardId, String modifiedTitle, String modifiedContent, Category modifiedCategory){
-        // Entity 조회
-        Board board = retrieveBoardById(boardId);
-        if(board.getMember().getId() != memberId)
-            throw new UnauthorizedAccessException("권한이 없습니다");
-        // 변경 감지
-        board.updateBoard(modifiedCategory, modifiedTitle, modifiedContent);
-        return board.getId();
-    }
-    // 게시글 삭제
-    @Override
-    @Transactional
-    public boolean deleteBoard(Long boardId, Long memberId){
-        // Entity 조회
-        Board board = retrieveBoardById(boardId);
-        if (board.getMember().getId() == memberId) {
-            try {
-                boardRepository.removeBoard(board);
-                return true;
-            } catch (Exception e) {
-                log.error("게시글 삭제 중 에러 발생");
-                throw new RuntimeException("게시글 삭제를 실패했습니다.");
-            }
-        }else {
-            throw new UnauthorizedAccessException("권한이 없습니다.");
-        }
-    }
     // 게시글 업로드
     @Override
     @Transactional
@@ -173,8 +123,60 @@ public class BoardServiceImpl implements BoardService {
                 .map(image -> imageFileRepository.save(image.toEntity(board))).collect(Collectors.toList());
         imageFiles.forEach(board::addImageFile);
     }
+    
+    // 게시글 상세
+    @Override
+    public BoardResDto retrieveBoardResponseById(Long boardId){
+            return BoardResDto.builder()
+                    .board(retrieveBoardById(boardId))
+                    .likes(getBoardLikeCount(boardId))
+                    .build();
+    }
+    // 게시글 상세 v2
+    @Override
+    @Transactional(readOnly = true)
+    public BoardDetailResDto retrieveBoardByIdVersion2(Long boardId) {
+        Board findBoard = boardRepository.findByIdVersion2(boardId).orElseThrow(()
+         -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
+        return BoardDetailResDto.builder()
+                .board(findBoard)
+                .likes(getBoardLikeCount(boardId))
+                .build();
+    }
 
-    // 게시글 좋아요
+    // 게시글 수정
+    @Override
+    @Transactional
+    public Long editBoard(Long memberId, Long boardId, String modifiedTitle, String modifiedContent, Category modifiedCategory){
+        // Entity 조회
+        Board board = retrieveBoardById(boardId);
+        if(board.getMember().getId() != memberId)
+            throw new UnauthorizedAccessException("권한이 없습니다");
+        // 변경 감지
+        board.updateBoard(modifiedCategory, modifiedTitle, modifiedContent);
+        return board.getId();
+    }
+
+    // 게시글 삭제
+    @Override
+    @Transactional
+    public boolean deleteBoard(Long boardId, Long memberId){
+        // Entity 조회
+        Board board = retrieveBoardById(boardId);
+        if (board.getMember().getId() == memberId) {
+            try {
+                boardRepository.removeBoard(board);
+                return true;
+            } catch (Exception e) {
+                log.error("게시글 삭제 중 에러 발생");
+                throw new RuntimeException("게시글 삭제를 실패했습니다.");
+            }
+        }else {
+            throw new UnauthorizedAccessException("권한이 없습니다.");
+        }
+    }
+
+    // 게시글 좋아요 Redis
     @Override
     public Long addLikeToBoard(Long memberId, Long boardId){
         if (checkBoardLikedStatus(memberId, boardId)) {
@@ -189,6 +191,7 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
+    // 게시글 좋아요 JPA 테스트 중
     @Override
     @Transactional
     public Long addBoardLikeVersion2(Long boardId, Member member) {
@@ -201,10 +204,13 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
+    // 게시글 좋아요 여부 체크
     @Override
     public boolean checkBoardLikedStatus(Long memberId, Long boardId) {
         return memberBoardLikeRedisRepository.isMember(memberId, boardId);
     }
+
+    // 게시글 좋아요 취소 - Redis
     @Override
     public Long deleteBoardLike(Long memberId, Long boardId) {
         if (!checkBoardLikedStatus(memberId, boardId)) {
@@ -214,10 +220,12 @@ public class BoardServiceImpl implements BoardService {
             memberBoardLikeRedisRepository.delete(memberId, boardId);
             return boardLikeCountRedisRepository.decrementBoardLikeCount(boardId);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("게시글 \"좋아요\"정보 삭제를 실패했습니다");
+            log.error("게시글 \"좋아요\" 정보 삭제 실패");
+            throw new RuntimeException("게시글 \"좋아요\"취소를 실패했습니다");
         }
     }
+
+    // 게시글 Entity 조회
     @Override
     @Transactional(readOnly = true)
     public Board retrieveBoardById(Long boardId) {
@@ -225,12 +233,23 @@ public class BoardServiceImpl implements BoardService {
                 () -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다.")
         );
     }
+
+    // 게시글 좋아요 수 데이터 생성 - Redis
     private void createBoardLikeCount(Long boardId) {
         try {
             boardLikeCountRedisRepository.save(boardId);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.info("게시글 \"좋아요 수\"정보 생성 실패");
             throw new RuntimeException("게시글 \"좋아요 수\"정보 생성 중 오류발생");
+        }
+    }
+
+    // 게시글 좋아요 수 조회 - Redis
+    private Long getBoardLikeCount(Long boardId) {
+        try {
+            return boardLikeCountRedisRepository.findBoardLikeCount(boardId);
+        } catch (NullPointerException e) {
+            return 0L;
         }
     }
 
@@ -242,11 +261,5 @@ public class BoardServiceImpl implements BoardService {
         return listCount > LIMIT ? (int) Math.ceil((double) listCount / LIMIT) : 1;
     }
 
-    private Long getBoardLikeCount(Long boardId) {
-        try {
-            return boardLikeCountRedisRepository.findBoardLikeCount(boardId);
-        } catch (NullPointerException e) {
-            return 0L;
-        }
-    }
+
 }

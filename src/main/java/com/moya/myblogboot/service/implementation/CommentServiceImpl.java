@@ -33,13 +33,11 @@ public class CommentServiceImpl implements CommentService {
             parent.addChildComment(comment);
         }
         try {
-            Long result = commentRepository.write(comment);
-            // Board Entity에 Comment 추가 ( 변경감지 )
+            // Comment Persist
+            commentRepository.save(comment);
+            // Board Entity에 Comment 추가
             board.addComment(comment);
-            if (result > 0) {
-                return "댓글이 등록되었습니다.";
-            }
-            return ("댓글 등록울 실패했습니다.");
+            return "댓글이 등록되었습니다.";
         } catch (Exception e) {
             log.error("댓글 등록 중 에러 발생");
             throw new RuntimeException("댓글 등록을 실패했습니다.");
@@ -55,12 +53,12 @@ public class CommentServiceImpl implements CommentService {
             throw new UnauthorizedAccessException("권한이 없습니다.");
         }
         findComment.updateComment(modifiedComment);
-        return "result";
+        return "댓글이 수정되었습니다.";
     }
     // 댓글 삭제
     @Override
     @Transactional
-    public boolean deleteComment(Long memberId, Long commentId, Board board) {
+    public String deleteComment(Long memberId, Long commentId, Board board) {
         Comment findComment = retrieveCommentById(commentId);
         if(findComment.getMember().getId() != memberId) {
             throw new UnauthorizedAccessException("권한이 없습니다.");
@@ -68,7 +66,7 @@ public class CommentServiceImpl implements CommentService {
         try {
             board.removeComment(findComment);
             commentRepository.removeComment(findComment);
-            return true;
+            return "댓글이 삭제되었습니다.";
         } catch (Exception e) {
             log.error("댓글 삭제 중 에러 발생");
             throw new RuntimeException("댓글 삭제를 실패했습니다.");

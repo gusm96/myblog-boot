@@ -56,7 +56,7 @@ public class InitDb {
         public void initTestMember(){
             em.setFlushMode(FlushModeType.COMMIT); // Flush 모드를 COMMIT으로 설정
             String password = passwordEncoder.encode("a12345678");
-            for (int i = 1; i <= 1000; i++) {
+            for (int i = 1; i <= 10000; i++) {
                 Member member = Member.builder()
                         .username("liketest" + i)
                         .password(password)

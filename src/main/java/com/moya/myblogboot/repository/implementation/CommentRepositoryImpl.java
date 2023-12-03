@@ -16,11 +16,9 @@ public class CommentRepositoryImpl implements CommentRepository {
 
     private final EntityManager em;
 
-
     @Override
-    public Long write(Comment comment) {
+    public void save(Comment comment) {
         em.persist(comment);
-        return comment.getId();
     }
     @Override
     public Optional<Comment> findById(Long commentId) {
@@ -33,7 +31,10 @@ public class CommentRepositoryImpl implements CommentRepository {
     }
     @Override
     public List<Comment> commentList(Long boardId) {
-        List<Comment> result = em.createQuery("select r from Comment r where r.board.id =: boardId order by r.write_date desc ", Comment.class)
+        List<Comment> result = em.createQuery(
+                "select r from Comment r " +
+                        "where r.board.id =: boardId " +
+                        "order by r.write_date desc ", Comment.class)
                 .setParameter("boardId", boardId)
                 .getResultList();
         return result;

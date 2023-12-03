@@ -13,7 +13,7 @@ public interface CommentService {
 
     String updateComment(Long memberId, Long commentId, String modifiedComment);
 
-    boolean deleteComment(Long memberId, Long commentId, Board board);
+    String deleteComment(Long memberId, Long commentId, Board board);
 
     List<CommentResDto> getCommentList(Long boardId);
 

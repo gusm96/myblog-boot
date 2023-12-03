@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface CategoryRepository {
 
-    Long create(Category category);
+    void save(Category category);
 
     Optional<Category> findById(Long categoryId);
 

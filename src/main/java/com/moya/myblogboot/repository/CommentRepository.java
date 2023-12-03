@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface CommentRepository {
     // 댓글 작성
-    Long write(Comment comment);
+    void save(Comment comment);
     // 댓글 찾기
     Optional<Comment> findById(Long replyId);
     // 댓글 리스트

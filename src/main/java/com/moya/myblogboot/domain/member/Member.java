@@ -1,7 +1,11 @@
 package com.moya.myblogboot.domain.member;
 
+import com.moya.myblogboot.domain.comment.Comment;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -19,7 +23,6 @@ public class Member {
 
     @Builder
     public Member(String username, String password, String nickname) {
-
         this.username = username;
         this.password = password;
         this.nickname = nickname;

@@ -12,7 +12,7 @@ public interface CategoryService {
 
     Long updateCategory(Long categoryId, String modifiedCategoryName);
 
-    boolean deleteCategory(Long categoryId);
+    String deleteCategory(Long categoryId);
 
     Category retrieveCategoryById(Long categoryId);
 
