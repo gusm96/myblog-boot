@@ -34,11 +34,13 @@ public class BoardLikeCountRedisRepositoryImpl implements BoardLikeCountRedisRep
 
     @Override
     public Long decrementBoardLikeCount(Long boardId) {
+        if(getCount(boardId) - 1L < 0) return 0L;
         hashOperations.increment(BOARD_LIKE_COUNT_KEY + boardId, BOARD_LIKE_COUNT_HASH_KEY, -1L);
         return getCount(boardId);
     }
 
     private long getCount(Long boardId) {
+        //  찾아온 값을 Number로 캐스팅하고, 그 값을 long 타입으로 변환.
         return ((Number) hashOperations.get(BOARD_LIKE_COUNT_KEY + boardId, BOARD_LIKE_COUNT_HASH_KEY)).longValue();
     }
 }

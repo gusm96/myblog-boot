@@ -1,7 +1,5 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.repository.MemberRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,9 +9,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @SpringBootTest
-public class BoardLikeServiceTets {
+public class BoardLikeServiceTest {
 
     private static final int COUNT = 100;
     private static final ExecutorService service = Executors.newFixedThreadPool(COUNT);
@@ -43,5 +42,25 @@ public class BoardLikeServiceTets {
         // then
         latch.await();
         Assertions.assertEquals(before + COUNT, numberService.getNumber());
+    }*/
+
+
+    /*@Test
+    @DisplayName("카운트 테스트")
+    void incrementCount () throws InterruptedException {
+        // given
+        AtomicInteger count = new AtomicInteger();
+        int maxCount = 100;
+        CountDownLatch latch = new CountDownLatch(COUNT);
+        // when
+        for (int i = 0; i < COUNT; i++) {
+            service.execute(() -> {
+                count.getAndIncrement();
+                latch.countDown();
+            });
+        }
+        // then
+        latch.await();
+        Assertions.assertEquals(maxCount, count);
     }*/
 }

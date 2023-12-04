@@ -123,7 +123,7 @@
    
    - 그 후 게시글의 존재 여부와 요청한 사용자의 게시글 좋아요 데이터의 중복 여부를 검증합니다. 중복되지 않는다면 새로운 데이터를 생성하거나, 기존 데이터에 게시글 Index 값을 Set에 추가합니다.
    
-   - 이후 해당 게시글의 'BoardLikeCount'를 찾아와 요청에 따라 increment() 또는 decrement()를 실행하고, 총 좋아요 수를 클라이언트에게 반환합니다.
+   - 이후 해당 게시글의 'BoardLikeCount'를 찾아와 요청에 따라 incrementBoardLikeCount() 또는 decrementBoardLikeCount()를 실행하고, 수정된 좋아요 수를 클라이언트에게 반환합니다.
    
    - 클라이언트는 반환 받은 좋아요 수를 바탕으로 업데이트를 진행합니다.
 
@@ -133,11 +133,34 @@
 
 1. 동시성 문제
 
-   ‘게시글 좋아요’기능을 구현하면서 JPA와 Redis를 사용해 각각의 기능을 구현하고 테스트를 진행했었습니다. 각각의 비즈니스 로직을 구현하고서 처리 속도를 테스트하기 위해 Jmeter로 테스트를 진행했더니 동시성 이슈가 발견되었습니다.
+   테스트를 진행하면서 '게시글 좋아요' 기능을 JPA와 Redis로 각각 구현한 결과, Jmeter를 사용한 동시성 테스트에서 JPA에서 동시성 이슈가 발생했습니다. Redis로 구현한 기능은 단순한 로직 리팩터링만으로 1000건의 동시 요청에 대해 원활한 수행이 가능했습니다. 그러나 JPA로 구현한 기능은 동시성 이슈를 해결하기 위해 추가적인 처리가 필요했습니다.
 
-   Redis로 구현한 기능은 간단히 복잡한 로직을 리팩터링 하였더니 1000건의 동시 요청에도 문제없이 잘 수행되었습니다. 그러나 JPA로 구현한 기능은 해결하기 위해 동시성 제어가 필요했습니다. Java는 멀티 스레트 프로그래밍이 가능한 언어로 동기화를 하지 않으면 Race Condition이 발생해 로직의 수행 결과가 기대와 다를 수 있기 때문입니다.
+   Java는 멀티 스레드 프로그래밍을 지원하지만, 공유 데이터에 동시에 접근할 경우 Race Condition이 발생하여 예상치 못한 결과가 나타날 수 있습니다. 이를 방지하기 위해 JPA에서는 synchronized를 사용하여 특정 메서드 영역을 임계 영역으로 설정하고, wait(), notify() 메서드를 이용하여 스레드 간 접근을 제어하려 했습니다. 그러나 이로 인해 대기열이 길어지면서 데드락(교착상태)이 발생하는 문제가 발생했습니다.
 
-   이를 해결하기 위해 메서드 특정 영역에 synchronized를 사용해 임계 영역을 설정해 주고 wait(), notify() 메서드를 사용해 하나의 스레드가 작업 중일 때 다른 스레드의 접근을 제어하도록 해보았지만 대기열이 길어지면서 데드락(교착상태)가 발생하는 문제가 있었습니다.  그래서 Lock 클래스를 사용해 명시적으로 락을 걸어보았지만, 여전히 원하는 결과를 얻을 수 없었습니다. 결론적으로 Redis를 사용해 기능을 구현했지만, 계속해서 멀티 스레드 동시성을 제어하기 위해 동기화 방법을 학습하고 Thread safe하게 기능을 구현해 볼 것입니다.
+   이러한 상황에서는 비관적 락을 도입하여 데이터 수정 시에 블로킹을 걸어 동시성을 해결했습니다. 비관적 락은 다른 스레드의 접근을 허용하지 않고, 하나의 스레드가 작업을 수행하는 동안 다른 스레드의 접근을 막는 방식입니다. 이를 통해 JPA에서의 동시성 문제를 해결할 수 있었습니다.
+
+   종합적으로, 동시 요청이 많아질수록 JPA는 성능 저하가 발생하고, 이에 대한 대안으로 Redis로 구현한 기능을 사용하게 되었습니다. Redis는 단순하면서도 높은 성능을 제공하여 동시성 이슈를 효과적으로 해결할 수 있었습니다.
+
+   ```java
+   @Repository
+   @RequiredArgsConstructor
+   public class BoardLikeRepositoryImpl implements BoardLikeRepository {
+       private final EntityManager em;
+   	// ...
+       @Override
+       public Optional<BoardLike> findByBoardId(Long boardId) {
+           try {
+               BoardLike boardLike = em.createQuery("select b from BoardLike b where b.board.id =: boardId", BoardLike.class)
+                       .setParameter("boardId", boardId)
+                   	.setLockMode(LockModeType.PESSIMISTIC_WRITE) // 비관적 락 적용 읽기는 허용, 쓰기 및 수정 락
+                       .getSingleResult();
+               return Optional.ofNullable(boardLike);
+           } catch (NoResultException e) {
+               return Optional.empty();
+           }
+       }
+   }
+   ```
 
    [ Redis를 사용해 회원 로그인 및 게시글 좋아요 요청 1000 건 동시 요청 ]
 
@@ -150,12 +173,13 @@
    - 오류 0%
 
 2. Token 저장소
-
-   JWT를 사용해 Access Token과 Refresh Token을 생성하여 사용자 인증을 하는 기능을 구현했습니다. 이 과정에서 Token의 저장소를 지정하는 것에 있어 많은 고민을 했습니다.  처음은  Access Token은  클라이언트에 전달하여 Redux Store에 저장해 관리하고, Refresh Token은 Redis를 사용해 Memory에 저장해 관리하려 했습니다.
-
-   하지만 이 방법은 Stateless하지 않은 방법이기에 서버가 상태를 관리하지 않을 방법을 생각했습니다. 그래서 Refresh Token을 Cookie에 저장하는 방법을 택했습니다. Session Storage와 Local Storage와 같은 저장소도 있었지만. 각각의 장단점과 사용성을 고려했을 때, Http Only를 설정한 Cookie에 저장하는 것이 XSS 공격에도 비교적 안전하다 생각하여 선택했습니다. 
-
-   사용자 인증과 같이 정보 탈취에 민감한 기능을 구현하기 위해서 보안에 대한 추가적인 학습이 필요하다고 느꼈습니다.
+   JWT를 사용하여 Access Token과 Refresh Token을 생성하여 사용자 인증을 구현하면서 Token의 저장소를 결정하는 데 있어 여러 가지 고려 사항이 있었습니다. 초기에는 Access Token을 클라이언트에 전달하여 Redux Store에 저장하고, Refresh Token은 Redis를 활용하여 Memory에 저장하는 방식을 고려했습니다.
+   
+   그러나 이 방법은 상태를 유지하지 않는 Stateless한 방식이 아니었기 때문에 서버가 상태를 관리하는 방법을 찾아야 했습니다. 이에 따라 Refresh Token을 Memory에 저장하는 대신, 보다 안전한 방법으로 Cookie에 저장하기로 결정했습니다. 여러 저장소 중 Session Storage와 Local Storage도 고려했지만, Http Only 속성을 설정한 Cookie에 저장하는 방법이 XSS 공격에 비교적 안전하다고 판단하여 이를 선택했습니다.
+   
+   이러한 선택은 사용자 인증과 같이 민감한 정보를 다루는 기능에서 정보 탈취에 대한 위험을 최소화하기 위한 것이었습니다. Http Only 속성을 설정한 Cookie를 사용하면 JavaScript에서 해당 쿠키에 접근할 수 없어 XSS 공격에 대한 방어가 가능합니다.
+   
+   이와 같은 보안 관련 결정을 내리면서 사용자 인증과 같이 민감한 기능을 구현하기 위해서는 보안에 대한 추가적인 학습이 필요하다는 인식을 얻게 되었습니다. 보안 측면에서의 다양한 고려 사항을 공부하고 적용하는 것은 안전한 웹 애플리케이션을 개발하는 데 중요한 부분이라고 느꼈습니다.
 
 -----
 

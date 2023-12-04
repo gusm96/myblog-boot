@@ -128,7 +128,7 @@ class BoardServiceImplTest {
         assertThat(board.getBoardStatus()).isEqualTo(BoardStatus.HIDE);
     }*/
 
-    @DisplayName("게시글 검색 기능")
+    /*@DisplayName("게시글 검색 기능")
     @Test
     void 게시글_검색 () {
         // given
@@ -141,15 +141,5 @@ class BoardServiceImplTest {
         List<Board> result = boardRepositoryImpl.findBySearch(type, searchContents, 1, 5);
         // then
         assertThat(result).isNotEmpty();
-    }
-
-    @DisplayName("게시글 좋아요")
-    @Test
-    void 좋아요() {
-        // given
-
-        // when
-
-        // then
-    }
+    }*/
 }

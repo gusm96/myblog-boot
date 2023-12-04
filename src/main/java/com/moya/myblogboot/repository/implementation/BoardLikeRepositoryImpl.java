@@ -22,11 +22,12 @@ public class BoardLikeRepositoryImpl implements BoardLikeRepository {
     }
 
     @Override
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     public Optional<BoardLike> findByBoardId(Long boardId) {
         try {
             BoardLike boardLike = em.createQuery("select b from BoardLike b where b.board.id =: boardId", BoardLike.class)
-                    .setParameter("boardId", boardId).getSingleResult();
+                    .setParameter("boardId", boardId)
+                    .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+                    .getSingleResult();
             return Optional.ofNullable(boardLike);
         } catch (NoResultException e) {
             return Optional.empty();
