@@ -25,12 +25,6 @@ import java.util.NoSuchElementException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    //Entity 등록 실패
-    @ExceptionHandler(PersistenceException.class)
-    public ResponseEntity<?> handlePersistenceException(PersistenceException e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-    }
-
     // 데이터 중복에 대한 예외처리
     @ExceptionHandler(DuplicateKeyException.class)
     public ResponseEntity<?> handleDuplicateKeyException(DuplicateKeyException e) {
@@ -38,14 +32,8 @@ public class GlobalExceptionHandler {
     }
 
     // Entity NotFound에 대한 예외 처리
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-    }
-
-    // 존재하지 않는 아이디
-    @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<?> handleUsernameNotFoundException(UsernameNotFoundException e) {
+    @ExceptionHandler({EntityNotFoundException.class, UsernameNotFoundException.class, NoSuchElementException.class})
+    public ResponseEntity<?> handleNotFoundException(Exception e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
 
@@ -55,38 +43,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
-    // 토큰 만료
-    @ExceptionHandler(ExpiredTokenException.class)
-    public ResponseEntity<?> handleExpiredTokenException(ExpiredTokenException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-    }
-    @ExceptionHandler(ExpiredJwtException.class)
-    public ResponseEntity<?> handleExpiredJwtException(ExpiredJwtException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-    }
-    // 존재하지 않는 토큰
-    @ExceptionHandler(SignatureException.class)
-    public ResponseEntity<?> handleInvalidateTokenException(SignatureException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-    }
-
-    // 권한이 없을 때.
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<?> handleUnauthorizedAccessException(AccessDeniedException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-    }
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getBindingResult().getAllErrors().get(0).getDefaultMessage());
     }
 
-    // Element 찾지 못함
-    @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<?> handleNoSuchElementException(NoSuchElementException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    // Token 예외 처리
+    @ExceptionHandler({AccessDeniedException.class, SignatureException.class, ExpiredTokenException.class, ExpiredJwtException.class})
+    public ResponseEntity<?> handleUnauthorizedAccessException(Exception e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
-
     // RefreshToken 만료
     @ExceptionHandler(ExpiredRefreshTokenException.class)
     public ResponseEntity<?> handleExpiredRefreshTokenException(HttpServletRequest request, HttpServletResponse response, ExpiredRefreshTokenException e) {
@@ -96,7 +62,7 @@ public class GlobalExceptionHandler {
     }
 
     // Internal Sever Error
-    @ExceptionHandler(RuntimeException.class)
+    @ExceptionHandler({RuntimeException.class, PersistenceException.class})
     public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
