@@ -58,7 +58,7 @@
 
 2. **게시글 좋아요 기능**
 
-   > 게시글의 "좋아요" 수를 업데이트하는 과정에서 RDBMS에 지속적으로 접근한다면 DB의 트래픽 부하와 성능 저하가 발생할 수 있습니다. 이를 해결하기 위해 더 빠른 조회와 업데이트가 가능하며, DB 트래픽을 줄일 수 있는 Redis를 활용하였습니다.
+   > 게시글의 "좋아요" 수를 업데이트하는 과정에서 RDBMS에 지속적으로 접근한다면 DB의 트래픽 부하와 성능 저하가 발생할 수 있습니다. 이를 해결하기 위해 더 빠른 조회와 업데이트로 DB 트래픽을 줄일 수 있는 Redis를 활용하였습니다.
 
    - 게시글 좋아요 데이터는 'BoardLikeCount'와 'MemberBoardLike' 두 가지로 분류됩니다.
 
@@ -66,31 +66,40 @@
 
      ```java
      // BoardLikeCountRedisRepositoryImpl.java
-     
-     		@Override
+         @Override
          public void save(Long boardId) {
-             String key = BOARD_LIKE_COUNT_KEY + boardId;
-             hashOperations.put(key, BOARD_LIKE_COUNT_HASH_KEY, 0L);
+             hashOperations.put(BOARD_LIKE_COUNT_KEY + boardId, BOARD_LIKE_COUNT_HASH_KEY, 0L);
          }
      
          @Override
          public Long findBoardLikeCount(Long boardId) {
-             String key = BOARD_LIKE_COUNT_KEY + boardId;
-             return ((Number) hashOperations.get(key, BOARD_LIKE_COUNT_HASH_KEY)).longValue();
+             return getCount(boardId);
          }
      
          @Override
-         public void update(Long boardId, Long count) {
-             String key = BOARD_LIKE_COUNT_KEY + boardId;
-             hashOperations.put(key, BOARD_LIKE_COUNT_HASH_KEY, count);
+         public Long incrementBoardLikeCount(Long boardId) {
+             hashOperations.increment(BOARD_LIKE_COUNT_KEY + boardId, BOARD_LIKE_COUNT_HASH_KEY, 1L);
+             return getCount(boardId);
          }
+     
+         @Override
+         public Long decrementBoardLikeCount(Long boardId) {
+             if(getCount(boardId) - 1L < 0) return 0L;
+             hashOperations.increment(BOARD_LIKE_COUNT_KEY + boardId, BOARD_LIKE_COUNT_HASH_KEY, -1L);
+             return getCount(boardId);
+         }
+     
+         private long getCount(Long boardId) {
+             //  찾아온 값을 Number로 캐스팅하고, 그 값을 long 타입으로 변환.
+             return ((Number) hashOperations.get(BOARD_LIKE_COUNT_KEY + boardId, BOARD_LIKE_COUNT_HASH_KEY)).longValue();
+         }
+     
      ```
-
+   
    - 'MemberBoardLike'는 사용자가 게시글에 좋아요를 요청할 때 생성되며, Set 데이터 구조를 가집니다.
-
+   
      ```java
      // MemberBoardLikeRedisRepositoryImpl.java
-     
      		@Override
          public void save(Long memberId, Long boardId) {
              String key = MEMBER_BOARD_LIKE_KEY + memberId;
@@ -109,16 +118,18 @@
              redisTemplate.opsForSet().remove(key, boardId);
          }
      ```
-
-   - 사용자가 게시글에 좋아요를 요청하면 가장 먼저 권한을 검증합니다. 그 후 게시글의 존재 여부와 요청한 사용자의 게시글 좋아요 데이터의 중복 여부를 검증합니다. 중복되지 않는다면 새로운 데이터를 생성하거나, 기존 데이터에 게시글 Index 값을 Set 데이터에 추가합니다.
-
+     
+   - 사용자가 게시글에 좋아요를 요청하면 가장 먼저 권한을 검증합니다. 
+   
+   - 그 후 게시글의 존재 여부와 요청한 사용자의 게시글 좋아요 데이터의 중복 여부를 검증합니다. 중복되지 않는다면 새로운 데이터를 생성하거나, 기존 데이터에 게시글 Index 값을 Set에 추가합니다.
+   
    - 이후 해당 게시글의 'BoardLikeCount'를 찾아와 요청에 따라 increment() 또는 decrement()를 실행하고, 총 좋아요 수를 클라이언트에게 반환합니다.
-
+   
    - 클라이언트는 반환 받은 좋아요 수를 바탕으로 업데이트를 진행합니다.
 
 -----
 
-### 4. 기술적 문제 및 해결
+### 3.  기술적 문제 및 해결
 
 1. 동시성 문제
 
@@ -142,7 +153,19 @@
 
    JWT를 사용해 Access Token과 Refresh Token을 생성하여 사용자 인증을 하는 기능을 구현했습니다. 이 과정에서 Token의 저장소를 지정하는 것에 있어 많은 고민을 했습니다.  처음은  Access Token은  클라이언트에 전달하여 Redux Store에 저장해 관리하고, Refresh Token은 Redis를 사용해 Memory에 저장해 관리하려 했습니다.
 
-   하지만 이 방법은 Stateless하지 않은 방법이기에 서버가 상태를 관리하지 않을 방법을 생각했습니다. 그래서 결정한 방법은 Access Token은 Redux Store로 동일하게 관리하고, Refresh Token은 Cookie에 저장하는 방법을 택했습니다. Session Storage와 Local Storage와 같은 저장소도 있었지만. 각각의 장단점과 사용성을 고려했을 때, Http Only를 설정한 Cookie에 저장하는 것이 XSS 공격에도 비교적 안전하다 생각하여 선택했습니다.
+   하지만 이 방법은 Stateless하지 않은 방법이기에 서버가 상태를 관리하지 않을 방법을 생각했습니다. 그래서 Refresh Token을 Cookie에 저장하는 방법을 택했습니다. Session Storage와 Local Storage와 같은 저장소도 있었지만. 각각의 장단점과 사용성을 고려했을 때, Http Only를 설정한 Cookie에 저장하는 것이 XSS 공격에도 비교적 안전하다 생각하여 선택했습니다. 
 
    사용자 인증과 같이 정보 탈취에 민감한 기능을 구현하기 위해서 보안에 대한 추가적인 학습이 필요하다고 느꼈습니다.
+
+-----
+
+### 4. 앞으로의 계획
+
+- Docker와 Jenkins를 사용해 CI/CD Pipeline 구축
+
+  - 현재 CI/CD 파이프라인을 구축하기 위해 Docker와 Jenkins를 학습하고 있습니다.
+
+  - 아래 사진과 같은 구조로 구축할 계획 입니다.
+
+    ![image](https://github.com/gusm96/myblog-boot/assets/77833389/51b0a0a4-4bb8-429e-a5ce-7a070a411911)
 
