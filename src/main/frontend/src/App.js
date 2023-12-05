@@ -66,6 +66,7 @@ function App() {
         <Route path="/management" element={<ProtectedRoute />}>
           <Route index element={<Management />} />
           <Route path="new-post" element={<BoardForm />} />
+          <Route path="boards" element={<Management />} />
           <Route path="boards/:boardId" element={<BoardEditForm />} />
           <Route path="*" element={<NotFound />} />
         </Route>

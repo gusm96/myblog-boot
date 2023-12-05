@@ -7,11 +7,10 @@ import {
   CATEGORY_LIST,
   CATEGORY_OF_BOARD_LIST,
   COMMENT_CUD,
-  COMMENT_LIST,
   IMAGE_FILE_CRUD,
 } from "../apiConfig";
 export const getBoard = (boardId) => {
-  return axios.get(`${BOARD_GET}/${boardId}`).then((res) => res.data);
+  return axios.get(`${BOARD_GET(boardId)}`).then((res) => res.data);
 };
 export const getBoardList = (page) => {
   return axios.get(`${BOARD_LIST}?${page}`).then((res) => res.data);
@@ -100,10 +99,6 @@ export const getBoardLikes = (page) => {
 
 export const checkBoardLike = (page) => {
   return axios.get();
-};
-
-export const getComments = (boardId) => {
-  return axios.get(COMMENT_LIST(boardId)).then((res) => res.data);
 };
 
 export const addComment = (boardId, commentData, accessToken) => {

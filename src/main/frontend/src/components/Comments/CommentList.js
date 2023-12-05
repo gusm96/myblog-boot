@@ -1,16 +1,8 @@
 import React from "react";
-import { useState } from "react";
-import { useEffect } from "react";
-import { getComments } from "../../services/boardApi";
+
 import moment from "moment";
 
-export const CommentList = ({ boardId }) => {
-  const [comments, setComments] = useState([]);
-  useEffect(() => {
-    getComments(boardId)
-      .then((data) => setComments(data))
-      .catch((error) => console.log(error));
-  }, [boardId]);
+export const CommentList = ({ comments }) => {
   return (
     <div>
       <ul>

@@ -8,7 +8,11 @@ export const CATEGORY_CUD = `${BASE_URL}/api/v1/category`;
 // 카테고리 리스트
 export const CATEGORY_LIST = `${BASE_URL}/api/v1/categories`;
 
-export const BOARD_GET = `${BASE_URL}/api/v1/boards`;
+// 게시글 상세
+export const BOARD_GET = (boardId) => {
+  return `${BASE_URL}/api/v2/boards/${boardId}`;
+};
+
 // 게시글 등록/수정/삭제  HTTP Method GET POST DELETE
 export const BOARD_CUD = `${BASE_URL}/api/v1/management/boards`;
 // 게시글 리스트

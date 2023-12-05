@@ -14,14 +14,14 @@ const Home = () => {
       getCategoryOfBoardList(categoryName, page)
         .then((data) => {
           setBoards(data.list);
-          setPageCount(data.pageCount);
+          setPageCount(data.totalPage);
         })
         .catch((error) => console.log(error));
     } else {
       getBoardList(page)
         .then((data) => {
           setBoards(data.list);
-          setPageCount(data.pageCount);
+          setPageCount(data.totalPage);
         })
         .catch((error) => console.log(error));
     }

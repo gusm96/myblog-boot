@@ -49,7 +49,10 @@ export const BoardEditForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     editBoard(boardId, board, htmlString, accessToken)
-      .then((data) => (window.location.href = `/management/boards/${data}`))
+      .then((data) => {
+        alert("게시글이 수정 되었습니다");
+        window.location.href = `/management/boards/${data}`;
+      })
       .catch((error) => console.log(error));
   };
 

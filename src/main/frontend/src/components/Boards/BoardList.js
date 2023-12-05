@@ -1,10 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
 import moment from "moment";
-import { PageButton } from "../PageButton";
 import Parser, { domToReact } from "html-react-parser";
 import "../Styles/css/boardList.css";
-const BoardList = ({ boards, pageCount, categoryName }) => {
+import { PageButton } from "./PageButton";
+const BoardList = ({ boards, pageCount, categoryName, adminMode }) => {
   const parserOptions = {
     replace: ({ attribs, children }) => {
       if (attribs) {
@@ -28,7 +28,14 @@ const BoardList = ({ boards, pageCount, categoryName }) => {
     <div className="board-list">
       {boards.map((board) => (
         <div key={board.id} className="mb-3 board-item">
-          <a href={`/boards/${board.id}`} style={cardStyle}>
+          <a
+            href={
+              adminMode
+                ? `/management/boards/${board.id}`
+                : `/boards/${board.id}`
+            }
+            style={cardStyle}
+          >
             <span className="board-title">{board.title}</span>
             <p className="board-content">
               {Parser(truncateText(board.content, 500), parserOptions)}
@@ -39,9 +46,11 @@ const BoardList = ({ boards, pageCount, categoryName }) => {
           </a>
         </div>
       ))}
+      <hr></hr>
       <PageButton
         pageCount={pageCount}
         categoryName={categoryName ? categoryName : null}
+        adminMode={adminMode}
       />
     </div>
   );

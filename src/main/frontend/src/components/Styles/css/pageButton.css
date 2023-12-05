@@ -1,0 +1,21 @@
+.page-buttons-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px; /* 필요에 따라 조절하세요 */
+}
+
+.page-buttons-container button {
+  background-color: gray;
+  color: white;
+  border: 1px solid gray;
+  padding: 8px 16px;
+  margin: 0 5px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.page-buttons-container button:hover {
+  color: black;
+  background-color: ivory;
+  border: 1px solid black;
+}

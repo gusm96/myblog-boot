@@ -23,6 +23,7 @@ const BoardDetail = () => {
     content: "",
     uploadDate: "",
     likes: "",
+    comments: [],
   });
   const handleBoardLike = (e) => {
     e.preventDefault();
@@ -55,6 +56,7 @@ const BoardDetail = () => {
         content: data.content,
         uploadDate: data.uploadDate,
         likes: data.likes,
+        comments: data.comments,
       });
     });
     if (isLoggedIn) {
@@ -68,7 +70,7 @@ const BoardDetail = () => {
     <div>
       <h1>{board.title}</h1>
       <hr></hr>
-      <div className="board-content">{Parser(board.content)}</div>
+      <div>{Parser(board.content)}</div>
       <div className="board-info">
         <div className="board-like">
           {isBoardLiked ? (
@@ -92,7 +94,7 @@ const BoardDetail = () => {
       ) : (
         <p>로그인을 하면 댓글을 작성할 수 있습니다.</p>
       )}
-      <CommentList boardId={boardId} />
+      <CommentList comments={board.comments} />
     </div>
   );
 };
