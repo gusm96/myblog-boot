@@ -44,18 +44,10 @@
 
 1. **JWT를 사용한 인증 인가 서비스**
 
-   > RestFul한 서비스를 구현하는 목표로, Spring Security와 JWT (JSON Web Token)를 활용하여 인증 및 인가 기능을 성공적으로 구현하였습니다. JWT의 사용은 클라이언트가 토큰의 정보를 소유함으로써, 서버가 stateless 상태를 유지할 수 있도록 도와줍니다.
+   > Spring Security와 JWT (JSON Web Token)를 활용하여 인증 및 인가 기능을 구현하였습니다. JWT의 사용은 클라이언트가 토큰의 정보를 소유함으로써, 서버가 stateless 상태를 유지할 수 있으며, DB 트래픽을 감소시켜 성능을 개선합니다.
 
-   - 사용자 로그인 요청이 발생하면, 먼저 사용자 정보를 검증합니다. 검증이 완료되면, Access Token과 Refresh Token을 생성하게 됩니다.
-   - Refresh Token은 보안을 위해 Http only Cookie에 저장하여, HTTP 통신을 통해서만 접근이 가능하도록 합니다.
-   - Access Token은 ResponseEntity body에 포함시켜 클라이언트에게 반환합니다.
-   - 클라이언트는 Redux 라이브러리를 활용하여 store에 Access Token을 보관합니다.
-   - 권한을 요구하는 요청이 발생하면, 클라이언트는 HTTP Header의 Authorization에 Access Token을 포함시켜 요청합니다.
-   - Access Token이 만료되면, 서버에서 만료 알림을 보내며 클라이언트는 Refresh Token을 사용해 Access Token을 재발급 받습니다.
-   - HTTP only Cookie에 저장된 Refresh Token을 검증하여 Access Token을 재발급합니다.
-   - Refresh Token이 만료되면, 쿠키에서 해당 데이터를 삭제하고, 클라이언트에 알려 강제 로그아웃을 진행합니다.
-   - 토큰에는 사용자의 Index와 권한(Role) 정보만 포함됩니다. 관리자(ADMIN)와 일반 회원(NORMAL)의 권한에 따라 API 접근이 제한됩니다.
-
+   <a align="center">![JWT인증인가](https://github.com/gusm96/myblog-boot/assets/77833389/6e2f27cb-2376-4809-9a43-7a445f65f3f2)</a>
+   
 2. **게시글 좋아요 기능**
 
    > 게시글의 "좋아요" 수를 업데이트하는 과정에서 RDBMS에 지속적으로 접근한다면 DB의 트래픽 부하와 성능 저하가 발생할 수 있습니다. 이를 해결하기 위해 더 빠른 조회와 업데이트로 DB 트래픽을 줄일 수 있는 Redis를 활용하였습니다.
