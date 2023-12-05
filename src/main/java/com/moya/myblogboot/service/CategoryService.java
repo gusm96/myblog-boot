@@ -10,7 +10,7 @@ public interface CategoryService {
 
     List<CategoryResDto> getCategoryList();
 
-    Long updateCategory(Long categoryId, String modifiedCategoryName);
+    String updateCategory(Long categoryId, String modifiedCategoryName);
 
     String deleteCategory(Long categoryId);
 

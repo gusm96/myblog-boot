@@ -12,11 +12,11 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BoardListResDto {
     private List<BoardResDto> list = new ArrayList<>();
-    private int pageCount;
+    private int totalPage;
 
     @Builder
-    public BoardListResDto(List<BoardResDto> list, int pageCount){
+    public BoardListResDto(List<BoardResDto> list, int totalPage){
         this.list = list;
-        this.pageCount = pageCount;
+        this.totalPage = totalPage;
     }
 }

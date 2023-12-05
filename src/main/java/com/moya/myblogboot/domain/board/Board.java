@@ -21,14 +21,11 @@ public class Board {
     private Long id;
     @Column(nullable = false)
     private String title;
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "longtext")
     private String content;
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "board_like_id")
-    private BoardLike boardlike;
-    private LocalDateTime upload_date;
-    private LocalDateTime edit_date;
-    private LocalDateTime delete_date;
+    private LocalDateTime uploadDate;
+    private LocalDateTime editDate;
+    private LocalDateTime deleteDate;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ImageFile> imageFiles =  new ArrayList<>();
@@ -54,17 +51,16 @@ public class Board {
         this.content = content;
         this.category = category;
         this.member = member;
-        this.upload_date = LocalDateTime.now();
+        this.uploadDate = LocalDateTime.now();
         this.boardStatus = BoardStatus.VIEW;
     }
-
 
     // 게시글 수정
     public void updateBoard(Category category, String title, String content ) {
         this.category = category;
         this.title = title;
         this.content = content;
-        this.edit_date = LocalDateTime.now();
+        this.editDate = LocalDateTime.now();
     }
 
     // 게시글 숨김 상태 수정
@@ -85,9 +81,4 @@ public class Board {
     public void removeImageFile(ImageFile file) {
         this.imageFiles.remove(file);
     }
-
-    public void setBoardLike(BoardLike boardLike) {
-        this.boardlike = boardLike;
-    }
-
 }

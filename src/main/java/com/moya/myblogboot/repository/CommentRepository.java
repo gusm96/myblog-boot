@@ -1,17 +1,15 @@
 package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.comment.Comment;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
-import java.util.Optional;
 
-public interface CommentRepository {
-    // 댓글 작성
-    void save(Comment comment);
-    // 댓글 찾기
-    Optional<Comment> findById(Long replyId);
-    // 댓글 리스트
-    List<Comment> commentList(Long boardId);
-    // 댓글 삭제
-    void removeComment(Comment comment);
+public interface CommentRepository extends JpaRepository<Comment, Long> {
+
+    @Query("select c from Comment c " +
+            "where c.board.id =: boardId " +
+            "order by c.write_date desc ")
+    List<Comment> findAllByBoardId(Long boardId);
 }

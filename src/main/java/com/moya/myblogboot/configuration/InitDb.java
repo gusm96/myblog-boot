@@ -84,7 +84,7 @@ public class InitDb {
                     .content(content)
                     .category(category.getId())
                     .build();
-            boardServiceImpl.uploadBoard(boardReqDto, member, category);
+            boardServiceImpl.uploadBoard(boardReqDto, member.getId());
         }
 
     }

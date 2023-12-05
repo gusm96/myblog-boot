@@ -7,75 +7,80 @@ import com.moya.myblogboot.domain.file.ImageFileDto;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.*;
+import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardService;
+import com.moya.myblogboot.service.CategoryService;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Transactional(readOnly = true)
 @Service
 @RequiredArgsConstructor
 public class BoardServiceImpl implements BoardService {
+    private final CategoryService categoryService;
+    private final AuthService authService;
     private final BoardRepository boardRepository;
     private final ImageFileRepository imageFileRepository;
     private final BoardLikeCountRedisRepository boardLikeCountRedisRepository;
     private final MemberBoardLikeRedisRepository memberBoardLikeRedisRepository;
-    private final BoardLikeRepository boardLikeRepository;
 
     // 페이지별 최대 게시글 수
-    public static final int LIMIT = 4;
+    private static final int LIMIT = 4;
 
     // 모든 게시글 리스트
     @Override
-    @Transactional(readOnly = true)
     public BoardListResDto retrieveBoardList(int page) {
+        PageRequest pageRequest = PageRequest.of(page, LIMIT,Sort.by(Sort.Direction.DESC, "uploadDate"));
         // 페이지 별 게시글 조회
-        List<Board> boardList = boardRepository.findAll(pagination(page), LIMIT);
-        // 모든 게시글 총 개수 조회
-        Long listCount = boardRepository.findAllCount();
+        Page<Board> boards = boardRepository.findAll(pageRequest);
         // 조회한 Board Entity List를 DTO 객체로 변환.
-        List<BoardResDto> resultList = boardList.stream().map(board
+        List<BoardResDto> resultList = boards.stream().map(board
                         -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
         // 화면에 보여질 List와 개시글 총 개수 반환.
         return BoardListResDto.builder()
                 .list(resultList)
-                .pageCount(pageCount(listCount))
+                .totalPage(boards.getTotalPages())
                 .build();
     }
 
     // 카테고리별 게시글 리스트
     @Override
-    @Transactional(readOnly = true)
-    public BoardListResDto retrieveBoardListByCategory(Category category, int page){
-        // 카테고리 + 페이지 게시글 조회
-        List<Board> boardList = boardRepository.findByCategory(category.getName(), pagination(page), LIMIT);
+    public BoardListResDto retrieveBoardListByCategory(String categoryName, int page){
+        // Category 조회
+        Category category = categoryService.retrieveCategoryByName(categoryName);
 
-        // 해당하는 카테고리의 게시글 수
-        Long listCount = boardRepository.findByCategoryCount(category.getName());
+        PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC, "uploadDate"));
+        Page<Board> boards = boardRepository.findAllByCategory(category, pageRequest);
+
         // DTO 객체로 변환
-        List<BoardResDto> resultList = boardList.stream().map(board
+        List<BoardResDto> resultList = boards.stream().map(board
                         -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
+
         return BoardListResDto.builder()
                 .list(resultList)
-                .pageCount(pageCount(listCount))
+                .totalPage(boards.getTotalPages())
                 .build();
     }
-    
+
     // 검색한 게시글 리스트
-    @Override
-    @Transactional(readOnly = true)
+    /*@Override
     public BoardListResDto retrieveBoardListBySearch (SearchType searchType, String searchContents, int page) {
         // 검색어 + 페이지 게시글 조회
-        List<Board> boardList = boardRepository.findBySearch(searchType, searchContents, pagination(page), LIMIT);
+        List<Board> boardList = boardRepository.findBySearch(searchType, searchContents, page, LIMIT);
         // 검색된 게시글의 수
         Long listCount = boardRepository.findBySearchCount(searchType, searchContents);
         // DTO 객체로 변환
@@ -84,31 +89,25 @@ public class BoardServiceImpl implements BoardService {
                 .toList();
         return BoardListResDto.builder()
                 .list(resultList)
-                .pageCount(pageCount(listCount))
+                .totalPage(pageCount(listCount))
                 .build();
-    }
+    }*/
 
     // 게시글 업로드
     @Override
     @Transactional
-    public Long uploadBoard(BoardReqDto boardReqDto, Member member, Category category) {
+    public Long uploadBoard(BoardReqDto boardReqDto, Long memberId) {
+        Member member = authService.retrieveMemberById(memberId);
+        Category category = categoryService.retrieveCategoryById(boardReqDto.getCategory());
+        Board newBoard = boardReqDto.toEntity(category, member);
         try {
-            Board newBoard = boardReqDto.toEntity(category, member);
             if (boardReqDto.getImages() != null && boardReqDto.getImages().size() > 0 ) {
                 saveImageFile(boardReqDto.getImages(), newBoard);
             }
-            // test
-            BoardLike boardLike = BoardLike.builder().board(newBoard).build();
-            newBoard.setBoardLike(boardLike);
-            //
-            Long boardId = boardRepository.upload(newBoard);
-
-            // BoardLikeCount RedisHash 생성 및 저장
-            if (boardId > 0) {
-                createBoardLikeCount(boardId);
-                return boardId;
-            }
-            return 0L;
+            Board result = boardRepository.save(newBoard);
+            // BoardLikeCount 생성 및 저장
+            createBoardLikeCount(result.getId());
+            return result.getId();
         } catch (Exception e) {
             log.error("게시글 등록 중 에러 발생");
             e.printStackTrace();
@@ -116,28 +115,10 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
-    @Override
-    @Transactional
-    public void saveImageFile(List<ImageFileDto> images, Board board) {
-        List<ImageFile> imageFiles = images.stream()
-                .map(image -> imageFileRepository.save(image.toEntity(board))).collect(Collectors.toList());
-        imageFiles.forEach(board::addImageFile);
-    }
-    
     // 게시글 상세
     @Override
-    public BoardResDto retrieveBoardResponseById(Long boardId){
-            return BoardResDto.builder()
-                    .board(retrieveBoardById(boardId))
-                    .likes(getBoardLikeCount(boardId))
-                    .build();
-    }
-    // 게시글 상세 v2
-    @Override
-    @Transactional(readOnly = true)
-    public BoardDetailResDto retrieveBoardByIdVersion2(Long boardId) {
-        Board findBoard = boardRepository.findByIdVersion2(boardId).orElseThrow(()
-         -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다."));
+    public BoardDetailResDto boardToResponseDto(Long boardId) {
+        Board findBoard = retrieveBoardById(boardId);
         return BoardDetailResDto.builder()
                 .board(findBoard)
                 .likes(getBoardLikeCount(boardId))
@@ -147,13 +128,13 @@ public class BoardServiceImpl implements BoardService {
     // 게시글 수정
     @Override
     @Transactional
-    public Long editBoard(Long memberId, Long boardId, String modifiedTitle, String modifiedContent, Category modifiedCategory){
+    public Long editBoard(Long memberId, Long boardId, BoardReqDto modifiedDto){
         // Entity 조회
         Board board = retrieveBoardById(boardId);
         if(board.getMember().getId() != memberId)
             throw new UnauthorizedAccessException("권한이 없습니다");
-        // 변경 감지
-        board.updateBoard(modifiedCategory, modifiedTitle, modifiedContent);
+        Category modifiedCategory = categoryService.retrieveCategoryById(modifiedDto.getCategory());
+        board.updateBoard(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent()); // 변경감지
         return board.getId();
     }
 
@@ -165,7 +146,7 @@ public class BoardServiceImpl implements BoardService {
         Board board = retrieveBoardById(boardId);
         if (board.getMember().getId() == memberId) {
             try {
-                boardRepository.removeBoard(board);
+                boardRepository.delete(board);
                 return true;
             } catch (Exception e) {
                 log.error("게시글 삭제 중 에러 발생");
@@ -191,19 +172,6 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
-    // 게시글 좋아요 JPA 테스트 중
-    @Override
-    @Transactional
-    public Long addBoardLikeVersion2(Long boardId, Member member) {
-        BoardLike boardLike = boardLikeRepository.findByBoardId(boardId).orElseThrow(()
-                -> new NoResultException("게시글 좋아요 정보를 불러오던 중 오류가 발생했습니다."));
-        if (!boardLike.getMembers().contains(member)) {
-            return   boardLike.incrementLike(member);
-        }else{
-            throw new DuplicateKeyException("이미 \"좋아요\"한 게시글 입니다.");
-        }
-    }
-
     // 게시글 좋아요 여부 체크
     @Override
     public boolean checkBoardLikedStatus(Long memberId, Long boardId) {
@@ -214,7 +182,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public Long deleteBoardLike(Long memberId, Long boardId) {
         if (!checkBoardLikedStatus(memberId, boardId)) {
-            throw new RuntimeException("존재하지 않는다.");
+            throw new NoSuchElementException("잘못된 요청입니다.");
         }
         try {
             memberBoardLikeRedisRepository.delete(memberId, boardId);
@@ -227,11 +195,15 @@ public class BoardServiceImpl implements BoardService {
 
     // 게시글 Entity 조회
     @Override
-    @Transactional(readOnly = true)
     public Board retrieveBoardById(Long boardId) {
-        return boardRepository.findById(boardId).orElseThrow(
-                () -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다.")
-        );
+        try {
+            return boardRepository.findById(boardId).orElseThrow(
+                    () -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다.")
+            );
+        } catch (InvalidDataAccessApiUsageException e) {
+            e.printStackTrace();
+            throw new RuntimeException("게시글 조회중 오류 발생.");
+        }
     }
 
     // 게시글 좋아요 수 데이터 생성 - Redis
@@ -252,14 +224,10 @@ public class BoardServiceImpl implements BoardService {
             return 0L;
         }
     }
-
-    private int pagination (int page){
-        return page == 1 ? 0 : (page - 1) * LIMIT;
+    // 이미지 파일 저장
+    private void saveImageFile(List<ImageFileDto> images, Board board) {
+        List<ImageFile> imageFiles = images.stream()
+                .map(image -> imageFileRepository.save(image.toEntity(board))).collect(Collectors.toList());
+        imageFiles.forEach(board::addImageFile);
     }
-
-    private int pageCount (Long listCount){
-        return listCount > LIMIT ? (int) Math.ceil((double) listCount / LIMIT) : 1;
-    }
-
-
 }

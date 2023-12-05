@@ -32,4 +32,5 @@ public class Member {
     public void addRoleAdmin (){
         this.role = Role.ROLE_ADMIN;
     }
+
 }

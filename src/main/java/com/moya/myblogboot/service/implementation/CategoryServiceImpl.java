@@ -24,13 +24,13 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryResDto> getCategoryList() {
-        return categoryRepository.categories().stream().map(CategoryResDto::of).toList();
+        return categoryRepository.findAll().stream().map(CategoryResDto::of).toList();
     }
     @Override
     @Transactional
     public String createCategory(String categoryName){
         // Category 중복 검사
-        if(categoryRepository.findByName(categoryName).isPresent()){
+        if(categoryRepository.existsByName(categoryName)){
             throw new DuplicateKeyException("이미 존재하는 카테고리입니다.");
         }
         Category category = Category.builder().name(categoryName).build();
@@ -43,11 +43,11 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
     @Override
-    public Long updateCategory(Long categoryId, String modifiedCategoryName) {
+    public String updateCategory(Long categoryId, String modifiedCategoryName) {
         Category category = retrieveCategoryById(categoryId);
         try {
             category.editCategory(modifiedCategoryName);
-            return category.getId();
+            return category.getName();
         } catch (Exception e) {
             log.error("카테고리 수정 실패");
             throw new RuntimeException("카테고리 수정 중 오류가 발생했습니다.");
@@ -59,7 +59,7 @@ public class CategoryServiceImpl implements CategoryService {
     public String deleteCategory(Long categoryId) {
         Category category = retrieveCategoryById(categoryId);
         try {
-            categoryRepository.removeCategory(category);
+            categoryRepository.delete(category);
             return "카테고리가 삭제되었습니다.";
         } catch (Exception e) {
             log.error("카테고리 삭제 실패");

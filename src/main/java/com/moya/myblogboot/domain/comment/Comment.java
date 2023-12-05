@@ -55,6 +55,7 @@ public class Comment {
         this.board = board;
     }
 
+
     public void addParentComment(Comment parent) {
         this.parent = parent;
     }

@@ -20,7 +20,6 @@ import java.util.List;
 public class CommentController {
 
     private final CommentService commentService;
-    private final BoardService boardService;
     private final AuthService authService;
 
     // 댓글 작성
@@ -28,9 +27,8 @@ public class CommentController {
     public ResponseEntity<String> createComment (HttpServletRequest request,
                                             @PathVariable("boardId") Long boardId,
                                             @RequestBody CommentReqDto commentReqDto ){
-        Board board = getBoard(boardId);
-        Member member = getMember(getTokenInfo(request).getMemberPrimaryKey());
-        return ResponseEntity.ok().body(commentService.addComment(member, board, commentReqDto));
+        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+        return ResponseEntity.ok().body(commentService.addComment( commentReqDto, memberId, boardId));
     }
 
     // update
@@ -39,7 +37,7 @@ public class CommentController {
                                              @PathVariable("commentId") Long commentId,
                                              @RequestBody CommentReqDto commentReqDto) {
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
-        return ResponseEntity.ok().body(commentService.updateComment(memberId, commentId, commentReqDto.getComment()));
+        return ResponseEntity.ok().body(commentService.updateComment(commentId, memberId, commentReqDto.getComment()));
     }
 
     // delete
@@ -49,19 +47,11 @@ public class CommentController {
             @PathVariable("boardId") Long boardId,
             @PathVariable("commentId") Long commentId) {
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
-        Board board = getBoard(boardId);
-        return ResponseEntity.ok().body(commentService.deleteComment(memberId, commentId, board));
+        return ResponseEntity.ok().body(commentService.deleteComment(commentId, memberId, boardId));
     }
 
     private TokenInfo getTokenInfo(HttpServletRequest req){
         return authService.getTokenInfo(req.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1]);
     }
 
-    private Member getMember(Long memberId) {
-        return authService.retrieveMemberById(memberId);
-    }
-
-    private Board getBoard (Long boardId){
-        return boardService.retrieveBoardById(boardId);
-    }
 }

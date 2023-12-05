@@ -1,12 +1,9 @@
 package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.board.*;
-import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardService;
-import com.moya.myblogboot.service.CategoryService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +17,11 @@ public class BoardController {
 
     private final BoardService boardService;
     private final AuthService authService;
-    private final CategoryService categoryService;
+
     // 모든 게시글 리스트
     @GetMapping("/api/v1/boards")
     public ResponseEntity<BoardListResDto> getAllBoards(@RequestParam(name = "p", defaultValue = "1") int page) {
-        return ResponseEntity.ok().body(boardService.retrieveBoardList(page));
+        return ResponseEntity.ok().body(boardService.retrieveBoardList(getPage(page)));
     }
 
     // 카테고리별 게시글 리스트
@@ -33,35 +30,29 @@ public class BoardController {
             @PathVariable("categoryName") String categoryName,
             @RequestParam(name = "p", defaultValue = "1") int page
     ) {
-        Category category = getCategoryByName(categoryName);
-        return ResponseEntity.ok().body(boardService.retrieveBoardListByCategory(category, page));
+        return ResponseEntity.ok().body(boardService.retrieveBoardListByCategory(categoryName, getPage(page)));
     }
-    // 검색 결과 게시글 리스트
+
+  /*  // 검색 결과 게시글 리스트
     @GetMapping("/api/v1/boards/search")
     public ResponseEntity<BoardListResDto> searchBoards(
             @RequestParam("type") SearchType searchType,
             @RequestParam("contents") String searchContents,
             @RequestParam(name = "p", defaultValue = "1") int page) {
-        return ResponseEntity.ok().body(boardService.retrieveBoardListBySearch(searchType, searchContents, page));
-    }
+        return ResponseEntity.ok().body(boardService.retrieveBoardListBySearch(searchType, searchContents, getPage(page)));
+    }*/
 
-    // 게시글 상세
-    @GetMapping("/api/v1/boards/{boardId}")
-    public ResponseEntity<BoardResDto> getBoard(@PathVariable Long boardId) {
-        return ResponseEntity.ok().body(boardService.retrieveBoardResponseById(boardId));
-    }
     // 게시글 상세v2
     @GetMapping("/api/v2/boards/{boardId}")
     public ResponseEntity<BoardDetailResDto> getBoardDetail(@PathVariable("boardId") Long boardId) {
-        return ResponseEntity.ok().body(boardService.retrieveBoardByIdVersion2(boardId));
+        return ResponseEntity.ok().body(boardService.boardToResponseDto(boardId));
     }
 
     // 게시글 작성 Post
     @PostMapping("/api/v1/management/boards")
     public ResponseEntity<Long> postBoard(HttpServletRequest request, @RequestBody @Valid BoardReqDto boardReqDto) {
-        Member member = getMember(request);
-        Category category = getCategory( boardReqDto.getCategory());
-        return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, member, category));
+        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+        return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, memberId));
     }
 
     // 게시글 수정
@@ -70,8 +61,7 @@ public class BoardController {
                                           @PathVariable("boardId") Long boardId,
                                           @RequestBody @Valid BoardReqDto boardReqDto) {
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
-        Category category = getCategory(boardReqDto.getCategory());
-        return ResponseEntity.ok().body(boardService.editBoard(memberId, boardId, boardReqDto.getTitle(), boardReqDto.getContent(), category));
+        return ResponseEntity.ok().body(boardService.editBoard(memberId, boardId, boardReqDto));
     }
 
     // 게시글 삭제
@@ -81,28 +71,22 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.deleteBoard(boardId, memberId));
     }
 
-    // Redis-게시글 좋아요 여부 확인
+    // 게시글 좋아요 여부 확인
     @GetMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToCheckBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
         return ResponseEntity.ok().body(boardService.checkBoardLikedStatus(memberId, boardId));
     }
-    // Redis-게시글 좋아요 추가 기능
+    // 게시글 좋아요 추가 기능
     @PostMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToAddBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
         return ResponseEntity.ok().body(boardService.addLikeToBoard(memberId, boardId));
     }
 
-    // 게시글 좋아요 JPA 실험중.
-    @PostMapping("/api/v2/likes/{boardId}")
-    public ResponseEntity<Long>  requestToAddBoardLikeVersion2(HttpServletRequest request, @PathVariable("boardId") Long boardId) {
-        Member member = getMember(request);
-        return ResponseEntity.ok().body(boardService.addBoardLikeVersion2(boardId, member));
-    }
-    // Redis-게시글 좋아요 취소
+    // 게시글 좋아요 취소
     @DeleteMapping("/api/v1/likes/{boardId}")
-    public ResponseEntity<?> requestToDeleteBoardLike (HttpServletRequest request, @PathVariable("boardId") Long boardId){
+    public ResponseEntity<?> requestToCancelBoardLike (HttpServletRequest request, @PathVariable("boardId") Long boardId){
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
         return ResponseEntity.ok().body(boardService.deleteBoardLike(memberId, boardId));
     }
@@ -112,16 +96,7 @@ public class BoardController {
         return authService.getTokenInfo(req.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1]);
     }
 
-    // Member Entity 조회
-    private Member getMember(HttpServletRequest request) {
-        return authService.retrieveMemberById(getTokenInfo(request).getMemberPrimaryKey());
-    }
-
-    // Category Entity 조회
-    private Category getCategory(Long categoryId) {
-        return categoryService.retrieveCategoryById(categoryId);
-    }
-    private Category getCategoryByName (String categoryName) {
-        return categoryService.retrieveCategoryByName(categoryName);
+    private int getPage(int page) {
+        return page - 1;
     }
 }

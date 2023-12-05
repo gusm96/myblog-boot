@@ -10,10 +10,8 @@ import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -59,7 +57,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Token memberLogin(LoginReqDto loginReqDto) {
         // username으로 회원 찾기
-        Member findMember = memberRepository.findByUsername(loginReqDto.getUsername()).orElseThrow(()
+        Member findMember = memberRepository.findMemberByUsername(loginReqDto.getUsername()).orElseThrow(()
                 -> new UsernameNotFoundException("존재하지 않는 아이디 입니다."));
         // password 비교
         if (!passwordEncoder.matches(loginReqDto.getPassword(), findMember.getPassword()))
@@ -105,7 +103,7 @@ public class AuthServiceImpl implements AuthService {
 
     // 회원 아이디 유효성 검사.
     private void validateUsername(String username) {
-        if (memberRepository.findByUsername(username).isPresent()) {
+        if (memberRepository.existsByUsername(username)) {
             throw new DuplicateKeyException("이미 존재하는 회원입니다.");
         }
     }

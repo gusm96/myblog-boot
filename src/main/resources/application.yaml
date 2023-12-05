@@ -7,12 +7,13 @@ spring:
     password: moya134353@@
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: create
     defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
     show-sql: true
+    open-in-view: false
   sql:
     init:
       mode: always

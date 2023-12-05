@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
-    // Entity NotFound에 대한 예외 처리
+    // NotFoundException
     @ExceptionHandler({EntityNotFoundException.class, UsernameNotFoundException.class, NoSuchElementException.class})
     public ResponseEntity<?> handleNotFoundException(Exception e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

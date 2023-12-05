@@ -2,6 +2,7 @@ package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
+import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.implementation.AuthServiceImpl;
 import com.moya.myblogboot.utils.JwtUtil;
 import io.jsonwebtoken.MalformedJwtException;
@@ -25,10 +26,10 @@ import java.util.List;
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
     private String secret;
-    private AuthServiceImpl authServiceImpl;
+    private AuthService authService;
 
-    public JwtFilter(AuthServiceImpl authServiceImpl, String secret) {
-        this.authServiceImpl = authServiceImpl;
+    public JwtFilter(AuthService authService, String secret) {
+        this.authService = authService;
         this.secret = secret;
     }
     @Override

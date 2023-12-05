@@ -30,7 +30,7 @@ public class CategoryController {
 
     // 카테고리 수정
     @PutMapping("/api/v1/management/category/{categoryId}")
-    public ResponseEntity<Long> editCategory(@PathVariable Long categoryId, @RequestBody @Valid CategoryReqDto categoryReqDto) {
+    public ResponseEntity<String> editCategory(@PathVariable Long categoryId, @RequestBody @Valid CategoryReqDto categoryReqDto) {
         return ResponseEntity.ok().body(categoryService.updateCategory(categoryId, categoryReqDto.getCategoryName()));
     }
 

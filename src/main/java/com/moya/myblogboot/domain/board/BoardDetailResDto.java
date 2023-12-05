@@ -27,8 +27,8 @@ public class BoardDetailResDto {
         this.title = board.getTitle();
         this.content = board.getContent();
         this.likes = likes;
-        this.uploadDate = board.getUpload_date();
-        this.editDate = board.getEdit_date();
+        this.uploadDate = board.getUploadDate();
+        this.editDate = board.getEditDate();
         this.comments = board.getComments().stream()
                 .filter(comment -> comment.getParent() == null)
                 .map(CommentResDto::of)

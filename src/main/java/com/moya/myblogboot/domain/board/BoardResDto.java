@@ -21,8 +21,8 @@ public class BoardResDto {
         this.title = board.getTitle();
         this.content = board.getContent();
         this.category = board.getCategory().getName();
-        this.upload_date = board.getUpload_date();
-        this.edit_date = board.getEdit_date();
+        this.upload_date = board.getUploadDate();
+        this.edit_date = board.getEditDate();
         this.likes = likes;
     }
 
