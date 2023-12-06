@@ -6,10 +6,13 @@ import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
 @Slf4j
+@Component
 public class JwtUtil {
 
     public static TokenInfo getTokenInfo(String token, String secret) {
@@ -24,7 +27,7 @@ public class JwtUtil {
     }
 
     // Token 만료
-    public static void validateToken(String token, String secret) {
+    public static void validateToken(String token ,String secret) {
         try {
             Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
             Date expiration = claims.getExpiration();
@@ -40,22 +43,12 @@ public class JwtUtil {
         }
     }
     // Token 생성
-    public static Token createToken (Member member, String secret, Long accessTokenExpiration, Long refreshTokenExpiration){
+    public static Token createToken (Member member, Long accessTokenExpiration, Long refreshTokenExpiration, String secret){
         Claims claims = Jwts.claims();
         claims.put("memberPrimaryKey", member.getId());
         claims.put("role", member.getRole());
-        String accessToken = Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(new Date((System.currentTimeMillis())))
-                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
-                .signWith(SignatureAlgorithm.HS256, secret)
-                .compact();
-        String refreshToken = Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(new Date((System.currentTimeMillis())))
-                .setExpiration(new Date(System.currentTimeMillis() +refreshTokenExpiration))
-                .signWith(SignatureAlgorithm.HS256, secret)
-                .compact();
+        String accessToken = jwtBuild(claims, accessTokenExpiration, secret);
+        String refreshToken = jwtBuild(claims,refreshTokenExpiration, secret);
 
         return Token.builder()
                 .access_token(accessToken)
@@ -63,17 +56,21 @@ public class JwtUtil {
                 .build();
     }
 
-    // Access Token 재발급
-    public static String reissuingToken(TokenInfo tokenInfo, String secret, Long accessTokenExpiration) {
-        Claims claims = Jwts.claims();
-        claims.put("memberPrimaryKey", tokenInfo.getMemberPrimaryKey());
-        claims.put("role", tokenInfo.getRole());
+    private static String jwtBuild(Claims claims, Long expiration, String secret) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date((System.currentTimeMillis())))
-                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
+    }
+
+    // Access Token 재발급
+    public static String reissuingToken(TokenInfo tokenInfo, Long accessTokenExpiration, String secret) {
+        Claims claims = Jwts.claims();
+        claims.put("memberPrimaryKey", tokenInfo.getMemberPrimaryKey());
+        claims.put("role", tokenInfo.getRole());
+        return jwtBuild(claims, accessTokenExpiration, secret);
     }
 
 

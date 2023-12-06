@@ -66,7 +66,7 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         // Token에 저장된 정보
-        TokenInfo tokenInfo = JwtUtil.getTokenInfo(token, secret);
+        TokenInfo tokenInfo = JwtUtil.getTokenInfo(token,secret);
         Long memberPrimaryKey = tokenInfo.getMemberPrimaryKey();
         // 권한 지정
         log.info("Member_Primary_Key : {}", memberPrimaryKey);
@@ -89,10 +89,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 "/api/v1/join",
                 "/api/v1/login",
                 "/api/v1/logout",
-                "/api/v1/boards",
                 "/api/v2/boards",
                 "/api/v1/boards/search",
-                "/api/v1/categories",
                 "/api/v1/reissuing-token",
                 "/api/v1/password-strength-check",
         };

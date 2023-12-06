@@ -25,16 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthServiceImpl implements AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
-
     @Value("${jwt.secret}")
-    private String secret;
+    private  String secret;
 
     @Value("${jwt.access-token-expiration}")
-    private Long accessTokenExpiration;
+    private  Long accessTokenExpiration;
 
     @Value("${jwt.refresh-token-expiration}")
-    private Long refreshTokenExpiration;
-
+    private  Long refreshTokenExpiration;
     // 회원 가입
     @Override
     @Transactional
@@ -57,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Token memberLogin(LoginReqDto loginReqDto) {
         // username으로 회원 찾기
-        Member findMember = memberRepository.findMemberByUsername(loginReqDto.getUsername()).orElseThrow(()
+        Member findMember = memberRepository.findByUsername(loginReqDto.getUsername()).orElseThrow(()
                 -> new UsernameNotFoundException("존재하지 않는 아이디 입니다."));
         // password 비교
         if (!passwordEncoder.matches(loginReqDto.getPassword(), findMember.getPassword()))
@@ -81,7 +79,7 @@ public class AuthServiceImpl implements AuthService {
             throw new ExpiredRefreshTokenException("토큰이 만료되었습니다.");
         }
         // Access Token 재발급
-        return JwtUtil.reissuingToken(getTokenInfo(refreshToken), secret, accessTokenExpiration);
+        return JwtUtil.reissuingToken(getTokenInfo(refreshToken), accessTokenExpiration, secret);
     }
 
     @Override
@@ -108,6 +106,6 @@ public class AuthServiceImpl implements AuthService {
         }
     }
     private Token createToken(Member member) {
-        return JwtUtil.createToken(member, secret, accessTokenExpiration, refreshTokenExpiration);
+        return JwtUtil.createToken(member, accessTokenExpiration, refreshTokenExpiration, secret);
     }
 }
