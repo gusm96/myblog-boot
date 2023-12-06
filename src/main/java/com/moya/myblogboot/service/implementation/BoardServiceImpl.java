@@ -33,9 +33,7 @@ public class BoardServiceImpl implements BoardService {
     private final AuthService authService;
     private final BoardRepository boardRepository;
     private final ImageFileRepository imageFileRepository;
-    private final BoardLikeCountRedisRepository boardLikeCountRedisRepository;
-    private final MemberBoardLikeRedisRepository memberBoardLikeRedisRepository;
-
+    private final BoardLikeRedisRepository boardLikeRedisRepository;
     // 페이지별 최대 게시글 수
     private static final int LIMIT = 4;
 
@@ -105,8 +103,7 @@ public class BoardServiceImpl implements BoardService {
                 saveImageFile(boardReqDto.getImages(), newBoard);
             }
             Board result = boardRepository.save(newBoard);
-            // BoardLikeCount 생성 및 저장
-            createBoardLikeCount(result.getId());
+            category.addBoard(result);
             return result.getId();
         } catch (Exception e) {
             log.error("게시글 등록 중 에러 발생");
@@ -164,8 +161,8 @@ public class BoardServiceImpl implements BoardService {
             throw new RuntimeException("이미 \"좋아요\"한 게시글 입니다.");
         }
         try {
-            memberBoardLikeRedisRepository.save(memberId, boardId);
-            return boardLikeCountRedisRepository.incrementBoardLikeCount(boardId);
+            boardLikeRedisRepository.save(boardId, memberId);
+            return getBoardLikeCount(boardId);
         }catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("게시글 \"좋아요\"를 실패했습니다.");
@@ -175,7 +172,7 @@ public class BoardServiceImpl implements BoardService {
     // 게시글 좋아요 여부 체크
     @Override
     public boolean checkBoardLikedStatus(Long memberId, Long boardId) {
-        return memberBoardLikeRedisRepository.isMember(memberId, boardId);
+        return boardLikeRedisRepository.isMember(boardId, memberId);
     }
 
     // 게시글 좋아요 취소 - Redis
@@ -185,8 +182,8 @@ public class BoardServiceImpl implements BoardService {
             throw new NoSuchElementException("잘못된 요청입니다.");
         }
         try {
-            memberBoardLikeRedisRepository.delete(memberId, boardId);
-            return boardLikeCountRedisRepository.decrementBoardLikeCount(boardId);
+            boardLikeRedisRepository.delete(boardId, memberId);
+            return getBoardLikeCount(boardId);
         } catch (Exception e) {
             log.error("게시글 \"좋아요\" 정보 삭제 실패");
             throw new RuntimeException("게시글 \"좋아요\"취소를 실패했습니다");
@@ -206,23 +203,10 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
-    // 게시글 좋아요 수 데이터 생성 - Redis
-    private void createBoardLikeCount(Long boardId) {
-        try {
-            boardLikeCountRedisRepository.save(boardId);
-        } catch (Exception e) {
-            log.info("게시글 \"좋아요 수\"정보 생성 실패");
-            throw new RuntimeException("게시글 \"좋아요 수\"정보 생성 중 오류발생");
-        }
-    }
 
     // 게시글 좋아요 수 조회 - Redis
     private Long getBoardLikeCount(Long boardId) {
-        try {
-            return boardLikeCountRedisRepository.findBoardLikeCount(boardId);
-        } catch (NullPointerException e) {
-            return 0L;
-        }
+        return boardLikeRedisRepository.getCount(boardId);
     }
     // 이미지 파일 저장
     private void saveImageFile(List<ImageFileDto> images, Board board) {
