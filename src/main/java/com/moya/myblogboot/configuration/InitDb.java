@@ -1,3 +1,4 @@
+/*
 package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.domain.board.BoardReqDto;
@@ -9,6 +10,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class InitDb {
     private final InitService initService;
     private final CategoryRepository categoryRepository;
+
 
     @PostConstruct
     public void init() {
@@ -34,23 +38,34 @@ public class InitDb {
         }
     }
     @Component
+    @Slf4j
     @RequiredArgsConstructor
     static class InitService {
+
         private final EntityManager em;
         private final PasswordEncoder passwordEncoder;
         private final BoardServiceImpl boardServiceImpl;
+        private final MemberRepository memberRepository;
 
+        @Value("${admin.username}")
+        private String adminUsername;
+        @Value("${admin.password}")
+        private String adminPassword;
+        @Value("${admin.nickname}")
+        private String adminNickname;
         @Transactional
         public Member initAdminMember(){
-            Member member = Member.builder()
-                    .username("moyada123")
-                    .password(passwordEncoder.encode("moyada123"))
-                    .nickname("Moya")
+             Member member = Member.builder()
+                    .username(adminUsername)
+                    .password(passwordEncoder.encode(adminPassword))
+                    .nickname(adminNickname)
                     .build();
-
             member.addRoleAdmin();
-            em.persist(member);
-            return member;
+            if (!memberRepository.existsByUsername(adminUsername)) {
+                memberRepository.save(member);
+                log.info("admin save");
+            }
+            return memberRepository.findByUsername(member.getUsername()).get();
         }
         @Transactional
         public void initTestMember(){
@@ -86,6 +101,6 @@ public class InitDb {
                     .build();
             boardServiceImpl.uploadBoard(boardReqDto, member.getId());
         }
-
     }
 }
+*/

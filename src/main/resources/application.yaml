@@ -41,3 +41,9 @@ jwt:
 ## Image File Path
 file:
   upload-dir: C:/Users/gusm9/Documents/workspace/myblog-boot/images/
+
+## 사용할 관리자 정보를 입력하세요.
+admin:
+  username : "moyada123"
+  password : "moyada123"
+  nickname : "Moya"

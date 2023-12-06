@@ -49,14 +49,14 @@ public class BoardController {
     }
 
     // 게시글 작성 Post
-    @PostMapping("/api/v1/management/boards")
+    @PostMapping("/api/v1/boards")
     public ResponseEntity<Long> postBoard(HttpServletRequest request, @RequestBody @Valid BoardReqDto boardReqDto) {
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
         return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, memberId));
     }
 
     // 게시글 수정
-    @PutMapping("/api/v1/management/boards/{boardId}")
+    @PutMapping("/api/v1/boards/{boardId}")
     public ResponseEntity<Long> editBoard(HttpServletRequest request,
                                           @PathVariable("boardId") Long boardId,
                                           @RequestBody @Valid BoardReqDto boardReqDto) {
@@ -65,7 +65,7 @@ public class BoardController {
     }
 
     // 게시글 삭제
-    @DeleteMapping("/api/v1/management/boards/{boardId}")
+    @DeleteMapping("/api/v1/boards/{boardId}")
     public ResponseEntity<Boolean> deleteBoard(HttpServletRequest request, @PathVariable("boardId") Long boardId) {
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
         return ResponseEntity.ok().body(boardService.deleteBoard(boardId, memberId));

@@ -120,7 +120,7 @@ export const BoardEditForm = () => {
         }}
         localization={{ locale: "ko" }}
         editorStyle={{
-          height: "400px",
+          height: "700px",
           width: "100%",
           border: "3px solid lightgray",
           padding: "20px",

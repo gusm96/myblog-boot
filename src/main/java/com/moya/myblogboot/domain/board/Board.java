@@ -37,7 +37,7 @@ public class Board {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @ManyToOne // 대부분 Category를 함께 조회 하기때문에 FetchType 을 Default 값으로 둠 (EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
 
@@ -80,5 +80,9 @@ public class Board {
     }
     public void removeImageFile(ImageFile file) {
         this.imageFiles.remove(file);
+    }
+
+    public void removeCategory() {
+        this.category = null;
     }
 }
