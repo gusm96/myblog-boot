@@ -7,7 +7,7 @@ spring:
     password: moya134353@@
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
     defer-datasource-initialization: true
     properties:
       hibernate:
