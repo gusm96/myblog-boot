@@ -23,19 +23,19 @@ public class CategoryController {
     }
 
     // 카테고리 작성
-    @PostMapping("/api/v1/management/category")
+    @PostMapping("/api/v1/categories")
     public ResponseEntity<String> newCategory(@RequestBody @Valid Map<String,String> categoryMap) {
         return ResponseEntity.ok(categoryService.createCategory(categoryMap.get("categoryName")));
     }
 
     // 카테고리 수정
-    @PutMapping("/api/v1/management/category/{categoryId}")
+    @PutMapping("/api/v1/categories/{categoryId}")
     public ResponseEntity<String> editCategory(@PathVariable Long categoryId, @RequestBody @Valid CategoryReqDto categoryReqDto) {
         return ResponseEntity.ok().body(categoryService.updateCategory(categoryId, categoryReqDto.getCategoryName()));
     }
 
     // 카테고리 삭제
-    @DeleteMapping("/api/v1/management/category/{categoryId}")
+    @DeleteMapping("/api/v1/categories/{categoryId}")
     public ResponseEntity<String> deleteCategory(@PathVariable Long categoryId) {
         return ResponseEntity.ok(categoryService.deleteCategory(categoryId));
     }

@@ -43,6 +43,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
     @Override
+    @Transactional
     public String updateCategory(Long categoryId, String modifiedCategoryName) {
         Category category = retrieveCategoryById(categoryId);
         try {
