@@ -22,8 +22,10 @@ pipeline {
             }
         }
         stage('Login'){
-            steps{
-                bat "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin" // docker hub 로그인
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'myblog-boot', passwordVariable: 'psw', usernameVariable: 'usr')]) {
+                    bat 'echo %psw% | docker login -u %usr% --password-stdin'
+                }
             }
         }
         stage('Deploy our image') { 
