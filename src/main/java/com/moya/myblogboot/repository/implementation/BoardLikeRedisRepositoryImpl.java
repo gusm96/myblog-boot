@@ -12,7 +12,7 @@ public class BoardLikeRedisRepositoryImpl implements BoardLikeRedisRepository {
     private final RedisTemplate<String, Object> redisTemplate;
     private static final String KEY = "boardLike:";
     @Override
-    public void save(Long boardId, Long memberId) {
+    public void add(Long boardId, Long memberId) {
         redisTemplate.opsForSet().add(KEY + boardId, memberId);
     }
 
@@ -22,13 +22,12 @@ public class BoardLikeRedisRepositoryImpl implements BoardLikeRedisRepository {
     }
 
     @Override
-    public void delete(Long boardId, Long memberId) {
+    public void cancel(Long boardId, Long memberId) {
         redisTemplate.opsForSet().remove(KEY + boardId, memberId);
     }
 
     @Override
     public Long getCount(Long boardId) {
-        Long result = (long) redisTemplate.opsForSet().members(KEY + boardId).size();
-        return result == null ? 0L : result;
+        return (long) redisTemplate.opsForSet().members(KEY + boardId).size();
     }
 }

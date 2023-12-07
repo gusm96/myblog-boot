@@ -142,13 +142,8 @@ public class BoardServiceImpl implements BoardService {
         // Entity 조회
         Board board = retrieveBoardById(boardId);
         if (board.getMember().getId() == memberId) {
-            try {
-                boardRepository.delete(board);
-                return true;
-            } catch (Exception e) {
-                log.error("게시글 삭제 중 에러 발생");
-                throw new RuntimeException("게시글 삭제를 실패했습니다.");
-            }
+            board.setDeleteDate();
+            return true;
         }else {
             throw new UnauthorizedAccessException("권한이 없습니다.");
         }
@@ -161,7 +156,7 @@ public class BoardServiceImpl implements BoardService {
             throw new RuntimeException("이미 \"좋아요\"한 게시글 입니다.");
         }
         try {
-            boardLikeRedisRepository.save(boardId, memberId);
+            boardLikeRedisRepository.add(boardId, memberId);
             return getBoardLikeCount(boardId);
         }catch (Exception e) {
             e.printStackTrace();
@@ -182,7 +177,7 @@ public class BoardServiceImpl implements BoardService {
             throw new NoSuchElementException("잘못된 요청입니다.");
         }
         try {
-            boardLikeRedisRepository.delete(boardId, memberId);
+            boardLikeRedisRepository.cancel(boardId, memberId);
             return getBoardLikeCount(boardId);
         } catch (Exception e) {
             log.error("게시글 \"좋아요\" 정보 삭제 실패");
