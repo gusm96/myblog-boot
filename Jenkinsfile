@@ -11,10 +11,17 @@ pipeline {
                 checkout scm
             }
         }
+        stage('Build') {
+            steps {
+                // Gradle build
+                sh './gradlew build'
+                // Copy the JAR file to the workspace
+                sh 'cp build/libs/myblog-boot-0.0.1-SNAPSHOT.jar $WORKSPACE/'
+            }
+        }
         stage('Building our image') {
             steps {
                 script {
-                    sh "cp /var/lib/jenkins/workspace/myblog-boot/build/libs/myblog-boot-0.0.1-SNAPSHOT.war /var/lib/jenkins/workspace/pipeline/" // war 파일을 현재 위치로 복사 
                     // Docker 빌드
                     dockerImage = docker.build repository + ":$BUILD_NUMBER"
                 }
@@ -24,7 +31,7 @@ pipeline {
         stage('Deploy our image') { 
           steps { 
               script {
-                sh 'docker push $repository:$BUILD_NUMBER' //docker push
+                sh "docker push $repository:$BUILD_NUMBER" //docker push
               } 
           }
         } 
