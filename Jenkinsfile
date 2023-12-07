@@ -1,7 +1,6 @@
 pipeline {
     environment {
         repository = "seongmogu/myblog-boot"
-        DOCKERHUB_CREDENTIALS = credentials("myblog-boot")
         dockerImage = ''
     }
     agent any
@@ -24,7 +23,7 @@ pipeline {
         stage('Docker Login and Push'){
             steps {
                 script {
-                    withDockerRegistry([credentialsId: DOCKERHUB_CREDENTIALS, url: "https://index.docker.io/v1/"]) {
+                    withDockerRegistry([credentialsId: "myblog-boot", url: "https://index.docker.io/v1/"]) {
                         bat "docker push $repository:$BUILD_NUMBER"
                     }
                 }
