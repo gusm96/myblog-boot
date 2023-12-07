@@ -22,10 +22,8 @@ pipeline {
             }
         }
         stage('Login'){
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'myblog-boot', passwordVariable: 'DOCKERHUB_CREDENTIALS_PSW', usernameVariable: 'DOCKERHUB_CREDENTIALS_USR')]) {
-                    bat 'echo %DOCKERHUB_CREDENTIALS_PSW% | docker login -u %DOCKERHUB_CREDENTIALS_USR% --password-stdin'
-                }
+            steps{
+                bat "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin" // docker hub 로그인
             }
         }
         stage('Deploy our image') { 
