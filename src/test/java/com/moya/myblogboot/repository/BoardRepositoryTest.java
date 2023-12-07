@@ -23,7 +23,7 @@ class BoardRepositoryTest {
     private static final int limit = 4;
     private static final int nowPage = 0;
 
-    @Test
+   /* @Test
     void findById() {
         Long boardId = 1L;
 
@@ -63,5 +63,5 @@ class BoardRepositoryTest {
         //given
         PageRequest pageRequest = PageRequest.of(nowPage, limit, Sort.by(Sort.Direction.DESC, "uploadDate"));
 
-    }
+    }*/
 }

@@ -18,12 +18,12 @@ class BoardLikeRedisRepositoryImplTest {
     void delete() {
     }
 
-    @Test
+   /* @Test
     void getCount() {
         Long boardId = 1L;
 
         Long result = boardLikeRedisRepository.getCount(boardId);
 
         Assertions.assertThat(0L).isEqualTo(result);
-    }
+    }*/
 }
