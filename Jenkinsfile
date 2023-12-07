@@ -14,9 +14,9 @@ pipeline {
         stage('Build') {
             steps {
                 // Gradle build
-                sh './gradlew build'
+                bat './gradlew build'
                 // Copy the JAR file to the workspace
-                sh 'cp build/libs/myblog-boot-0.0.1-SNAPSHOT.jar $WORKSPACE/'
+                bat 'cp build/libs/myblog-boot-0.0.1-SNAPSHOT.jar $WORKSPACE/'
             }
         }
         stage('Building our image') {
@@ -31,13 +31,13 @@ pipeline {
         stage('Deploy our image') { 
           steps { 
               script {
-                sh "docker push $repository:$BUILD_NUMBER" //docker push
+                bat "docker push $repository:$BUILD_NUMBER" //docker push
               } 
           }
         } 
         stage('Cleaning up') { 
             steps { 
-                sh "docker rmi $repository:$BUILD_NUMBER" // docker image 제거
+                bat "docker rmi $repository:$BUILD_NUMBER" // docker image 제거
             }
         }
     }
