@@ -17,6 +17,9 @@ pipeline {
                 script {
                     // Docker 빌드
                     dockerImage = docker.build(repository + ":$BUILD_NUMBER") 
+                    withDockerRegistry([credentialsId: DOCKERHUB_CREDENTIALS, url: "https://index.docker.io/v1/"]) {
+                        dockerImage.push()
+                    }
                 }
                 echo 'building the application...'
             }
