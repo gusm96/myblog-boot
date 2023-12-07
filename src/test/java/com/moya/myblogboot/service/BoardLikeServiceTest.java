@@ -1,5 +1,6 @@
 package com.moya.myblogboot.service;
 
+import com.moya.myblogboot.repository.BoardLikeRedisRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,53 +15,50 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SpringBootTest
 public class BoardLikeServiceTest {
 
-    private static final int COUNT = 100;
+    private static final int COUNT = 10000;
     private static final ExecutorService service = Executors.newFixedThreadPool(COUNT);
-
     @Autowired
-    private AuthService authService;
+    private BoardLikeRedisRepository boardLikeRedisRepository;
 
-    @Autowired
-    private BoardService boardService;
 
-    /*@Test
-    @DisplayName("JPA 좋아요 테스트")
-    void incrementBoarLikeCount () {
+    @DisplayName("Redis 게시글 좋아요 테스트")
+    @Test
+    void boardLike() throws InterruptedException {
         // given
-        int memberIdx = 2;
+        // 게시글 ID
+        Long boardId = 1L;
         CountDownLatch latch = new CountDownLatch(COUNT);
         // when
         for (int i = 0; i < COUNT; i++) {
-            Long finalMemberIdx = (long) memberIdx;
-            service.execute(() -> {
-                Member member = authService.retrieveMemberById(finalMemberIdx);
-                boardService.addBoardLikeVersion2(20L, member);
-                latch.countDown();
-            });
-            memberIdx++;
-        }
-        // then
-        latch.await();
-        Assertions.assertEquals(before + COUNT, numberService.getNumber());
-    }*/
-
-
-    /*@Test
-    @DisplayName("카운트 테스트")
-    void incrementCount () throws InterruptedException {
-        // given
-        AtomicInteger count = new AtomicInteger();
-        int maxCount = 100;
-        CountDownLatch latch = new CountDownLatch(COUNT);
-        // when
-        for (int i = 0; i < COUNT; i++) {
-            service.execute(() -> {
-                count.getAndIncrement();
+            Long memberId = (long) i;
+            service.execute(()-> {
+                boardLikeRedisRepository.save(boardId, memberId);
                 latch.countDown();
             });
         }
         // then
         latch.await();
-        Assertions.assertEquals(maxCount, count);
-    }*/
+        Assertions.assertEquals(COUNT, boardLikeRedisRepository.getCount(boardId));
+    }
+
+    @DisplayName("Redis 게시글 좋아요 취소 테스트")
+    @Test
+    void boardLikeCancel() throws InterruptedException {
+        // given
+        // 게시글 ID
+        Long boardId = 1L;
+        CountDownLatch latch = new CountDownLatch(COUNT);
+        // when
+        for (int i = 0; i < COUNT; i++) {
+            Long memberId = (long) i;
+            service.execute(()-> {
+                boardLikeRedisRepository.delete(boardId, memberId);
+                latch.countDown();
+            });
+        }
+        // then
+        latch.await();
+        Assertions.assertEquals(0L, boardLikeRedisRepository.getCount(boardId));
+    }
+
 }
