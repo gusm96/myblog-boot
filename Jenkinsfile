@@ -6,26 +6,24 @@ pipeline {
     }
     agent any
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
         stage('Build') {
             steps {
                 // Gradle build
                 bat './gradlew build'
-                // Copy the JAR file to the workspace
-                bat 'cp build/libs/myblog-boot-0.0.1-SNAPSHOT.jar $WORKSPACE/'
             }
         }
-        stage('Building our image') {
+        stage('Build Docker Image') {
             steps {
                 script {
                     // Docker 빌드
-                    dockerImage = docker.build repository + ":$BUILD_NUMBER"
+                    dockerImage = docker.build(repository + ":$BUILD_NUMBER") 
                 }
                 echo 'building the application...'
+            }
+        }
+        stage('Login'){
+            steps {
+                bat "echo $DOCKERHUB_CREDENTIALS_PSW | docker loing -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
             }
         }
         stage('Deploy our image') { 
@@ -35,10 +33,5 @@ pipeline {
               } 
           }
         } 
-        stage('Cleaning up') { 
-            steps { 
-                bat "docker rmi $repository:$BUILD_NUMBER" // docker image 제거
-            }
-        }
     }
 }
