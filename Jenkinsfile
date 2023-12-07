@@ -17,26 +17,18 @@ pipeline {
                 script {
                     // Docker 빌드
                     dockerImage = docker.build(repository + ":$BUILD_NUMBER") 
-                    withDockerRegistry([credentialsId: DOCKERHUB_CREDENTIALS, url: "https://index.docker.io/v1/"]) {
-                        dockerImage.push()
-                    }
                 }
                 echo 'building the application...'
             }
         }
-        // stage('Login'){
-        //     steps {
-        //         withCredentials([usernamePassword(credentialsId: 'myblog-boot', passwordVariable: 'psw', usernameVariable: 'usr')]) {
-        //             bat 'echo %psw% | docker login -u %usr% --password-stdin'
-        //         }
-        //     }
-        // }
-        stage('Deploy our image') { 
-          steps { 
-              script {
-                bat "docker push $repository:$BUILD_NUMBER" //docker push
-              } 
-          }
-        } 
+        stage('Docker Login and Push'){
+            steps {
+                script {
+                    withDockerRegistry([credentialsId: DOCKERHUB_CREDENTIALS, url: "https://index.docker.io/v1/"]) {
+                        bat "docker push $repository:$BUILD_NUMBER"
+                    }
+                }
+            }
+        }
     }
 }
