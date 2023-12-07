@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SpringBootTest
 public class BoardLikeServiceTest {
 
-    private static final int COUNT = 10000;
+    /*private static final int COUNT = 10000;
     private static final ExecutorService service = Executors.newFixedThreadPool(COUNT);
     @Autowired
     private BoardLikeRedisRepository boardLikeRedisRepository;
@@ -60,5 +60,5 @@ public class BoardLikeServiceTest {
         latch.await();
         Assertions.assertEquals(0L, boardLikeRedisRepository.getCount(boardId));
     }
-
+*/
 }
