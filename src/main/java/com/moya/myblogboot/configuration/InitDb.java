@@ -1,28 +1,21 @@
-/*
 package com.moya.myblogboot.configuration;
-
 import com.moya.myblogboot.domain.board.BoardReqDto;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.repository.*;
-import com.moya.myblogboot.service.implementation.BoardServiceImpl;
+import com.moya.myblogboot.service.BoardService;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-@Component
 @RequiredArgsConstructor
 public class InitDb {
     private final InitService initService;
     private final CategoryRepository categoryRepository;
-
-
     @PostConstruct
     public void init() {
         Member adminMember = initService.initAdminMember();
@@ -31,41 +24,28 @@ public class InitDb {
         Category category1 = categoryRepository.findById(categoryId1).get();
         Category category2 = categoryRepository.findById(categoryId2).get();
         initService.initTestMember();
-      // Board 카테고리별로 10개씩
+        // Board 카테고리별로 10개씩
         for (int i = 0; i < 10; i++) {
             initService.initBoard(adminMember, category1, "자바", "자바의 진짜 직이네~");
             initService.initBoard(adminMember, category2, "파이썬", "파이썬 진짜 멋지네~~");
         }
     }
-    @Component
-    @Slf4j
     @RequiredArgsConstructor
     static class InitService {
-
         private final EntityManager em;
         private final PasswordEncoder passwordEncoder;
-        private final BoardServiceImpl boardServiceImpl;
-        private final MemberRepository memberRepository;
-
-        @Value("${admin.username}")
-        private String adminUsername;
-        @Value("${admin.password}")
-        private String adminPassword;
-        @Value("${admin.nickname}")
-        private String adminNickname;
+        private final BoardService boardService;
+        private final BoardRepository boardRepository;
         @Transactional
         public Member initAdminMember(){
-             Member member = Member.builder()
-                    .username(adminUsername)
-                    .password(passwordEncoder.encode(adminPassword))
-                    .nickname(adminNickname)
+            Member member = Member.builder()
+                    .username("moyada123")
+                    .password(passwordEncoder.encode("moyada123"))
+                    .nickname("Moya")
                     .build();
             member.addRoleAdmin();
-            if (!memberRepository.existsByUsername(adminUsername)) {
-                memberRepository.save(member);
-                log.info("admin save");
-            }
-            return memberRepository.findByUsername(member.getUsername()).get();
+            em.persist(member);
+            return member;
         }
         @Transactional
         public void initTestMember(){
@@ -99,8 +79,8 @@ public class InitDb {
                     .content(content)
                     .category(category.getId())
                     .build();
-            boardServiceImpl.uploadBoard(boardReqDto, member.getId());
+            boardService.uploadBoard(boardReqDto, member.getId());
         }
+
     }
 }
-*/

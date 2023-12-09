@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
 @SpringBootApplication
+@RequiredArgsConstructor
 public class MyblogBootApplication {
     public static void main(String[] args) {
         SpringApplication.run(MyblogBootApplication.class, args);

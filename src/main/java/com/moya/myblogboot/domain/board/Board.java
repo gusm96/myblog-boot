@@ -81,8 +81,11 @@ public class Board {
     public void removeImageFile(ImageFile file) {
         this.imageFiles.remove(file);
     }
-
     public void removeCategory() {
         this.category = null;
+    }
+
+    public void setDeleteDate(){
+        this.deleteDate = LocalDateTime.now();
     }
 }
