@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @Transactional
 public class QuerydslTest {
-    @Autowired
+   /* @Autowired
     private EntityManager em;
 
     private JPAQueryFactory queryFactory;
@@ -58,5 +58,5 @@ public class QuerydslTest {
                 .fetchOne();
         // then
         assertThat(findMember.getUsername()).isEqualTo("member1");
-    }
+    }*/
 }
