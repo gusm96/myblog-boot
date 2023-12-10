@@ -1,6 +1,7 @@
 package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.board.SearchType;
 import com.moya.myblogboot.domain.category.Category;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
@@ -21,4 +22,6 @@ public interface BoardRepository extends JpaRepository<Board, Long> ,BoardQueryd
     Page<Board> findAll(Pageable pageable);
 
     Page<Board> findAllByCategory(Category category, PageRequest pageRequest);
+
+
 }

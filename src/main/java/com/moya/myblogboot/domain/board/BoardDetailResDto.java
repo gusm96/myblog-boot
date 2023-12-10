@@ -22,13 +22,13 @@ public class BoardDetailResDto {
     private List<CommentResDto> comments;
 
     @Builder
-    public BoardDetailResDto(Board board, Long likes, Long views) {
+    public BoardDetailResDto(Board board) {
         this.id = board.getId();
         this.category = board.getCategory().getName();
         this.title = board.getTitle();
         this.content = board.getContent();
-        this.likes = likes;
-        this.views = views;
+        this.likes = board.getLikes();
+        this.views = board.getViews();
         this.uploadDate = board.getUploadDate();
         this.editDate = board.getEditDate();
         this.comments = board.getComments().stream()

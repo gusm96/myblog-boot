@@ -17,6 +17,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,21 +76,21 @@ public class BoardServiceImpl implements BoardService {
     }
 
     // 검색한 게시글 리스트
-    /*@Override
+    @Override
     public BoardListResDto retrieveBoardListBySearch (SearchType searchType, String searchContents, int page) {
         // 검색어 + 페이지 게시글 조회
-        List<Board> boardList = boardRepository.findBySearch(searchType, searchContents, page, LIMIT);
-        // 검색된 게시글의 수
-        Long listCount = boardRepository.findBySearchCount(searchType, searchContents);
+        PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC));
+        Page<Board> boardList = boardRepository.findBySearchType(pageRequest, searchType, searchContents);
+
         // DTO 객체로 변환
         List<BoardResDto> resultList = boardList.stream().map(board
                         -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
         return BoardListResDto.builder()
                 .list(resultList)
-                .totalPage(pageCount(listCount))
+                .totalPage(boardList.getTotalPages())
                 .build();
-    }*/
+    }
 
     // 게시글 업로드
     @Override
@@ -114,19 +115,26 @@ public class BoardServiceImpl implements BoardService {
 
     // 게시글 상세
     @Override
+    @Transactional
     public BoardDetailResDto boardToResponseDto(Long boardId) {
         Board findBoard = retrieveBoardById(boardId);
-        Long views = incrementViews(boardId);
+        // 비동기로 조회수 증가
+        incrementViewsAsync(boardId);
+        // 비동기로 게시글 조회수 업데이트
+        updateViews(findBoard);
         return BoardDetailResDto.builder()
                 .board(findBoard)
-                .likes(getBoardLikeCount(boardId))
-                .views(views)
                 .build();
     }
 
-    // 게시글 조회수 증가
-    private Long incrementViews(Long boardId) {
-        return boardRedisRepository.viewsIncrement(boardId);
+    @Async // 게시글 조회수 증가
+    public void incrementViewsAsync(Long boardId) {
+        boardRedisRepository.viewsIncrement(boardId);
+    }
+
+    @Async // 게시글 조회수 업데이트
+    public void updateViews(Board board) {
+        board.updateViews(boardRedisRepository.getViews(board.getId()));
     }
 
     // 게시글 수정
@@ -158,12 +166,15 @@ public class BoardServiceImpl implements BoardService {
 
     // 게시글 좋아요 Redis
     @Override
+    @Transactional
     public Long addLikeToBoard(Long memberId, Long boardId){
-        if (checkBoardLikedStatus(memberId, boardId)) {
+        Board board = retrieveBoardById(boardId);
+        if (isBoardLiked(memberId, boardId)) {
             throw new RuntimeException("이미 \"좋아요\"한 게시글 입니다.");
         }
         try {
-            boardRedisRepository.add(boardId, memberId);
+            addLike(memberId, boardId);
+            updateLikes(board);
             return getBoardLikeCount(boardId);
         }catch (Exception e) {
             e.printStackTrace();
@@ -171,25 +182,41 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
+    @Async
+    public void addLike(Long memberId, Long boardId) {
+        boardRedisRepository.addLike(boardId, memberId);
+    }
+
+    @Async
+    public void updateLikes(Board board){
+        board.updateLikes(getBoardLikeCount(board.getId()));
+    }
     // 게시글 좋아요 여부 체크
     @Override
-    public boolean checkBoardLikedStatus(Long memberId, Long boardId) {
+    public boolean isBoardLiked(Long memberId, Long boardId) {
         return boardRedisRepository.isMember(boardId, memberId);
     }
 
     // 게시글 좋아요 취소 - Redis
     @Override
+    @Transactional
     public Long deleteBoardLike(Long memberId, Long boardId) {
-        if (!checkBoardLikedStatus(memberId, boardId)) {
+        Board board = retrieveBoardById(boardId);
+        if (!isBoardLiked(memberId, boardId)) {
             throw new NoSuchElementException("잘못된 요청입니다.");
         }
         try {
-            boardRedisRepository.cancel(boardId, memberId);
+            likesCancel(memberId, boardId);
+            updateLikes(board);
             return getBoardLikeCount(boardId);
         } catch (Exception e) {
             log.error("게시글 \"좋아요\" 정보 삭제 실패");
             throw new RuntimeException("게시글 \"좋아요\"취소를 실패했습니다");
         }
+    }
+    @Async
+    public void likesCancel(Long memberId, Long boardId) {
+        boardRedisRepository.likesCancel(boardId, memberId);
     }
 
     // 게시글 Entity 조회
@@ -208,8 +235,9 @@ public class BoardServiceImpl implements BoardService {
 
     // 게시글 좋아요 수 조회 - Redis
     private Long getBoardLikeCount(Long boardId) {
-        return boardRedisRepository.getCount(boardId);
+        return boardRedisRepository.getLikesCount(boardId);
     }
+
     // 이미지 파일 저장
     private void saveImageFile(List<ImageFileDto> images, Board board) {
         List<ImageFile> imageFiles = images.stream()

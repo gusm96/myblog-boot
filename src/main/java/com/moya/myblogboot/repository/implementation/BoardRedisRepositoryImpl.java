@@ -13,7 +13,7 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
     private static final String BOARD_LIKE_KEY = "likes:";
     private static final String BOARD_VIEWS_KEY = "views:";
     @Override
-    public void add(Long boardId, Long memberId) {
+    public void addLike(Long boardId, Long memberId) {
         String key = BOARD_LIKE_KEY + boardId;
         redisTemplate.opsForSet().add(key, memberId);
     }
@@ -25,15 +25,14 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
     }
 
     @Override
-    public void cancel(Long boardId, Long memberId) {
+    public void likesCancel(Long boardId, Long memberId) {
         String key = BOARD_LIKE_KEY + boardId;
         redisTemplate.opsForSet().remove(key, memberId);
     }
 
     @Override
-    public Long getCount(Long boardId) {
+    public Long getLikesCount(Long boardId) {
         String key = BOARD_LIKE_KEY + boardId;
-
         return (long) redisTemplate.opsForSet().members(key).size();
     }
     @Override

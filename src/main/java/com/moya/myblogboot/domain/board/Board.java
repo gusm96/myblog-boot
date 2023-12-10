@@ -23,6 +23,8 @@ public class Board {
     private String title;
     @Column(nullable = false, columnDefinition = "longtext")
     private String content;
+    private Long views;
+    private Long likes;
     private LocalDateTime uploadDate;
     private LocalDateTime editDate;
     private LocalDateTime deleteDate;
@@ -50,6 +52,8 @@ public class Board {
         this.title = title;
         this.content = content;
         this.category = category;
+        this.views = 0L;
+        this.likes = 0L;
         this.member = member;
         this.uploadDate = LocalDateTime.now();
         this.boardStatus = BoardStatus.VIEW;
@@ -87,5 +91,12 @@ public class Board {
 
     public void setDeleteDate(){
         this.deleteDate = LocalDateTime.now();
+    }
+    public void updateViews(Long views){
+        this.views = views;
+    }
+
+    public void updateLikes(Long likes) {
+        this.likes = likes;
     }
 }

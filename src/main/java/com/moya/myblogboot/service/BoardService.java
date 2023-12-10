@@ -8,7 +8,7 @@ public interface BoardService {
 
     BoardListResDto retrieveBoardListByCategory(String categoryName, int page);
 
-    //BoardListResDto retrieveBoardListBySearch(SearchType searchType, String searchContents, int page);
+    BoardListResDto retrieveBoardListBySearch(SearchType searchType, String searchContents, int page);
 
     BoardDetailResDto boardToResponseDto(Long boardId);
 
@@ -20,7 +20,7 @@ public interface BoardService {
 
     Long addLikeToBoard(Long memberId, Long boardId);
 
-    boolean checkBoardLikedStatus(Long memberId, Long boardId);
+    boolean isBoardLiked(Long memberId, Long boardId);
 
     Long deleteBoardLike(Long memberId, Long boardId);
 

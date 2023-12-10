@@ -75,7 +75,7 @@ public class BoardController {
     @GetMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToCheckBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
-        return ResponseEntity.ok().body(boardService.checkBoardLikedStatus(memberId, boardId));
+        return ResponseEntity.ok().body(boardService.isBoardLiked(memberId, boardId));
     }
     // 게시글 좋아요 추가 기능
     @PostMapping("/api/v1/likes/{boardId}")
