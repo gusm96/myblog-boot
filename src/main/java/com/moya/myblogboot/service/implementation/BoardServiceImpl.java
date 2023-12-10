@@ -119,11 +119,10 @@ public class BoardServiceImpl implements BoardService {
     public BoardDetailResDto boardToResponseDto(Long boardId) {
         // Board Entity 조회
         Board findBoard = retrieveBoardById(boardId);
-
-        // 비동기로 조회수 증가 및 업데이트
-        incrementViewsAsync(boardId);
+        // Memory에 저장된 좋아요 수
         Long likes = getBoardLikeCount(boardId);
-        Long views = boardRedisRepository.getViews(boardId);
+        // Memory에 저장된 조회수
+        Long views = boardRedisRepository.viewsIncrement(boardId);
 
         // 응답용 DTO 객체로 변환
         return BoardDetailResDto.builder()
@@ -133,10 +132,6 @@ public class BoardServiceImpl implements BoardService {
                 .build();
     }
 
-    @Async
-    public void incrementViewsAsync(Long boardId) {
-        boardRedisRepository.viewsIncrement(boardId);
-    }
 
     // 게시글 수정
     @Override
@@ -172,17 +167,12 @@ public class BoardServiceImpl implements BoardService {
             throw new RuntimeException("이미 \"좋아요\"한 게시글 입니다.");
         }
         try {
-            addLike(memberId, boardId);
+            boardRedisRepository.addLike(boardId, memberId);
             return getBoardLikeCount(boardId);
         }catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("게시글 \"좋아요\"를 실패했습니다.");
         }
-    }
-
-    @Async
-    public void addLike(Long memberId, Long boardId) {
-        boardRedisRepository.addLike(boardId, memberId);
     }
 
     // 게시글 좋아요 여부 체크
@@ -198,16 +188,12 @@ public class BoardServiceImpl implements BoardService {
             throw new NoSuchElementException("잘못된 요청입니다.");
         }
         try {
-            likesCancel(memberId, boardId);
+            boardRedisRepository.likesCancel(boardId, memberId);
             return getBoardLikeCount(boardId);
         } catch (Exception e) {
             log.error("게시글 \"좋아요\" 정보 삭제 실패");
             throw new RuntimeException("게시글 \"좋아요\"취소를 실패했습니다");
         }
-    }
-    @Async
-    public void likesCancel(Long memberId, Long boardId) {
-        boardRedisRepository.likesCancel(boardId, memberId);
     }
 
     // 게시글 Entity 조회
