@@ -16,17 +16,19 @@ public class BoardDetailResDto {
     private String title;
     private String content;
     private Long likes;
+    private Long views;
     private LocalDateTime uploadDate;
     private LocalDateTime editDate;
     private List<CommentResDto> comments;
 
     @Builder
-    public BoardDetailResDto(Board board, Long likes) {
+    public BoardDetailResDto(Board board, Long likes, Long views) {
         this.id = board.getId();
         this.category = board.getCategory().getName();
         this.title = board.getTitle();
         this.content = board.getContent();
         this.likes = likes;
+        this.views = views;
         this.uploadDate = board.getUploadDate();
         this.editDate = board.getEditDate();
         this.comments = board.getComments().stream()

@@ -1,6 +1,6 @@
 package com.moya.myblogboot.repository;
 
-public interface BoardLikeRedisRepository {
+public interface BoardRedisRepository {
     // 좋아요
     void add(Long boardId, Long memberId);
     // 좋아요 수
@@ -9,4 +9,7 @@ public interface BoardLikeRedisRepository {
     boolean isMember(Long boardId, Long memberId);
     // 좋아요 취소
     void cancel(Long boardId, Long memberId);
+    Long getViews(Long boardId);
+
+    Long viewsIncrement(Long boardId);
 }

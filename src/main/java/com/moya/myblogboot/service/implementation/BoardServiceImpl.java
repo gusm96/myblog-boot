@@ -33,7 +33,7 @@ public class BoardServiceImpl implements BoardService {
     private final AuthService authService;
     private final BoardRepository boardRepository;
     private final ImageFileRepository imageFileRepository;
-    private final BoardLikeRedisRepository boardLikeRedisRepository;
+    private final BoardRedisRepository boardRedisRepository;
     // 페이지별 최대 게시글 수
     private static final int LIMIT = 4;
 
@@ -116,10 +116,17 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public BoardDetailResDto boardToResponseDto(Long boardId) {
         Board findBoard = retrieveBoardById(boardId);
+        Long views = incrementViews(boardId);
         return BoardDetailResDto.builder()
                 .board(findBoard)
                 .likes(getBoardLikeCount(boardId))
+                .views(views)
                 .build();
+    }
+
+    // 게시글 조회수 증가
+    private Long incrementViews(Long boardId) {
+        return boardRedisRepository.viewsIncrement(boardId);
     }
 
     // 게시글 수정
@@ -156,7 +163,7 @@ public class BoardServiceImpl implements BoardService {
             throw new RuntimeException("이미 \"좋아요\"한 게시글 입니다.");
         }
         try {
-            boardLikeRedisRepository.add(boardId, memberId);
+            boardRedisRepository.add(boardId, memberId);
             return getBoardLikeCount(boardId);
         }catch (Exception e) {
             e.printStackTrace();
@@ -167,7 +174,7 @@ public class BoardServiceImpl implements BoardService {
     // 게시글 좋아요 여부 체크
     @Override
     public boolean checkBoardLikedStatus(Long memberId, Long boardId) {
-        return boardLikeRedisRepository.isMember(boardId, memberId);
+        return boardRedisRepository.isMember(boardId, memberId);
     }
 
     // 게시글 좋아요 취소 - Redis
@@ -177,7 +184,7 @@ public class BoardServiceImpl implements BoardService {
             throw new NoSuchElementException("잘못된 요청입니다.");
         }
         try {
-            boardLikeRedisRepository.cancel(boardId, memberId);
+            boardRedisRepository.cancel(boardId, memberId);
             return getBoardLikeCount(boardId);
         } catch (Exception e) {
             log.error("게시글 \"좋아요\" 정보 삭제 실패");
@@ -201,7 +208,7 @@ public class BoardServiceImpl implements BoardService {
 
     // 게시글 좋아요 수 조회 - Redis
     private Long getBoardLikeCount(Long boardId) {
-        return boardLikeRedisRepository.getCount(boardId);
+        return boardRedisRepository.getCount(boardId);
     }
     // 이미지 파일 저장
     private void saveImageFile(List<ImageFileDto> images, Board board) {
