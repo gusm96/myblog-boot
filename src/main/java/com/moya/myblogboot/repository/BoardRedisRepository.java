@@ -13,4 +13,7 @@ public interface BoardRedisRepository {
     Long getViews(Long boardId);
 
     Long viewsIncrement(Long boardId);
+
+    void setViews(Long boardId, Long views);
+
 }

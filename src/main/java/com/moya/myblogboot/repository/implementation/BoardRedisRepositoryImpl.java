@@ -38,12 +38,23 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
     @Override
     public Long getViews(Long boardId) {
         String key = BOARD_VIEWS_KEY + boardId;
-        return Long.parseLong(redisTemplate.opsForValue().get(key).toString());
+        Object value = redisTemplate.opsForValue().get(key);
+        if (value != null) {
+            return Long.parseLong(value.toString());
+        }else{
+            return null;
+        }
     }
 
     @Override
     public Long viewsIncrement(Long boardId) {
         String key = BOARD_VIEWS_KEY + boardId;
         return redisTemplate.opsForValue().increment(key);
+    }
+
+    @Override
+    public void setViews(Long boardId, Long views) {
+        String key = BOARD_VIEWS_KEY + boardId;
+        redisTemplate.opsForValue().set(key, views);
     }
 }

@@ -117,24 +117,25 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public BoardDetailResDto boardToResponseDto(Long boardId) {
+        // Board Entity 조회
         Board findBoard = retrieveBoardById(boardId);
-        // 비동기로 조회수 증가
+
+        // 비동기로 조회수 증가 및 업데이트
         incrementViewsAsync(boardId);
-        // 비동기로 게시글 조회수 업데이트
-        updateViews(findBoard);
+        Long likes = getBoardLikeCount(boardId);
+        Long views = boardRedisRepository.getViews(boardId);
+
+        // 응답용 DTO 객체로 변환
         return BoardDetailResDto.builder()
                 .board(findBoard)
+                .likes(likes)
+                .views(views)
                 .build();
     }
 
-    @Async // 게시글 조회수 증가
+    @Async
     public void incrementViewsAsync(Long boardId) {
         boardRedisRepository.viewsIncrement(boardId);
-    }
-
-    @Async // 게시글 조회수 업데이트
-    public void updateViews(Board board) {
-        board.updateViews(boardRedisRepository.getViews(board.getId()));
     }
 
     // 게시글 수정
@@ -166,15 +167,12 @@ public class BoardServiceImpl implements BoardService {
 
     // 게시글 좋아요 Redis
     @Override
-    @Transactional
     public Long addLikeToBoard(Long memberId, Long boardId){
-        Board board = retrieveBoardById(boardId);
         if (isBoardLiked(memberId, boardId)) {
             throw new RuntimeException("이미 \"좋아요\"한 게시글 입니다.");
         }
         try {
             addLike(memberId, boardId);
-            updateLikes(board);
             return getBoardLikeCount(boardId);
         }catch (Exception e) {
             e.printStackTrace();
@@ -187,10 +185,6 @@ public class BoardServiceImpl implements BoardService {
         boardRedisRepository.addLike(boardId, memberId);
     }
 
-    @Async
-    public void updateLikes(Board board){
-        board.updateLikes(getBoardLikeCount(board.getId()));
-    }
     // 게시글 좋아요 여부 체크
     @Override
     public boolean isBoardLiked(Long memberId, Long boardId) {
@@ -199,15 +193,12 @@ public class BoardServiceImpl implements BoardService {
 
     // 게시글 좋아요 취소 - Redis
     @Override
-    @Transactional
     public Long deleteBoardLike(Long memberId, Long boardId) {
-        Board board = retrieveBoardById(boardId);
         if (!isBoardLiked(memberId, boardId)) {
             throw new NoSuchElementException("잘못된 요청입니다.");
         }
         try {
             likesCancel(memberId, boardId);
-            updateLikes(board);
             return getBoardLikeCount(boardId);
         } catch (Exception e) {
             log.error("게시글 \"좋아요\" 정보 삭제 실패");
