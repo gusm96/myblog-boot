@@ -54,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Token memberLogin(LoginReqDto loginReqDto) {
-        // username으로 회원 찾기
+        // username 으로 회원 찾기
         Member findMember = memberRepository.findByUsername(loginReqDto.getUsername()).orElseThrow(()
                 -> new UsernameNotFoundException("존재하지 않는 아이디 입니다."));
         // password 비교
