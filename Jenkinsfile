@@ -5,17 +5,25 @@ pipeline {
     }
     agent any
     stages {
+        stage('Set Execute Permission') {
+            steps {
+                script {
+                    // 실행 권한 설정
+                    sh 'chmod +x /var/jenkins_home/workspace/myblog-boot/gradlew'
+                }
+            }
+        }
         stage('Build') {
             steps {
                 // Gradle build
-                bat './gradlew build -x test'
+                sh './gradlew build -x test'
             }
         }
         stage('Build Docker Image') {
             steps {
                 script {
                     // Docker 빌드
-                    dockerImage = docker.build(repository + ":$BUILD_NUMBER") 
+                    dockerImage = docker.build(repository + ":$BUILD_NUMBER")
                 }
                 echo 'building the application...'
             }
@@ -24,7 +32,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry([credentialsId: "myblog-boot", url: "https://index.docker.io/v1/"]) {
-                        bat "docker push $repository:$BUILD_NUMBER"
+                        sh "docker push $repository:$BUILD_NUMBER"
                     }
                 }
             }
