@@ -14,6 +14,7 @@ public interface BoardRedisRepository {
 
     Long viewsIncrement(Long boardId);
 
-    void setViews(Long boardId, Long views);
+    Long setViews(Long boardId, Long views);
 
+    void deleteViews(Long id);
 }

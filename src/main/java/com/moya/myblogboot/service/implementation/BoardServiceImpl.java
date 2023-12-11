@@ -119,10 +119,11 @@ public class BoardServiceImpl implements BoardService {
     public BoardDetailResDto boardToResponseDto(Long boardId) {
         // Board Entity 조회
         Board findBoard = retrieveBoardById(boardId);
+
         // Memory에 저장된 좋아요 수
         Long likes = getBoardLikeCount(boardId);
-        // Memory에 저장된 조회수
-        Long views = boardRedisRepository.viewsIncrement(boardId);
+        // Redis에서 조회수 가져오기
+        Long views = getViews(findBoard);
 
         // 응답용 DTO 객체로 변환
         return BoardDetailResDto.builder()
@@ -130,6 +131,17 @@ public class BoardServiceImpl implements BoardService {
                 .likes(likes)
                 .views(views)
                 .build();
+    }
+    // Redis에서 조회수 가져오기
+    private Long getViews(Board board) {
+        Long views = boardRedisRepository.getViews(board.getId());
+        // 조회수 갱신 로직
+        if (views == null || views < board.getViews()) {
+            views = boardRedisRepository.setViews(board.getId(), board.getViews() + 1L);
+        } else {
+            views = boardRedisRepository.viewsIncrement(board.getId());
+        }
+        return views;
     }
 
 
