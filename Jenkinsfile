@@ -21,7 +21,7 @@ pipeline {
                 }
             }
         }
-        stage('Docker Login and Push'){
+        stage('Docker hub Push'){
             steps {
                 script {
                      bat "docker push $repository:$BUILD_NUMBER"
