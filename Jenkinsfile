@@ -11,21 +11,20 @@ pipeline {
                 bat './gradlew build -x test'
             }
         }
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    // Docker 빌드
-                    dockerImage = docker.build(repository + ":$BUILD_NUMBER")
+        stage('Docker Hub Login and build image'){
+            steps{
+                script{
+                    withDockerRegistry([credentialsId: "docker-hub", url: "https://index.docker.io/v1/"]) {
+                        // Docker build image
+                        dockerImage = docker.build(repository + ":$BUILD_NUMBER")
+                    }
                 }
-                echo 'building the application...'
             }
         }
         stage('Docker Login and Push'){
             steps {
                 script {
-                    withDockerRegistry([credentialsId: "myblog-boot", url: "https://index.docker.io/v1/"]) {
-                        bat "docker push $repository:$BUILD_NUMBER"
-                    }
+                     bat "docker push $repository:$BUILD_NUMBER"
                 }
             }
         }
