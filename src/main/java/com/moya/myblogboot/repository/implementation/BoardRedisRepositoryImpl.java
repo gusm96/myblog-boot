@@ -53,8 +53,15 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
     }
 
     @Override
-    public void setViews(Long boardId, Long views) {
+    public Long setViews(Long boardId, Long views) {
         String key = BOARD_VIEWS_KEY + boardId;
         redisTemplate.opsForValue().set(key, views);
+        return getViews(boardId);
+    }
+
+    @Override
+    public void deleteViews(Long boardId) {
+        String key = BOARD_VIEWS_KEY + boardId;
+        redisTemplate.delete(key);
     }
 }

@@ -29,18 +29,18 @@ public class ScheduledTaskService {
         log.info("삭제 후 15일이 지난 게시글 영구삭제");
     }
 
-    // 1분마다 조회수/좋아요 데이터 DB에 업데이트
-    @Scheduled(fixedRate = 60000) //
+    // 10분마다 조회수/좋아요 데이터 DB에 업데이트
+    @Scheduled(fixedRate = 600000) //
     @Transactional
     public void updateViewsScheduled() {
         List<Board> boards = boardRepository.findAll();
         for (Board board : boards) {
             Long currentViewsInMemory = getViews(board.getId());
-            if (currentViewsInMemory == null || currentViewsInMemory < board.getViews()) {
-                boardRedisRepository.setViews(board.getId(), board.getViews());
+            if(currentViewsInMemory != null && currentViewsInMemory > board.getViews()){
+                board.updateViews(getViews(board.getId()));
             }
-            board.updateViews(getViews(board.getId()));
             board.updateLikes(getLikesCount(board.getId()));
+            boardRedisRepository.deleteViews(board.getId());
         }
         log.info("DB 조회수 업데이트 실행");
     }
