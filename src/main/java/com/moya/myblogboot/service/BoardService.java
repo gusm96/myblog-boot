@@ -18,13 +18,6 @@ public interface BoardService {
 
     Long uploadBoard(BoardReqDto boardReqDto, Long memberId);
 
-    Long addLikeToBoard(Long memberId, Long boardId);
-
-    boolean isBoardLiked(Long memberId, Long boardId);
-
-    Long deleteBoardLike(Long memberId, Long boardId);
-
     Board retrieveBoardById(Long boardId);
-
 }
 

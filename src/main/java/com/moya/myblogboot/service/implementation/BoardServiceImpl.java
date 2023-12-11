@@ -17,12 +17,10 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -119,8 +117,7 @@ public class BoardServiceImpl implements BoardService {
     public BoardDetailResDto boardToResponseDto(Long boardId) {
         // Board Entity 조회
         Board findBoard = retrieveBoardById(boardId);
-
-        // Memory에 저장된 좋아요 수
+        // Redis에 저장된 좋아요 수
         Long likes = getBoardLikeCount(boardId);
         // Redis에서 조회수 가져오기
         Long views = getViews(findBoard);
@@ -137,13 +134,14 @@ public class BoardServiceImpl implements BoardService {
         Long views = boardRedisRepository.getViews(board.getId());
         // 조회수 갱신 로직
         if (views == null || views < board.getViews()) {
+            // 조회수가 null 이거나 DB에 저장된 값보다 작은 경우 캐시에 DB 데이터 저장
             views = boardRedisRepository.setViews(board.getId(), board.getViews() + 1L);
         } else {
+            // 조회수 증가 후 결과 값 반환
             views = boardRedisRepository.viewsIncrement(board.getId());
         }
         return views;
     }
-
 
     // 게시글 수정
     @Override
@@ -172,41 +170,6 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
-    // 게시글 좋아요 Redis
-    @Override
-    public Long addLikeToBoard(Long memberId, Long boardId){
-        if (isBoardLiked(memberId, boardId)) {
-            throw new RuntimeException("이미 \"좋아요\"한 게시글 입니다.");
-        }
-        try {
-            boardRedisRepository.addLike(boardId, memberId);
-            return getBoardLikeCount(boardId);
-        }catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("게시글 \"좋아요\"를 실패했습니다.");
-        }
-    }
-
-    // 게시글 좋아요 여부 체크
-    @Override
-    public boolean isBoardLiked(Long memberId, Long boardId) {
-        return boardRedisRepository.isMember(boardId, memberId);
-    }
-
-    // 게시글 좋아요 취소 - Redis
-    @Override
-    public Long deleteBoardLike(Long memberId, Long boardId) {
-        if (!isBoardLiked(memberId, boardId)) {
-            throw new NoSuchElementException("잘못된 요청입니다.");
-        }
-        try {
-            boardRedisRepository.likesCancel(boardId, memberId);
-            return getBoardLikeCount(boardId);
-        } catch (Exception e) {
-            log.error("게시글 \"좋아요\" 정보 삭제 실패");
-            throw new RuntimeException("게시글 \"좋아요\"취소를 실패했습니다");
-        }
-    }
 
     // 게시글 Entity 조회
     @Override

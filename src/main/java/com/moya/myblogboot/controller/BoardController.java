@@ -3,6 +3,7 @@ package com.moya.myblogboot.controller;
 import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.service.AuthService;
+import com.moya.myblogboot.service.BoardLikeService;
 import com.moya.myblogboot.service.BoardService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class BoardController {
 
     private final BoardService boardService;
+    private final BoardLikeService boardLikeService;
     private final AuthService authService;
 
     // 모든 게시글 리스트
@@ -75,20 +77,20 @@ public class BoardController {
     @GetMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToCheckBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
-        return ResponseEntity.ok().body(boardService.isBoardLiked(memberId, boardId));
+        return ResponseEntity.ok().body(boardLikeService.isBoardLiked(memberId, boardId));
     }
-    // 게시글 좋아요 추가 기능
+    // 게시글 좋아요
     @PostMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToAddBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
-        return ResponseEntity.ok().body(boardService.addLikeToBoard(memberId, boardId));
+        return ResponseEntity.ok().body(boardLikeService.addLikeToBoard(memberId, boardId));
     }
 
     // 게시글 좋아요 취소
     @DeleteMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToCancelBoardLike (HttpServletRequest request, @PathVariable("boardId") Long boardId){
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
-        return ResponseEntity.ok().body(boardService.deleteBoardLike(memberId, boardId));
+        return ResponseEntity.ok().body(boardLikeService.deleteBoardLike(memberId, boardId));
     }
 
     // 토큰 정보 조회
