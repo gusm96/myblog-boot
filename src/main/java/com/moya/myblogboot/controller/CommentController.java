@@ -22,6 +22,11 @@ public class CommentController {
     private final CommentService commentService;
     private final AuthService authService;
 
+    // 댓글 리스트
+    @GetMapping("/api/v1/comments/{boardId}")
+    public ResponseEntity<List> getCommentList(@PathVariable("boardId") Long boardId) {
+        return ResponseEntity.ok().body(commentService.getCommentList(boardId));
+    }
     // 댓글 작성
     @PostMapping("/api/v1/comments/{boardId}")
     public ResponseEntity<String> createComment (HttpServletRequest request,

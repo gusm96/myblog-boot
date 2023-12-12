@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +29,18 @@ public class CommentServiceImpl implements CommentService {
     private final AuthService authService;
     private final BoardService boardService;
 
+    // 댓글 리스트
+    @Override
+    public List<CommentResDto> getCommentList(Long boardId) {
+        List<Comment> comments = commentRepository.findAllByBoardId(boardId);
+        return comments.stream()
+                .map(parent -> CommentResDto.builder()
+                        .comment(parent)
+                        .child(parent.getChild().stream().map(CommentResDto::of).collect(Collectors.toList()))
+                        .build())
+                .collect(Collectors.toList());
+
+    }
     @Override
     @Transactional
     public String addComment(CommentReqDto commentReqDto, Long memberId, Long boardId) {
@@ -84,15 +98,7 @@ public class CommentServiceImpl implements CommentService {
             }
     }
 
-    // 댓글 리스트
-    @Override
-    public List<CommentResDto> getCommentList(Long boardId) {
-        List<Comment> list = commentRepository.findAllByBoardId(boardId);
-        return list.stream()
-                .filter(comment -> comment.getParent() == null) // 부모 댓글만 선택
-                .map(CommentResDto::of) // CommentResDto로 변환
-                .collect(Collectors.toList());
-    }
+
     
     // 댓글 찾기
     @Override

@@ -17,14 +17,21 @@ public class CommentResDto {
     private List<CommentResDto> child;
 
     @Builder
+    public CommentResDto(Comment comment , List<CommentResDto> child) {
+        this.id = comment.getId();
+        this.writer = comment.getMember().getNickname();
+        this.comment = comment.getComment();
+        this.write_date = comment.getWrite_date();
+        this.modificationStatus = comment.getModificationStatus();
+        this.child = child;
+    }
+    @Builder
     public CommentResDto(Comment comment) {
         this.id = comment.getId();
         this.writer = comment.getMember().getNickname();
         this.comment = comment.getComment();
         this.write_date = comment.getWrite_date();
         this.modificationStatus = comment.getModificationStatus();
-        this.child = convertToCommentResDto(comment.getChild());
-
     }
 
     public static CommentResDto of(Comment comment) {
@@ -33,8 +40,5 @@ public class CommentResDto {
                 .build();
     }
 
-    private List<CommentResDto> convertToCommentResDto (List<Comment> child){
-        return child.stream().map(CommentResDto::of).toList();
-    }
 
 }
