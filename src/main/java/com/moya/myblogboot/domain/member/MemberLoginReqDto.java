@@ -5,10 +5,10 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginReqDto {
+public class MemberLoginReqDto {
     @NotBlank(message = "아이디를 입력하세요.")
     @Size(min = 6, max = 20, message = "아이디는 6자 이상 20자 이하로 입력하여야 합니다.\n※ 공백 및 특수문자 입력 불가능.")
     private String username;

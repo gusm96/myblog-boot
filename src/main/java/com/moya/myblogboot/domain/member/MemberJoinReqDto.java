@@ -3,6 +3,7 @@ package com.moya.myblogboot.domain.member;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Getter
 @Builder
@@ -25,15 +26,12 @@ public class MemberJoinReqDto {
     @Size(min = 2, max = 8, message = "닉네임은 2~8글자 사이로 입력하세요.")
     private String nickname;
 
-    public void passwordEncode (String encodedPassword){
-        this.password = encodedPassword;
-    }
-
-    public Member toEntity() {
+    public Member toEntity(PasswordEncoder passwordEncoder) {
         return Member.builder()
                 .username(this.getUsername())
-                .password(this.getPassword())
+                .password(passwordEncoder.encode(this.password))
                 .nickname(this.getNickname())
                 .build();
     }
+
 }

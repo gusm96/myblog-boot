@@ -1,6 +1,6 @@
 package com.moya.myblogboot.service.implementation;
 
-import com.moya.myblogboot.domain.member.LoginReqDto;
+import com.moya.myblogboot.domain.member.MemberLoginReqDto;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.token.*;
@@ -39,10 +39,8 @@ public class AuthServiceImpl implements AuthService {
     public String memberJoin(MemberJoinReqDto memberJoinReqDto) {
         // 아이디 중복 체크
         validateUsername(memberJoinReqDto.getUsername());
-        // 비밀번호 암호화
-        memberJoinReqDto.passwordEncode(passwordEncoder.encode(memberJoinReqDto.getPassword()));
         // Member Entity 생성
-        Member newMember = memberJoinReqDto.toEntity();
+        Member newMember = memberJoinReqDto.toEntity(passwordEncoder);
         // Member Persist
         try {
             memberRepository.save(newMember);
@@ -53,12 +51,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Token memberLogin(LoginReqDto loginReqDto) {
+    public Token memberLogin(MemberLoginReqDto memberLoginReqDto) {
         // username 으로 회원 찾기
-        Member findMember = memberRepository.findByUsername(loginReqDto.getUsername()).orElseThrow(()
+        Member findMember = memberRepository.findByUsername(memberLoginReqDto.getUsername()).orElseThrow(()
                 -> new UsernameNotFoundException("존재하지 않는 아이디 입니다."));
         // password 비교
-        if (!passwordEncoder.matches(loginReqDto.getPassword(), findMember.getPassword()))
+        System.out.println("비밀번호 : " + memberLoginReqDto.getPassword());
+        if (!passwordEncoder.matches(memberLoginReqDto.getPassword(), findMember.getPassword()))
             throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
         // Token 생성
         return createToken(findMember);
