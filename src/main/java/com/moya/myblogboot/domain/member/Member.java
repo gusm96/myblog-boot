@@ -1,6 +1,5 @@
 package com.moya.myblogboot.domain.member;
 
-import com.moya.myblogboot.domain.comment.Comment;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -1,6 +1,6 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.member.LoginReqDto;
+import com.moya.myblogboot.domain.member.MemberLoginReqDto;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.member.PwStrengthCheckReqDto;
 import com.moya.myblogboot.domain.token.Token;
@@ -33,8 +33,8 @@ public class AuthController {
 
     // 로그인
     @PostMapping("/api/v1/login")
-    public ResponseEntity<String> login(@RequestBody @Valid LoginReqDto loginReqDto, HttpServletResponse response) {
-        Token newToken = authService.memberLogin(loginReqDto);
+    public ResponseEntity<String> login(@RequestBody @Valid MemberLoginReqDto memberLoginReqDto, HttpServletResponse response) {
+        Token newToken = authService.memberLogin(memberLoginReqDto);
         // Http Only Cookie에 Refersh Token 저장.
         Cookie refreshTokenCookie = CookieUtil.addCookie("refresh_token", newToken.getRefresh_token());
         // Cookie Response
@@ -47,14 +47,14 @@ public class AuthController {
     public ResponseEntity<HttpStatus> logout(HttpServletRequest request, HttpServletResponse response) {
         // Cookie 에서 Refresh Token 찾는다.
         Cookie refreshTokenCookie = CookieUtil.findCookie(request, "refresh_token");
-        if (refreshTokenCookie.getValue() != null && !refreshTokenCookie.getValue().equals(""))
+        if (refreshTokenCookie != null && refreshTokenCookie.getValue() != null && !refreshTokenCookie.getValue().equals(""))
             CookieUtil.deleteCookie(response, refreshTokenCookie); // Refresh Token 삭제 -> Refresh Token의 정보 소멸
         return ResponseEntity.ok().body(HttpStatus.OK);
     }
 
     // 토큰 권한 조회
     @GetMapping("/api/v1/token-role")
-    public ResponseEntity<String> getTokenFromRole(HttpServletRequest request) {
+    public ResponseEntity<String> getRoleFromToken(HttpServletRequest request) {
         return ResponseEntity.ok().body(authService.getTokenInfo(getToken(request)).getRole());}
 
 
