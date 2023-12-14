@@ -56,7 +56,6 @@ public class AuthServiceImpl implements AuthService {
         Member findMember = memberRepository.findByUsername(memberLoginReqDto.getUsername()).orElseThrow(()
                 -> new UsernameNotFoundException("존재하지 않는 아이디 입니다."));
         // password 비교
-        System.out.println("비밀번호 : " + memberLoginReqDto.getPassword());
         if (!passwordEncoder.matches(memberLoginReqDto.getPassword(), findMember.getPassword()))
             throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
         // Token 생성
