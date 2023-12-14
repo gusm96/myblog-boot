@@ -92,22 +92,13 @@ class BoardRepositoryTest {
         assertThat(count).isEqualTo(boards.getTotalElements());
     }
 
-   /* @DisplayName("삭제일로 검색")
-    @Test
-    void deleteBoard () {
-        // given
-        LocalDateTime thresholdDate = CURRENT_DATE.minusDays(15); // 15일 이후
-        queryFactory = new JPAQueryFactory(em);
-        // when
-        List<Board> boards = queryFactory
-                .select(board)
-                .from(board)
-                .where(board.deleteDate.loe(thresholdDate))
-                .fetch();
-        // then
-        for (Board board : boards){
-            System.out.println("삭제할 게시글 : " + board.getTitle());
-        }
-        assertThat(boards.size()).isEqualTo(3);
-    }*/
+   @Test
+   @DisplayName("카테고리로 게시글 리스트 조회")
+   void findAllByCategoryName () {
+       // given
+
+       // when
+
+       // then
+   }
 }

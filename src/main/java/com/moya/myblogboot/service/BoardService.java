@@ -9,7 +9,6 @@ public interface BoardService {
     BoardListResDto retrieveBoardListByCategory(String categoryName, int page);
 
     BoardListResDto retrieveBoardListBySearch(SearchType searchType, String searchContents, int page);
-
     BoardDetailResDto boardToResponseDto(Long boardId);
 
     Long editBoard(Long memberId, Long boardId, BoardReqDto boardReqDto);

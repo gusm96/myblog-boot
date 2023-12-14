@@ -1,14 +1,12 @@
 package com.moya.myblogboot.repository.implementation;
 
 import com.moya.myblogboot.domain.board.Board;
-import com.moya.myblogboot.domain.board.QBoard;
 import com.moya.myblogboot.domain.board.SearchType;
 import com.moya.myblogboot.repository.BoardQuerydslRepository;
+import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -30,12 +28,13 @@ public class BoardQuerydslRepositoryImpl implements BoardQuerydslRepository {
     }
 
     @Override
-    public Page<Board> findBySearchType (PageRequest pageRequest, SearchType searchType, String searchContents){
-
-       /* queryFactory = new JPAQueryFactory(em);
-        Page<Board> boards = queryFactory.selectFrom(board)
-                    .where(searchType == SearchType.TITLE ? board.title.like(searchContents) : board.content.like(searchContents))
-                */
-        return null;
+    public QueryResults<Board> findBySearchType (int page, int limit , SearchType searchType, String contents){
+        queryFactory = new JPAQueryFactory(em);
+        return queryFactory.selectFrom(board)
+                .where(searchType == SearchType.TITLE ? board.title.eq(contents) : board.content.like(contents))
+                .orderBy(board.uploadDate.desc())
+                .offset(page)
+                .limit(limit)
+                .fetchResults();
     }
 }

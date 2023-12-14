@@ -10,6 +10,7 @@ import com.moya.myblogboot.repository.*;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardService;
 import com.moya.myblogboot.service.CategoryService;
+import com.querydsl.core.QueryResults;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,16 +78,14 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public BoardListResDto retrieveBoardListBySearch (SearchType searchType, String searchContents, int page) {
         // 검색어 + 페이지 게시글 조회
-        PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC));
-        Page<Board> boardList = boardRepository.findBySearchType(pageRequest, searchType, searchContents);
-
+        QueryResults<Board> boards = boardRepository.findBySearchType(pagination(page), LIMIT, searchType, searchContents);
         // DTO 객체로 변환
-        List<BoardResDto> resultList = boardList.stream().map(board
+        List<BoardResDto> resultList = boards.getResults().stream().map(board
                         -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
         return BoardListResDto.builder()
                 .list(resultList)
-                .totalPage(boardList.getTotalPages())
+                .totalPage(pageCount(boards.getTotal()))
                 .build();
     }
 
@@ -149,7 +148,8 @@ public class BoardServiceImpl implements BoardService {
     public Long editBoard(Long memberId, Long boardId, BoardReqDto modifiedDto){
         // Entity 조회
         Board board = retrieveBoardById(boardId);
-        if(board.getMember().getId() != memberId)
+
+        if(!board.getMember().getId().equals(memberId))
             throw new UnauthorizedAccessException("권한이 없습니다");
         Category modifiedCategory = categoryService.retrieveCategoryById(modifiedDto.getCategory());
         board.updateBoard(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent()); // 변경감지
@@ -162,14 +162,13 @@ public class BoardServiceImpl implements BoardService {
     public boolean deleteBoard(Long boardId, Long memberId){
         // Entity 조회
         Board board = retrieveBoardById(boardId);
-        if (board.getMember().getId() == memberId) {
-            board.setDeleteDate();
+        if (board.getMember().getId().equals(memberId)) {
+            board.setDeleteDate(); // 15일 이후 자동 삭제
             return true;
         }else {
             throw new UnauthorizedAccessException("권한이 없습니다.");
         }
     }
-
 
     // 게시글 Entity 조회
     @Override
@@ -184,7 +183,6 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
-
     // 게시글 좋아요 수 조회 - Redis
     private Long getBoardLikeCount(Long boardId) {
         return boardRedisRepository.getLikesCount(boardId);
@@ -195,5 +193,17 @@ public class BoardServiceImpl implements BoardService {
         List<ImageFile> imageFiles = images.stream()
                 .map(image -> imageFileRepository.save(image.toEntity(board))).collect(Collectors.toList());
         imageFiles.forEach(board::addImageFile);
+    }
+
+    private int pagination (int page){
+        if (page == 1) return 0;
+        return (page - 1) * LIMIT;
+    }
+    private int pageCount (Long listCount){
+        if(listCount > LIMIT){
+            return (int) Math.ceil((double) listCount / LIMIT);
+        }else{
+            return 1;
+        }
     }
 }

@@ -19,7 +19,6 @@ public class BoardDetailResDto {
     private Long views;
     private LocalDateTime uploadDate;
     private LocalDateTime editDate;
-    private List<CommentResDto> comments;
 
     @Builder
     public BoardDetailResDto(Board board, Long likes, Long views) {
@@ -31,9 +30,5 @@ public class BoardDetailResDto {
         this.views = views;
         this.uploadDate = board.getUploadDate();
         this.editDate = board.getEditDate();
-        this.comments = board.getComments().stream()
-                .filter(comment -> comment.getParent() == null)
-                .map(CommentResDto::of)
-                .collect(Collectors.toList());
     }
 }
