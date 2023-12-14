@@ -31,10 +31,6 @@ public class WebSecurityConfig  {
         this.authService = authService;
     }
 
-  /*  public AuthService getAuthService() {
-        return this.authService;
-    }*/
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.httpBasic().disable()

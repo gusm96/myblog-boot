@@ -27,7 +27,7 @@ public class BoardController {
     }
 
     // 카테고리별 게시글 리스트
-    @GetMapping("/api/v1/boards/categories/{categoryName}")
+    @GetMapping("/api/v1/boards/{categoryName}")
     public ResponseEntity<BoardListResDto>   requestCategoryOfBoards(
             @PathVariable("categoryName") String categoryName,
             @RequestParam(name = "p", defaultValue = "1") int page
@@ -35,18 +35,19 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.retrieveBoardListByCategory(categoryName, getPage(page)));
     }
 
-  /*  // 검색 결과 게시글 리스트
+    // 검색 결과 게시글 리스트
     @GetMapping("/api/v1/boards/search")
     public ResponseEntity<BoardListResDto> searchBoards(
             @RequestParam("type") SearchType searchType,
             @RequestParam("contents") String searchContents,
             @RequestParam(name = "p", defaultValue = "1") int page) {
-        return ResponseEntity.ok().body(boardService.retrieveBoardListBySearch(searchType, searchContents, getPage(page)));
-    }*/
+        return ResponseEntity.ok().body(boardService.retrieveBoardListBySearch(searchType, searchContents, page));
+    }
 
     // 게시글 상세v2
     @GetMapping("/api/v2/boards/{boardId}")
     public ResponseEntity<BoardDetailResDto> getBoardDetail(@PathVariable("boardId") Long boardId) {
+
         return ResponseEntity.ok().body(boardService.boardToResponseDto(boardId));
     }
 
@@ -79,6 +80,7 @@ public class BoardController {
         Long memberId = getTokenInfo(request).getMemberPrimaryKey();
         return ResponseEntity.ok().body(boardLikeService.isBoardLiked(memberId, boardId));
     }
+
     // 게시글 좋아요
     @PostMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToAddBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){

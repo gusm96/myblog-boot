@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,13 +25,13 @@ public class CategoryController {
 
     // 카테고리 작성
     @PostMapping("/api/v1/categories")
-    public ResponseEntity<String> newCategory(@RequestBody @Valid Map<String,String> categoryMap) {
-        return ResponseEntity.ok(categoryService.createCategory(categoryMap.get("categoryName")));
+    public ResponseEntity<String> newCategory(@RequestBody @Valid CategoryReqDto categoryReqDto) {
+        return ResponseEntity.ok(categoryService.createCategory(categoryReqDto.getCategoryName()));
     }
 
     // 카테고리 수정
     @PutMapping("/api/v1/categories/{categoryId}")
-    public ResponseEntity<String> editCategory(@PathVariable Long categoryId, @RequestBody @Valid CategoryReqDto categoryReqDto) {
+    public ResponseEntity<String> editCategory(@PathVariable Long categoryId, @RequestBody @Valid CategoryReqDto categoryReqDto ) {
         return ResponseEntity.ok().body(categoryService.updateCategory(categoryId, categoryReqDto.getCategoryName()));
     }
 

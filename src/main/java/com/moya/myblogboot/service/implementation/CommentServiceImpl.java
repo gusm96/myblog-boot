@@ -70,9 +70,9 @@ public class CommentServiceImpl implements CommentService {
     // 댓글 수정
     @Override
     @Transactional
-    public String updateComment(Long memberId, Long commentId, String modifiedComment) {
+    public String updateComment(Long commentId, Long memberId, String modifiedComment) {
         Comment findComment = retrieveCommentById(commentId);
-        if(findComment.getMember().getId() != memberId){
+        if(!findComment.getMember().getId().equals(memberId)){
             throw new UnauthorizedAccessException("권한이 없습니다.");
         }
         findComment.updateComment(modifiedComment);
@@ -82,24 +82,20 @@ public class CommentServiceImpl implements CommentService {
     // 댓글 삭제
     @Override
     @Transactional
-    public String deleteComment(Long memberId, Long commentId, Long boardId) {
-        Board board = boardService.retrieveBoardById(boardId);
+    public String deleteComment(Long commentId, Long memberId) {
         Comment findComment = retrieveCommentById(commentId);
-        if(findComment.getMember().getId() != memberId) {
+        if (!findComment.getMember().getId().equals(memberId)) {
             throw new UnauthorizedAccessException("권한이 없습니다.");
         }
         try {
-            board.removeComment(findComment);
             commentRepository.delete(findComment);
             return "댓글이 삭제되었습니다.";
         } catch (Exception e) {
             log.error("댓글 삭제 중 에러 발생");
             throw new RuntimeException("댓글 삭제를 실패했습니다.");
-            }
+        }
     }
 
-
-    
     // 댓글 찾기
     @Override
     public Comment retrieveCommentById(Long commentId) {
