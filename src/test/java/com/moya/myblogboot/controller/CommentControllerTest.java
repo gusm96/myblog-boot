@@ -19,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -98,11 +99,12 @@ class CommentControllerTest {
                     .comment("test")
                     .build();
             Comment saveComment = commentRepository.save(newComment);
-            
+
             // 부모 댓글 아이디로 사용할 예정
             parentId = saveComment.getId();
         }
     }
+
     @Test
     @DisplayName("댓글 리스트 조회")
     void requestCommentList() throws Exception {
@@ -141,7 +143,7 @@ class CommentControllerTest {
 
     @Test
     @DisplayName("댓글 수정")
-    void requestEditComment() throws Exception{
+    void requestEditComment() throws Exception {
         // given
         String path = "/api/v1/comments/" + parentId;
         CommentReqDto commentReqDto = new CommentReqDto();
