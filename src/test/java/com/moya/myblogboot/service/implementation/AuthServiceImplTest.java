@@ -4,10 +4,8 @@ import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.member.MemberLoginReqDto;
 import com.moya.myblogboot.domain.token.Token;
-import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.service.AuthService;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +16,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,6 +25,7 @@ import static org.assertj.core.api.Assertions.*;
 @Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 class AuthServiceImplTest {
     @Autowired
     private AuthService authService;

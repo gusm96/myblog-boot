@@ -41,7 +41,7 @@ public class BoardController {
             @RequestParam("type") SearchType searchType,
             @RequestParam("contents") String searchContents,
             @RequestParam(name = "p", defaultValue = "1") int page) {
-        return ResponseEntity.ok().body(boardService.retrieveBoardListBySearch(searchType, searchContents, page));
+        return ResponseEntity.ok().body(boardService.retrieveBoardListBySearch(searchType, searchContents, getPage(page)));
     }
 
     // 게시글 상세v2

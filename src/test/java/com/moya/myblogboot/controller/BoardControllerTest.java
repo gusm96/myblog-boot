@@ -1,5 +1,6 @@
 package com.moya.myblogboot.controller;
 
+import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.BoardReqDto;
 import com.moya.myblogboot.domain.board.SearchType;
@@ -27,10 +28,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 
+
 @Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
-class BoardControllerTest {
+class BoardControllerTest extends AbstractContainerBaseTest {
     @Autowired
     MockMvc mockMvc;
     @Autowired
@@ -47,7 +49,6 @@ class BoardControllerTest {
     @Autowired
     CategoryRepository categoryRepository;
     private static Long boardId;
-    private static Long memberId;
     private static Long categoryId;
 
     private static String accessToken;
@@ -60,7 +61,6 @@ class BoardControllerTest {
                 .build();
         member.addRoleAdmin();
         Member saveMember = memberRepository.save(member);
-        memberId = saveMember.getId();
 
         Category category = Category.builder().name("Test").build();
         Category saveCategory = categoryRepository.save(category);
@@ -92,9 +92,9 @@ class BoardControllerTest {
     void getAllBoards() throws Exception {
         //given
         int page = 1;
-
+        String path = "/api/v1/boards";
         // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/boards")
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
                 .param("p", String.valueOf(page)));
 
         // then
@@ -104,12 +104,16 @@ class BoardControllerTest {
     @Test
     @DisplayName("카테고리별 게시글 조회")
     void requestCategoryOfBoards() throws Exception {
-        //given
+        // given
         int page = 1;
         String category = "Test";
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/boards/" + category)
-                        .param("p", String.valueOf(page)))
-                .andExpect(MockMvcResultMatchers.status().isOk());
+        String path = "/api/v1/boards/" + category;
+
+        // when
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
+                .param("p", String.valueOf(page)));
+        //then
+        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
@@ -119,9 +123,10 @@ class BoardControllerTest {
         SearchType searchType = SearchType.TITLE;
         String contents = "title";
         int page = 1;
+        String path = "/api/v1/boards/search";
 
         // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/boards/search?p=1&type=TITLE&contents=title  ")
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
                 .param("p", String.valueOf(page))
                 .param("type", String.valueOf(searchType))
                 .param("contents", contents)
@@ -134,11 +139,10 @@ class BoardControllerTest {
     @Test
     @DisplayName("게시글 조회")
      void getBoardDetail() throws Exception {
-        // given
-        // private static Long boardId 사용
+        String path = "/api/v2/boards/" + boardId;
 
         // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v2/boards/" + boardId));
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path));
 
         // then
         resultActions.andExpect(MockMvcResultMatchers.status().isOk())
@@ -149,13 +153,14 @@ class BoardControllerTest {
     @DisplayName("게시글 등록")
     void postBoard() throws Exception {
         // given
+        String path = "/api/v1/boards";
         BoardReqDto boardReqDto = BoardReqDto.builder()
                 .category(categoryId)
                 .title("title")
                 .content("content")
                 .build();
         // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/boards")
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(path)
                         .header(HttpHeaders.AUTHORIZATION, accessToken)
                         .contentType("application/json")
                         .content(new ObjectMapper().writeValueAsString(boardReqDto)));
@@ -168,13 +173,13 @@ class BoardControllerTest {
     @DisplayName("게시글 수정")
     void editBoard() throws Exception {
         // given
+        String path = "/api/v1/boards/" + boardId;
         BoardReqDto modifiedBoardDto = BoardReqDto.builder()
                 .title("modifiedTitle")
                 .content("modifiedContent")
                 .category(categoryId).build();
-
         // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/boards/" + boardId)
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.put(path)
                         .header(HttpHeaders.AUTHORIZATION, accessToken)
                         .contentType("application/json")
                         .content(new ObjectMapper().writeValueAsString(modifiedBoardDto)));
@@ -185,15 +190,22 @@ class BoardControllerTest {
     @Test
     @DisplayName("게시글 삭제")
     void deleteBoard() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/boards/"+ boardId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken))
-                .andExpect(MockMvcResultMatchers.status().isOk());
+        // given
+        String path = "/api/v1/boards/" + boardId;
+
+        // when
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.delete(path)
+                .header(HttpHeaders.AUTHORIZATION, accessToken));
+
+        // then
+        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
     @DisplayName("게시글 좋아요 요청")
     void requestToAddBoardLike() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/likes/" + boardId)
+        String path = "/api/v1/likes/" + boardId;
+        mockMvc.perform(MockMvcRequestBuilders.post(path)
                         .header(HttpHeaders.AUTHORIZATION, accessToken))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
@@ -202,13 +214,14 @@ class BoardControllerTest {
     @DisplayName("게시글 좋아요 여부 체크")
     void requestToCheckBoardLike() throws Exception{
         // given
+        String path = "/api/v1/likes/" + boardId;
         // 먼저 게시글 좋아요 요청
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/likes/" + boardId)
+        mockMvc.perform(MockMvcRequestBuilders.post(path)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
 
         // when
         // 좋아요 여부 확인
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/likes/" + boardId)
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
 
         // then
@@ -219,13 +232,14 @@ class BoardControllerTest {
     @DisplayName("게시글 좋아요 취소")
     void requestToCancelBoardLike()throws Exception {
         // given
+        String path = "/api/v1/likes/" + boardId;
         // 먼저 게시글 좋아요 요청
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/likes/" + boardId)
+        mockMvc.perform(MockMvcRequestBuilders.post(path)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
 
         // when
         // 좋아요 취소
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/likes/" + boardId)
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.delete(path)
                         .header(HttpHeaders.AUTHORIZATION, accessToken));
 
         // then
