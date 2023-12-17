@@ -17,8 +17,8 @@ public class BoardDetailResDto {
     private String content;
     private Long likes;
     private Long views;
-    private LocalDateTime uploadDate;
-    private LocalDateTime editDate;
+    private LocalDateTime createDate;
+    private LocalDateTime updateDate;
 
     @Builder
     public BoardDetailResDto(Board board, Long likes, Long views) {
@@ -28,7 +28,7 @@ public class BoardDetailResDto {
         this.content = board.getContent();
         this.likes = likes;
         this.views = views;
-        this.uploadDate = board.getUploadDate();
-        this.editDate = board.getEditDate();
+        this.createDate = board.getCreateDate();
+        this.updateDate = board.getUpdateDate();
     }
 }

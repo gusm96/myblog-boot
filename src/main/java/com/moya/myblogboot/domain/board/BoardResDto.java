@@ -11,8 +11,8 @@ public class BoardResDto {
     private String title;
     private String content;
     private String category;
-    private LocalDateTime upload_date;
-    private LocalDateTime edit_date;
+    private LocalDateTime createDate;
+    private LocalDateTime updateDate;
     private Long likes;
 
     @Builder
@@ -21,8 +21,8 @@ public class BoardResDto {
         this.title = board.getTitle();
         this.content = board.getContent();
         this.category = board.getCategory().getName();
-        this.upload_date = board.getUploadDate();
-        this.edit_date = board.getEditDate();
+        this.createDate = board.getCreateDate();
+        this.updateDate = board.getUpdateDate();
         this.likes = likes;
     }
 

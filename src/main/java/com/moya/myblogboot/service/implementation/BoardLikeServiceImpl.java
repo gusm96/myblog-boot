@@ -1,11 +1,19 @@
 package com.moya.myblogboot.service.implementation;
 
+import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.board.BoardLike;
+import com.moya.myblogboot.domain.member.Member;
+import com.moya.myblogboot.repository.BoardLikeRepository;
 import com.moya.myblogboot.repository.BoardRedisRepository;
+import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardLikeService;
+import com.moya.myblogboot.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 
@@ -14,6 +22,8 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class BoardLikeServiceImpl implements BoardLikeService {
     private final BoardRedisRepository boardRedisRepository;
+    private final BoardLikeRepository boardLikeRepository;
+    private final BoardService boardService;
     // 게시글 좋아요 Redis
     @Override
     public Long addLikeToBoard(Long memberId, Long boardId){
@@ -28,10 +38,14 @@ public class BoardLikeServiceImpl implements BoardLikeService {
             throw new RuntimeException("게시글 \"좋아요\"를 실패했습니다.");
         }
     }
+
     // 게시글 좋아요 여부 체크
     @Override
     public boolean isBoardLiked(Long memberId, Long boardId) {
-        return boardRedisRepository.isMember(boardId, memberId);
+        if(boardRedisRepository.isMember(boardId, memberId) || boardLikeRepository.existsByBoardIdAndMemberId(boardId,memberId)){
+            return true;
+        }
+        return false;
     }
     // 게시글 좋아요 취소 - Redis
     @Override
@@ -49,7 +63,7 @@ public class BoardLikeServiceImpl implements BoardLikeService {
     }
 
     private Long getBoardLikeCount(Long boardId) {
-        return boardRedisRepository.getLikesCount(boardId);
+        Board board = boardService.retrieveBoardById(boardId);
+        return boardRedisRepository.getLikesCount(boardId) + board.getLikes();
     }
 }
-

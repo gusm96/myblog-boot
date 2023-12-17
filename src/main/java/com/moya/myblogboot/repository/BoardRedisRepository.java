@@ -1,5 +1,7 @@
 package com.moya.myblogboot.repository;
 
+import java.util.List;
+
 public interface BoardRedisRepository {
     // 좋아요
     void addLike(Long boardId, Long memberId);
@@ -10,6 +12,7 @@ public interface BoardRedisRepository {
     void likesCancel(Long boardId, Long memberId);
 
     Long getLikesCount(Long boarId);
+
     Long getViews(Long boardId);
 
     Long viewsIncrement(Long boardId);
@@ -17,4 +20,10 @@ public interface BoardRedisRepository {
     Long setViews(Long boardId, Long views);
 
     void deleteViews(Long id);
+
+    List<Long> getLikesMembers(Long boardId);
+
+    void deleteLikes(Long boardId);
+
+    List<Long> getKeysValues(String key);
 }

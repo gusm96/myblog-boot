@@ -1,20 +1,22 @@
 package com.moya.myblogboot.domain.board;
 
+import com.moya.myblogboot.domain.abstration.BaseTimeEntity;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.domain.file.ImageFile;
 import com.moya.myblogboot.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Board {
+public class Board extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "board_id")
@@ -25,9 +27,9 @@ public class Board {
     private String content;
     private Long views;
     private Long likes;
-    private LocalDateTime uploadDate;
-    private LocalDateTime editDate;
-    private LocalDateTime deleteDate;
+
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<BoardLike> boardLikes = new HashSet<>();
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ImageFile> imageFiles =  new ArrayList<>();
@@ -55,7 +57,6 @@ public class Board {
         this.views = 0L;
         this.likes = 0L;
         this.member = member;
-        this.uploadDate = LocalDateTime.now();
         this.boardStatus = BoardStatus.VIEW;
     }
 
@@ -64,7 +65,6 @@ public class Board {
         this.category = category;
         this.title = title;
         this.content = content;
-        this.editDate = LocalDateTime.now();
     }
 
     // 게시글 숨김 상태 수정
@@ -89,9 +89,6 @@ public class Board {
         this.category = null;
     }
 
-    public void setDeleteDate(){
-        this.deleteDate = LocalDateTime.now();
-    }
     public void updateViews(Long views){
         this.views = views;
     }
