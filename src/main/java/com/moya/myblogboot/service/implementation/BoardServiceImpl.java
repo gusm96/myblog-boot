@@ -10,7 +10,6 @@ import com.moya.myblogboot.repository.*;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardService;
 import com.moya.myblogboot.service.CategoryService;
-import com.querydsl.core.QueryResults;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +39,7 @@ public class BoardServiceImpl implements BoardService {
     // 모든 게시글 리스트
     @Override
     public BoardListResDto retrieveBoardList(int page) {
-        PageRequest pageRequest = PageRequest.of(page, LIMIT,Sort.by(Sort.Direction.DESC, "uploadDate"));
+        PageRequest pageRequest = PageRequest.of(page, LIMIT,Sort.by(Sort.Direction.DESC, "createDate"));
         // 페이지 별 게시글 조회
         Page<Board> boards = boardRepository.findAll(pageRequest);
         // 조회한 Board Entity List를 DTO 객체로 변환.
@@ -60,7 +59,7 @@ public class BoardServiceImpl implements BoardService {
         // Category 조회
         Category category = categoryService.retrieveCategoryByName(categoryName);
 
-        PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC, "uploadDate"));
+        PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC, "createDate"));
         Page<Board> boards = boardRepository.findAllByCategory(category, pageRequest);
 
         // DTO 객체로 변환
@@ -77,15 +76,16 @@ public class BoardServiceImpl implements BoardService {
     // 검색한 게시글 리스트
     @Override
     public BoardListResDto retrieveBoardListBySearch (SearchType searchType, String searchContents, int page) {
+        PageRequest pageRequest = PageRequest.of(page, LIMIT);
         // 검색어 + 페이지 게시글 조회
-        QueryResults<Board> boards = boardRepository.findBySearchType(pagination(page), LIMIT, searchType, searchContents);
+        Page<Board> boards = boardRepository.findBySearchType(pageRequest, searchType, searchContents);
         // DTO 객체로 변환
-        List<BoardResDto> resultList = boards.getResults().stream().map(board
+        List<BoardResDto> resultList = boards.getContent().stream().map(board
                         -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
         return BoardListResDto.builder()
                 .list(resultList)
-                .totalPage(pageCount(boards.getTotal()))
+                .totalPage(boards.getTotalPages())
                 .build();
     }
 
@@ -163,7 +163,7 @@ public class BoardServiceImpl implements BoardService {
         // Entity 조회
         Board board = retrieveBoardById(boardId);
         if (board.getMember().getId().equals(memberId)) {
-            board.setDeleteDate(); // 15일 이후 자동 삭제
+            board.delete(); // 15일 이후 자동 삭제
             return true;
         }else {
             throw new UnauthorizedAccessException("권한이 없습니다.");
@@ -193,17 +193,5 @@ public class BoardServiceImpl implements BoardService {
         List<ImageFile> imageFiles = images.stream()
                 .map(image -> imageFileRepository.save(image.toEntity(board))).collect(Collectors.toList());
         imageFiles.forEach(board::addImageFile);
-    }
-
-    private int pagination (int page){
-        if (page == 1) return 0;
-        return (page - 1) * LIMIT;
-    }
-    private int pageCount (Long listCount){
-        if(listCount > LIMIT){
-            return (int) Math.ceil((double) listCount / LIMIT);
-        }else{
-            return 1;
-        }
     }
 }
