@@ -21,7 +21,6 @@ public class BoardController {
 
     private final BoardService boardService;
     private final BoardLikeService boardLikeService;
-    private final AuthService authService;
 
     // 모든 게시글 리스트
     @GetMapping("/api/v1/boards")
@@ -60,8 +59,6 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, memberId));
     }
 
-
-
     // 게시글 수정
     @PutMapping("/api/v1/boards/{boardId}")
     public ResponseEntity<Long> editBoard(@PathVariable("boardId") Long boardId,
@@ -99,7 +96,7 @@ public class BoardController {
         return ResponseEntity.ok().body(boardLikeService.deleteBoardLike(memberId, boardId));
     }
 
-    private static Long getMemberId(Principal principal) {
+    private Long getMemberId(Principal principal) {
         Long memberId = -1L;
         if(principal instanceof UsernamePasswordAuthenticationToken){
             memberId = (Long) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();

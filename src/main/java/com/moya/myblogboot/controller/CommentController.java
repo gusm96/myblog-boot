@@ -55,7 +55,7 @@ public class CommentController {
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(commentService.deleteComment(commentId, memberId));
     }
-    private static Long getMemberId(Principal principal) {
+    private Long getMemberId(Principal principal) {
         Long memberId = -1L;
         if(principal instanceof UsernamePasswordAuthenticationToken){
             memberId = (Long) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
