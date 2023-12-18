@@ -11,8 +11,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -20,7 +22,6 @@ import java.util.List;
 public class CommentController {
 
     private final CommentService commentService;
-    private final AuthService authService;
 
     // 댓글 리스트
     @GetMapping("/api/v1/comments/{boardId}")
@@ -30,33 +31,35 @@ public class CommentController {
     
     // 댓글 작성
     @PostMapping("/api/v1/comments/{boardId}")
-    public ResponseEntity<String> requestCreateComment (HttpServletRequest request,
+    public ResponseEntity<String> requestCreateComment (Principal principal,
                                             @PathVariable("boardId") Long boardId,
                                             @RequestBody CommentReqDto commentReqDto ){
-        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+        Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(commentService.addComment( commentReqDto, memberId, boardId));
     }
 
     // 댓글 수정
     @PutMapping("/api/v1/comments/{commentId}")
-    public ResponseEntity<String> requestEditComment(HttpServletRequest request,
+    public ResponseEntity<String> requestEditComment(Principal principal,
                                              @PathVariable("commentId") Long commentId,
                                              @RequestBody CommentReqDto commentReqDto) {
-        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+        Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(commentService.updateComment(commentId, memberId, commentReqDto.getComment()));
     }
 
     // 댓글 삭제
     @DeleteMapping("/api/v1/comments/{commentId}")
     public ResponseEntity<String> requestToDeleteComment(
-            HttpServletRequest request,
+            Principal principal,
             @PathVariable("commentId") Long commentId) {
-        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+        Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(commentService.deleteComment(commentId, memberId));
     }
-
-    private TokenInfo getTokenInfo(HttpServletRequest req){
-        return authService.getTokenInfo(req.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1]);
+    private static Long getMemberId(Principal principal) {
+        Long memberId = -1L;
+        if(principal instanceof UsernamePasswordAuthenticationToken){
+            memberId = (Long) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
+        }
+        return memberId;
     }
-
 }
