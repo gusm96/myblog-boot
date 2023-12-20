@@ -1,6 +1,6 @@
 package com.moya.myblogboot.domain.board;
 
-import com.moya.myblogboot.domain.abstration.BaseTimeEntity;
+import com.moya.myblogboot.domain.base.BaseTimeEntity;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.domain.file.ImageFile;
@@ -26,7 +26,7 @@ public class Board extends BaseTimeEntity {
     @Column(nullable = false, columnDefinition = "longtext")
     private String content;
     private Long views;
-    private Long likes;
+
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<BoardLike> boardLikes = new HashSet<>();
@@ -55,7 +55,6 @@ public class Board extends BaseTimeEntity {
         this.content = content;
         this.category = category;
         this.views = 0L;
-        this.likes = 0L;
         this.member = member;
         this.boardStatus = BoardStatus.VIEW;
     }
@@ -93,7 +92,8 @@ public class Board extends BaseTimeEntity {
         this.views = views;
     }
 
-    public void updateLikes(Long likes) {
-        this.likes = likes;
+    public void deleteBoard() {
+        this.delete();
+        this.boardStatus = BoardStatus.HIDE;
     }
 }

@@ -1,5 +1,9 @@
 package com.moya.myblogboot.configuration;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.SocketOptions;
 import lombok.Getter;
@@ -50,18 +54,25 @@ public class RedisConfig {
     // RedisConnection에서 넘겨준 byte값 객체 직렬화
     @Bean
     public RedisTemplate<?,?> redisTemplate(){
-        GenericJackson2JsonRedisSerializer genericJackson2JsonSerializer = new GenericJackson2JsonRedisSerializer();
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         // ConnectionFactory 설정.
         redisTemplate.setConnectionFactory(lettuceConnectionFactory());
 
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        // ObjectMapper에 JavaTimeModule 등록 (LocalDateTime 타입 직/역직렬화 할 수 있도록 하기 위해 설정)
+        objectMapper.registerModule(new JavaTimeModule());
+        // 객체를 메모리에 저장할 때 타입 정보를 포함시키도록 설정
+        objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
+
         // key, value 직렬화 설정
         redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(genericJackson2JsonSerializer);
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
 
         // hash key, value 직렬화 설정
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashValueSerializer(genericJackson2JsonSerializer);
+        redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
 
         return redisTemplate;
     }

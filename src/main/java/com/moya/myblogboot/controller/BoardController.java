@@ -10,7 +10,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,7 +21,6 @@ public class BoardController {
 
     private final BoardService boardService;
     private final BoardLikeService boardLikeService;
-    private final AuthService authService;
 
     // 모든 게시글 리스트
     @GetMapping("/api/v1/boards")
@@ -47,60 +49,83 @@ public class BoardController {
     // 게시글 상세v2
     @GetMapping("/api/v2/boards/{boardId}")
     public ResponseEntity<BoardDetailResDto> getBoardDetail(@PathVariable("boardId") Long boardId) {
-
         return ResponseEntity.ok().body(boardService.boardToResponseDto(boardId));
     }
 
+    // 게시글 상세 V3
+    @GetMapping("/api/v3/boards/{boardId}")
+    public ResponseEntity<BoardResDtoV2> getBoardDetailV3(@PathVariable("boardId") Long boardId) {
+        return ResponseEntity.ok().body(boardService.retrieveBoardDetail(boardId));
+    }
     // 게시글 작성 Post
     @PostMapping("/api/v1/boards")
-    public ResponseEntity<Long> postBoard(HttpServletRequest request, @RequestBody @Valid BoardReqDto boardReqDto) {
-        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+    public ResponseEntity<Long> postBoard(@RequestBody @Valid BoardReqDto boardReqDto, Principal principal) {
+
+        Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, memberId));
     }
 
     // 게시글 수정
     @PutMapping("/api/v1/boards/{boardId}")
-    public ResponseEntity<Long> editBoard(HttpServletRequest request,
-                                          @PathVariable("boardId") Long boardId,
-                                          @RequestBody @Valid BoardReqDto boardReqDto) {
-        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+    public ResponseEntity<Long> editBoard(@PathVariable("boardId") Long boardId,
+                                          @RequestBody @Valid BoardReqDto boardReqDto,
+                                          Principal principal) {
+        Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardService.editBoard(memberId, boardId, boardReqDto));
     }
 
     // 게시글 삭제
     @DeleteMapping("/api/v1/boards/{boardId}")
-    public ResponseEntity<Boolean> deleteBoard(HttpServletRequest request, @PathVariable("boardId") Long boardId) {
-        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+    public ResponseEntity<Boolean> deleteBoard( @PathVariable("boardId") Long boardId, Principal principal) {
+        Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardService.deleteBoard(boardId, memberId));
     }
 
     // 게시글 좋아요 여부 확인
     @GetMapping("/api/v1/likes/{boardId}")
-    public ResponseEntity<?> requestToCheckBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
-        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+    public ResponseEntity<?> requestToCheckBoardLike( @PathVariable("boardId") Long boardId, Principal principal){
+        Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.isBoardLiked(memberId, boardId));
     }
 
     // 게시글 좋아요
     @PostMapping("/api/v1/likes/{boardId}")
-    public ResponseEntity<?> requestToAddBoardLike(HttpServletRequest request, @PathVariable("boardId") Long boardId){
-        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+    public ResponseEntity<?> requestToAddBoardLike(@PathVariable("boardId") Long boardId, Principal principal){
+        Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.addLikeToBoard(memberId, boardId));
+    }
+
+    // 게시글 좋아요 V2
+    @PostMapping("/api/v2/likes/{boardId}")
+    public ResponseEntity<Long> requestToAddBoardLikeV2(@PathVariable("boardId") Long boardId, Principal principal) {
+        Long memberId = getMemberId(principal);
+        return ResponseEntity.ok().body(boardLikeService.addLikeV2(boardId, memberId));
     }
 
     // 게시글 좋아요 취소
     @DeleteMapping("/api/v1/likes/{boardId}")
-    public ResponseEntity<?> requestToCancelBoardLike (HttpServletRequest request, @PathVariable("boardId") Long boardId){
-        Long memberId = getTokenInfo(request).getMemberPrimaryKey();
+    public ResponseEntity<?> requestToCancelBoardLike ( @PathVariable("boardId") Long boardId, Principal principal){
+        Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.deleteBoardLike(memberId, boardId));
     }
+    // 게시글 좋아요 취소 V2
+    @DeleteMapping("/api/v2/likes/{boardId}")
+    public ResponseEntity<?> requestToCancelBoardLikeV2 ( @PathVariable("boardId") Long boardId, Principal principal){
+        Long memberId = getMemberId(principal);
+        return ResponseEntity.ok().body(boardLikeService.cancelLikes(boardId, memberId));
+    }
 
-    // 토큰 정보 조회
-    private TokenInfo getTokenInfo(HttpServletRequest req){
-        return authService.getTokenInfo(req.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1]);
+    private Long getMemberId(Principal principal) {
+        Long memberId = -1L;
+        if(principal instanceof UsernamePasswordAuthenticationToken){
+            memberId = (Long) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
+        }
+        return memberId;
     }
 
     private int getPage(int page) {
         return page - 1;
     }
+
+
 }

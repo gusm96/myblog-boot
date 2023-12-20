@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,7 +42,7 @@ public class BoardServiceImpl implements BoardService {
     public BoardListResDto retrieveBoardList(int page) {
         PageRequest pageRequest = PageRequest.of(page, LIMIT,Sort.by(Sort.Direction.DESC, "createDate"));
         // 페이지 별 게시글 조회
-        Page<Board> boards = boardRepository.findAll(pageRequest);
+        Page<Board> boards = boardRepository.findAll(BoardStatus.VIEW, pageRequest);
         // 조회한 Board Entity List를 DTO 객체로 변환.
         List<BoardResDto> resultList = boards.stream().map(board
                         -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
@@ -110,7 +111,7 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
-    // 게시글 상세
+    // 게시글 상세 조회 V2
     @Override
     @Transactional
     public BoardDetailResDto boardToResponseDto(Long boardId) {
@@ -142,13 +143,25 @@ public class BoardServiceImpl implements BoardService {
         return views;
     }
 
+    // 게시글 상세 조회 V3
+    @Override
+    public BoardResDtoV2 retrieveBoardDetail(Long boardId) {
+        Optional<BoardForRedis> boardForRedis = boardRedisRepository.findById(boardId);
+        // Memory에 데이터 없으면 DB에서 조회
+        if(boardForRedis.isEmpty()){
+            Board board = retrieveBoardById(boardId);
+            BoardForRedis saveBoard = boardRedisRepository.save(board);
+            return BoardResDtoV2.builder().boardForRedis(saveBoard).build();
+        }
+        return BoardResDtoV2.builder().boardForRedis(boardForRedis.get()).build();
+    }
+
     // 게시글 수정
     @Override
     @Transactional
     public Long editBoard(Long memberId, Long boardId, BoardReqDto modifiedDto){
         // Entity 조회
         Board board = retrieveBoardById(boardId);
-
         if(!board.getMember().getId().equals(memberId))
             throw new UnauthorizedAccessException("권한이 없습니다");
         Category modifiedCategory = categoryService.retrieveCategoryById(modifiedDto.getCategory());
@@ -163,7 +176,7 @@ public class BoardServiceImpl implements BoardService {
         // Entity 조회
         Board board = retrieveBoardById(boardId);
         if (board.getMember().getId().equals(memberId)) {
-            board.delete(); // 15일 이후 자동 삭제
+            board.deleteBoard(); // 15일 이후 자동 삭제
             return true;
         }else {
             throw new UnauthorizedAccessException("권한이 없습니다.");
