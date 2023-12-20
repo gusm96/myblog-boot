@@ -1,6 +1,6 @@
 package com.moya.myblogboot.domain.member;
 
-import com.moya.myblogboot.domain.abstration.BaseTimeEntity;
+import com.moya.myblogboot.domain.base.BaseTimeEntity;
 import com.moya.myblogboot.domain.board.BoardLike;
 import jakarta.persistence.*;
 import lombok.*;

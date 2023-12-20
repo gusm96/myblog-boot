@@ -54,7 +54,7 @@ public class WebSecurityConfig  {
                 .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                // UsernamePasswordAuthenticationFilter 이전에 CustomFiler( JwtFilter )적용
+                // UsernamePasswordAuthenticationFilter 이전에 JwtFilter 적용
                 .and().addFilterBefore(new JwtFilter(authService, secret), UsernamePasswordAuthenticationFilter.class).build();
     }
 

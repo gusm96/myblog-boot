@@ -82,6 +82,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public TokenInfo getTokenInfo(String token) {
+        tokenIsExpired(token);
         return JwtUtil.getTokenInfo(token, secret);
     }
 
