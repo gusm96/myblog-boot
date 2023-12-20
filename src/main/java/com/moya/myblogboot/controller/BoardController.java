@@ -52,9 +52,15 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.boardToResponseDto(boardId));
     }
 
+    // 게시글 상세 V3
+    @GetMapping("/api/v3/boards/{boardId}")
+    public ResponseEntity<BoardResDtoV2> getBoardDetailV3(@PathVariable("boardId") Long boardId) {
+        return ResponseEntity.ok().body(boardService.retrieveBoardDetail(boardId));
+    }
     // 게시글 작성 Post
     @PostMapping("/api/v1/boards")
     public ResponseEntity<Long> postBoard(@RequestBody @Valid BoardReqDto boardReqDto, Principal principal) {
+
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, memberId));
     }
@@ -89,11 +95,24 @@ public class BoardController {
         return ResponseEntity.ok().body(boardLikeService.addLikeToBoard(memberId, boardId));
     }
 
+    // 게시글 좋아요 V2
+    @PostMapping("/api/v2/likes/{boardId}")
+    public ResponseEntity<Long> requestToAddBoardLikeV2(@PathVariable("boardId") Long boardId, Principal principal) {
+        Long memberId = getMemberId(principal);
+        return ResponseEntity.ok().body(boardLikeService.addLikeV2(boardId, memberId));
+    }
+
     // 게시글 좋아요 취소
     @DeleteMapping("/api/v1/likes/{boardId}")
     public ResponseEntity<?> requestToCancelBoardLike ( @PathVariable("boardId") Long boardId, Principal principal){
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.deleteBoardLike(memberId, boardId));
+    }
+    // 게시글 좋아요 취소 V2
+    @DeleteMapping("/api/v2/likes/{boardId}")
+    public ResponseEntity<?> requestToCancelBoardLikeV2 ( @PathVariable("boardId") Long boardId, Principal principal){
+        Long memberId = getMemberId(principal);
+        return ResponseEntity.ok().body(boardLikeService.cancelLikes(boardId, memberId));
     }
 
     private Long getMemberId(Principal principal) {

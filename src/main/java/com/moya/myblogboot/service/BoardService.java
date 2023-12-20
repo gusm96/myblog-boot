@@ -18,5 +18,7 @@ public interface BoardService {
     Long uploadBoard(BoardReqDto boardReqDto, Long memberId);
 
     Board retrieveBoardById(Long boardId);
+
+    BoardResDtoV2 retrieveBoardDetail(Long boardId);
 }
 

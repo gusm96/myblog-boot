@@ -7,4 +7,8 @@ public interface BoardLikeService {
     boolean isBoardLiked(Long memberId, Long boardId);
 
     Long deleteBoardLike(Long memberId, Long boardId);
+
+    Long addLikeV2(Long boardId, Long memberId);
+
+    Long cancelLikes(Long boardId, Long memberId);
 }

@@ -1,17 +1,14 @@
 package com.moya.myblogboot.repository.implementation;
 
+import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.board.BoardForRedis;
 import com.moya.myblogboot.repository.BoardRedisRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.ConvertingCursor;
-import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Repository;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import javax.swing.text.html.Option;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -46,13 +43,13 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
     }
 
     @Override
-    public List<Long> getKeysValues(String key) {
+    public Set<Long> getKeysValues(String key) {
         Set<String> keys = redisTemplate.keys(key+"*");
-
-        List<Long> values = new ArrayList<>();
+        Set<Long> values = new HashSet<>();
         for (String k : keys) {
             // 'likes:' 부분을 잘라내고 나머지 부분을 Long으로 변환하여 리스트에 추가
-            values.add(Long.parseLong(k.substring(key.length())));
+            String resultKey = k.split(":")[1];
+            values.add(Long.parseLong(resultKey));
         }
         return values;
     }
@@ -61,7 +58,6 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
     public List<Long> getLikesMembers(Long boardId) {
         String key = BOARD_LIKE_KEY + boardId;
         Set<Object> members = redisTemplate.opsForSet().members(key);
-
         return members.stream()
                 .map(member -> Long.parseLong(member.toString()))
                 .collect(Collectors.toList());
@@ -100,5 +96,88 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
     public void deleteViews(Long boardId) {
         String key = BOARD_VIEWS_KEY + boardId;
         redisTemplate.delete(key);
+    }
+    @Override
+    public Optional<BoardForRedis> findById(Long boardId) {
+        String key = "board:" + boardId;
+        String viewsKey = key + ":views";
+        BoardForRedis findBoard = (BoardForRedis) redisTemplate.opsForValue().get(key);
+        if (findBoard == null)
+            return Optional.empty();
+        try{
+            Long updateViews = redisTemplate.opsForValue().increment(viewsKey);
+            findBoard.setUpdateViews(updateViews);
+            redisTemplate.opsForValue().set(key, findBoard);
+            return Optional.ofNullable(findBoard);
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
+    }
+
+    @Override
+    public Optional<BoardForRedis> findOne(Long boardId) {
+        String key = "board:" + boardId;
+        BoardForRedis boardForRedis = (BoardForRedis) redisTemplate.opsForValue().get(key);
+        if(boardForRedis == null){
+            return Optional.empty();
+        }else {
+            return Optional.ofNullable(boardForRedis);
+        }
+    }
+
+    @Override
+    public BoardForRedis save(Board board) {
+        String key = "board:" + board.getId();
+        String viewsKey = key + ":views";
+        Set<Long> memberIds = board.getBoardLikes().stream().map(boardLike -> boardLike.getMember().getId()).collect(Collectors.toSet());
+        BoardForRedis boardForRedis = BoardForRedis.builder()
+                .board(board)
+                .memberIds(memberIds)
+                .build();
+        try {
+            Long updateViews = redisTemplate.opsForValue().increment(viewsKey);
+            boardForRedis.setUpdateViews(updateViews);
+            redisTemplate.opsForValue().set(key, boardForRedis);
+            return boardForRedis;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
+    }
+
+
+    @Override
+    public void delete(Long boardId) {
+        String key = "board:" + boardId;
+        String viewsKey = key + ":views";
+        redisTemplate.delete(key);
+        redisTemplate.delete(viewsKey);
+    }
+
+    @Override
+    public boolean existsMember(Long boardId, Long memberId) {
+        String key = "board:" + boardId;
+        BoardForRedis boardForRedis = (BoardForRedis) redisTemplate.opsForValue().get(key);
+        return boardForRedis.getLikes().contains(memberId);
+    }
+
+    @Override
+    public Long addLikeV2(Long boardId, Long memberId) {
+        String key = "board:" + boardId;
+        String viewsKey = "views";
+        BoardForRedis boardForRedis = (BoardForRedis) redisTemplate.opsForValue().get(key);
+        boardForRedis.addLike(memberId);
+        redisTemplate.opsForValue().set(key, boardForRedis);
+        return (long) boardForRedis.getLikes().size();
+    }
+
+    @Override
+    public Long deleteMembers(Long boardId, Long memberId) {
+        String key = "board:" + boardId;
+        BoardForRedis boardForRedis = (BoardForRedis) redisTemplate.opsForValue().get(key);
+        boardForRedis.cancelLike(memberId);
+        redisTemplate.opsForValue().set(key, boardForRedis);
+        return (long) boardForRedis.getLikes().size();
     }
 }
