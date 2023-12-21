@@ -1,7 +1,7 @@
 package com.moya.myblogboot.service.implementation;
 
+import com.moya.myblogboot.domain.category.CategoriesResDto;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.category.CategoryReqDto;
 import com.moya.myblogboot.domain.category.CategoryResDto;
 import com.moya.myblogboot.repository.CategoryRepository;
 import com.moya.myblogboot.service.CategoryService;
@@ -42,6 +42,12 @@ public class CategoryServiceImpl implements CategoryService {
             throw new PersistenceException("카테고리 등록을 실패했습니다.");
         }
     }
+
+    @Override
+    public List<CategoriesResDto> retrieveCategoriesDto() {
+        return categoryRepository.findAllDto();
+    }
+
     @Override
     @Transactional
     public String updateCategory(Long categoryId, String modifiedCategoryName) {
@@ -59,6 +65,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public String deleteCategory(Long categoryId) {
         Category category = retrieveCategoryById(categoryId);
+        if(category.getBoards().size() > 0) {
+            throw new RuntimeException("등록된 게시글이 존재해 삭제할 수 없습니다.");
+        }
         try {
             categoryRepository.delete(category);
             return "카테고리가 삭제되었습니다.";
