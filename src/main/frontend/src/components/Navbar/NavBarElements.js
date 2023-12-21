@@ -6,12 +6,12 @@ import { logout } from "../../services/authApi";
 import { selectIsLoggedIn } from "../../redux/userSlice";
 const NavBarElements = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
-
   const dispatch = useDispatch();
   const handleLogout = () => {
     if (window.confirm("정말 로그아웃 하시겠습니까?")) {
       dispatch(userLogout());
       logout();
+      window.location.href = "/";
     }
   };
 

@@ -42,7 +42,9 @@ export const Comment = ({ boardId, accessToken }) => {
       alert("댓글의 내용을 입력하세요.");
     } else {
       addComment(boardId, commentData, accessToken)
-        .then((data) => console.log(data))
+        .then((data) => {
+          window.location.reload();
+        })
         .catch((error) => console.log(error));
     }
   };
@@ -65,7 +67,10 @@ export const Comment = ({ boardId, accessToken }) => {
         onChange={handleChange}
         style={{
           width: "70%",
-          margin: "0, 0",
+          margin: "0 10px 0 0", // 수정된 부분
+          padding: "10px",
+          borderRadius: "5px",
+          border: "1px solid #ced4da",
         }}
       ></textarea>
       <Button
@@ -73,10 +78,10 @@ export const Comment = ({ boardId, accessToken }) => {
         type="submit"
         style={{
           width: "30%",
-          margin: "0, 0",
+          margin: "0",
         }}
       >
-        댓글작성
+        댓글 작성
       </Button>
       <Modal
         show={isLoggedInModal}

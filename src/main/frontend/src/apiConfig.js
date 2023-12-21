@@ -3,38 +3,32 @@ export const BASE_URL = "http://localhost:8080";
 
 // API 별 URL
 
-// 카테고리 등록/수정/삭제 HTTP Method GET POST DELETE
-export const CATEGORY_CUD = `${BASE_URL}/api/v1/category`;
-// 카테고리 리스트
-export const CATEGORY_LIST = `${BASE_URL}/api/v1/categories`;
-
+// 카테고리 등록/조회/수정/삭제 HTTP Method GET POST PUT DELETE
+export const CATEGORY_CRUD = `${BASE_URL}/api/v1/categories`;
+export const CATEGORIES = `${BASE_URL}/api/v2/categories`;
 // 게시글 상세
 export const BOARD_GET = (boardId) => {
-  return `${BASE_URL}/api/v2/boards/${boardId}`;
+  return `${BASE_URL}/api/v3/boards/${boardId}`;
 };
 
 // 게시글 등록/수정/삭제  HTTP Method GET POST DELETE
-export const BOARD_CUD = `${BASE_URL}/api/v1/management/boards`;
+export const BOARD_CUD = `${BASE_URL}/api/v1/boards`;
 // 게시글 리스트
 export const BOARD_LIST = `${BASE_URL}/api/v1/boards`;
 
 export const CATEGORY_OF_BOARD_LIST = (categoryName) => {
-  return `${BASE_URL}/api/v1/boards/categories/${categoryName}`;
+  return `${BASE_URL}/api/v1/boards/${categoryName}`;
 };
 // 게시글 좋아요 CRRUD
 export const BOARD_LIKE_CRUD = (boardId) => {
-  return `${BASE_URL}/api/v1/likes/${boardId}`;
+  return `${BASE_URL}/api/v2/likes/${boardId}`;
 };
 
 // 이미지 파일 CRUD
 export const IMAGE_FILE_CRUD = `${BASE_URL}/api/v1/images`;
 
 // 댓글 등록/수정/삭제 HTTP Method GET POST DELETE
-export const COMMENT_CUD = `${BASE_URL}/api/v1/comments`;
-// 댓글 리스트
-export const COMMENT_LIST = (boardId) => {
-  return `${BASE_URL}/api/v1/boards/${boardId}/comments`;
-};
+export const COMMENT_CRUD = `${BASE_URL}/api/v1/comments`;
 
 // 토큰 유효 검증
 export const TOKEN_VALIDATION = `${BASE_URL}/api/v1/token-validation`;

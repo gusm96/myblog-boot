@@ -14,7 +14,7 @@ export const UserLayout = () => {
       <main
         className="inner"
         style={{
-          marginTop: "100px",
+          marginTop: "30px",
         }}
       >
         <Container>

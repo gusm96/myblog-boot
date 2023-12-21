@@ -14,9 +14,9 @@ import java.util.Date;
 @Slf4j
 @Component
 public class JwtUtil {
-
+    // Token 정보
     public static TokenInfo getTokenInfo(String token, String secret) {
-        validateToken(token, secret);
+        // JWT 파싱, Claims 추출
         Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
         Long memberPrimaryKey = claims.get("memberPrimaryKey", Long.class);
         String role = claims.get("role", String.class);
@@ -29,8 +29,9 @@ public class JwtUtil {
     // Token 만료
     public static void validateToken(String token ,String secret) {
         try {
+            // JWT 파싱, Claims 추출
             Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
-            Date expiration = claims.getExpiration();
+            Date expiration = claims.getExpiration(); // Token 만료일
             if (expiration != null && expiration.before(new Date())) {
                 throw new ExpiredTokenException("토큰이 만료되었습니다");
             }
@@ -56,6 +57,7 @@ public class JwtUtil {
                 .build();
     }
 
+    // JWT builder
     private static String jwtBuild(Claims claims, Long expiration, String secret) {
         return Jwts.builder()
                 .setClaims(claims)

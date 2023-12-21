@@ -4,6 +4,7 @@ import BoardList from "../components/Boards/BoardList";
 import { useParams, useSearchParams } from "react-router-dom";
 import { getBoardList, getCategoryOfBoardList } from "../services/boardApi";
 import "../components/Styles/css/fonts.css";
+import { SearchBar } from "../components/SearchBar";
 const Home = () => {
   const [boards, setBoards] = useState([]);
   const { categoryName } = useParams();
@@ -29,6 +30,7 @@ const Home = () => {
 
   return (
     <Container>
+      <SearchBar />
       <BoardList
         boards={boards}
         pageCount={pageCount}

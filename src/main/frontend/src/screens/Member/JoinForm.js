@@ -55,7 +55,6 @@ export const JoinForm = () => {
       })
       .catch((error) => {
         alert(error.response.data);
-        console.log(error);
       });
   };
   return (

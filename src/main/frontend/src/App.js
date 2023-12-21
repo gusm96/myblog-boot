@@ -15,6 +15,7 @@ import { updateUserAccessToken, userLogout } from "./redux/authAction";
 import { JoinForm } from "./screens/Member/JoinForm";
 import { NotFound } from "./screens/error/NotFound";
 import { NavigateBack } from "./screens/error/NavigateBack";
+import { CategoryList } from "./components/Category/CategoryList";
 
 export default App;
 
@@ -68,6 +69,7 @@ function App() {
           <Route path="new-post" element={<BoardForm />} />
           <Route path="boards" element={<Management />} />
           <Route path="boards/:boardId" element={<BoardEditForm />} />
+          <Route path="categories" element={<CategoryList />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

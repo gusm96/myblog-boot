@@ -16,7 +16,8 @@
   padding: 10px;
   margin-right: 10px;
   margin-bottom: 0px;
-}
-.nav-link:hover {
-  border-bottom: 5px solid black;
+  transition: transform 0.3s ease;
+  &:hover {
+    transform: scale(1.05);
+  }
 }

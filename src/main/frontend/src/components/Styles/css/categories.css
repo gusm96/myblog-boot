@@ -1,0 +1,78 @@
+.category-form {
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid #343a40;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+.category-form input {
+  width: 80%;
+  margin: 5px 5px 5px;
+  border: none;
+}
+.category-form button {
+  width: 20%;
+  border: none;
+  border-radius: 0px 10px 10px 0px;
+  background-color: gray;
+  &:hover {
+    background-color: #343a40;
+  }
+}
+.list-group-container {
+  padding: 0px;
+  margin: 0px;
+  align-items: center;
+}
+
+.list-group-container .list-items {
+  display: flex;
+  align-items: center;
+  width: 80%;
+  padding: 0px;
+  margin-bottom: 20px;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  box-shadow: 3px 3px rgba(0, 0, 0, 0.2);
+}
+.list-group .category-name {
+  width: 80%;
+}
+.list-group .category-name p {
+  text-align: center;
+  height: 100%;
+  width: 100%;
+  font-weight: bolder;
+  margin: 0px;
+}
+.list-group .btn-container {
+  width: 20%;
+}
+.list-group .btn-container button {
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  background-color: gray;
+}
+.list-group .btn-container button:hover {
+  background-color: #343a40;
+}
+.list-group .delete-btn {
+  width: 50%;
+  /* disable일 때의 스타일 */
+  &:disabled {
+    opacity: 0.5; /* 어둡게 표시할 투명도 값 */
+    background-color: gray;
+    border: 1px solid gray;
+    cursor: not-allowed; /* 커서를 'not-allowed'로 변경하여 사용 불가능한 상태 표시 */
+  }
+}
+.list-group .edit-btn {
+  width: 50%;
+}
+
+.categories-container button {
+  transition: transform 0.3s ease;
+  &:hover {
+    transform: scale(1.03);
+  }
+}

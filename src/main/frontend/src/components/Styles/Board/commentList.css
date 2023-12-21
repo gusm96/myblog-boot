@@ -1,0 +1,63 @@
+.comment-list-container {
+  margin-top: 20px;
+}
+
+.comment-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.comment-item {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.writer {
+  font-weight: bold;
+}
+
+.upload-date {
+  color: #868e96;
+}
+
+.comment-content {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.reply-container {
+  width: 100px;
+  display: flex;
+  justify-content: space-around;
+}
+.reply-list {
+  font-size: small;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  &:hover {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1px 3px;
+    border-radius: 5px;
+    transform: scale(1.2); /* 호버 시 1.1배 확대되도록 설정 */
+  }
+}
+.reply-btn {
+  font-size: small;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  &:hover {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1px 3px;
+    border-radius: 5px;
+    transform: scale(1.2); /* 호버 시 1.1배 확대되도록 설정 */
+  }
+}

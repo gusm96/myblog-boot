@@ -67,8 +67,9 @@ export const LoginForm = () => {
       <Button variant="primary" type="submit">
         로그인
       </Button>
-      <hr></hr>
-      <Nav.Link href="/join">회원가입</Nav.Link>
+      <a href="/join">
+        <Button>회원가입</Button>
+      </a>
     </Form>
   );
 };

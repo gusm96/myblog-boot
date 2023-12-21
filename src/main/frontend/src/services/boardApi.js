@@ -4,9 +4,8 @@ import {
   BOARD_GET,
   BOARD_LIKE_CRUD,
   BOARD_LIST,
-  CATEGORY_LIST,
   CATEGORY_OF_BOARD_LIST,
-  COMMENT_CUD,
+  COMMENT_CRUD,
   IMAGE_FILE_CRUD,
 } from "../apiConfig";
 export const getBoard = (boardId) => {
@@ -15,14 +14,13 @@ export const getBoard = (boardId) => {
 export const getBoardList = (page) => {
   return axios.get(`${BOARD_LIST}?${page}`).then((res) => res.data);
 };
-export const getCategories = () => {
-  return axios.get(`${CATEGORY_LIST}`).then((res) => res.data);
-};
+
 export const getCategoryOfBoardList = (categoryName, page) => {
   return axios
     .get(`${CATEGORY_OF_BOARD_LIST(categoryName)}?${page}`)
     .then((res) => res.data);
 };
+
 export const uploadBoard = (formData, htmlString, accessToken) => {
   return axios.post(
     `${BOARD_CUD}`,
@@ -100,11 +98,13 @@ export const getBoardLikes = (page) => {
 export const checkBoardLike = (page) => {
   return axios.get();
 };
-
+export const getComments = (boardId) => {
+  return axios.get(`${COMMENT_CRUD}/${boardId}`).then((res) => res.data);
+};
 export const addComment = (boardId, commentData, accessToken) => {
   return axios
     .post(
-      `${COMMENT_CUD}/${boardId}`,
+      `${COMMENT_CRUD}/${boardId}`,
       {
         comment: commentData.comment,
       },
