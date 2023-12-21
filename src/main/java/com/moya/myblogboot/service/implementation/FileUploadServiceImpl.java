@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,4 +44,14 @@ public class FileUploadServiceImpl implements FileUploadService {
         }
     }
 
+    @Override
+    public String deleteImageFile(ImageFileDto imageFileDto) {
+        try {
+            Path filePath = Paths.get(imageFileDto.getFilePath(), imageFileDto.getFileName());
+            Files.deleteIfExists(filePath);
+            return null;
+        } catch (Exception e) {
+            throw new RuntimeException("파일 삭제를 실패했습니다.");
+        }
+    }
 }

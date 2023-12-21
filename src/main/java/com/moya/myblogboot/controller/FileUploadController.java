@@ -2,6 +2,7 @@ package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.file.ImageFileDto;
 import com.moya.myblogboot.service.FileUploadService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +21,8 @@ public class FileUploadController {
     }
 
     @DeleteMapping("/api/v1/images")
-    public ResponseEntity<?> requestDeleteImageFile(@RequestParam("file_path") String filePath) {
+    public ResponseEntity<?> requestDeleteImageFile(@RequestBody @Valid ImageFileDto imageFileDto) {
         // 경로로 이미지 찾아서 삭제.
-        return ResponseEntity.ok().body("");
+        return ResponseEntity.ok().body(fileUploadService.deleteImageFile(imageFileDto));
     }
 }
