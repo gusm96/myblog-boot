@@ -3,15 +3,23 @@ import React, { useEffect, useState } from "react";
 import { Editor } from "react-draft-wysiwyg";
 import draftjsToHtml from "draftjs-to-html";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import { Button, Form, InputGroup } from "react-bootstrap";
+import {
+  Button,
+  Form,
+  InputGroup,
+  Modal,
+  ModalBody,
+  ModalHeader,
+  ModalTitle,
+} from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { selectAccessToken } from "../../redux/userSlice";
-import {
-  getCategories,
-  uploadBoard,
-  uploadImageFile,
-} from "../../services/boardApi";
+import { uploadBoard, uploadImageFile } from "../../services/boardApi";
+import { addNewCategory, getCategories } from "../../services/categoryApi";
+
 export const BoardForm = () => {
+  const [showModal, setShowModal] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
   const [categories, setCategories] = useState([]);
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const [htmlString, setHtmlString] = useState("");
@@ -52,17 +60,17 @@ export const BoardForm = () => {
   };
   const uploadImageCallBack = (file) => {
     return new Promise((resolve, reject) => {
+      // formData를 생성해 에디터로 부터 File을 formData에 담는다.
       const formData = new FormData();
       formData.append("image", file);
-
-      // 'YOUR_IMAGE_UPLOAD_ENDPOINT'를 이미지 업로드를 처리하는 실제 서버 엔드포인트로 교체합니다.
+      // ajax 비동기 통신으로 서버에 이미지 전송
       uploadImageFile(formData, accessToken)
         .then((data) => {
+          // 서버로 부터 정상적으로 저장된 후 반환된 파일 데이터를 images 배열에 저장합니다.
           setFormData((prevState) => ({
             ...prevState,
             images: [...prevState.images, data],
           }));
-          // 서버가 이미지 파일 경로로 응답하는 것으로 가정합니다.
           const imagePath = data.filePath;
           resolve({ data: { link: imagePath } });
         })
@@ -72,60 +80,129 @@ export const BoardForm = () => {
         });
     });
   };
+
+  const handleNewCategory = () => {
+    addNewCategory(newCategory, accessToken)
+      .then((res) => {
+        if (res.status === 200) {
+          alert("카테고리 추가 완료");
+          const newCategoryObject = {
+            id: categories.length + 1,
+            name: newCategory,
+          };
+          setCategories([...categories, newCategoryObject]);
+
+          setShowModal(false);
+          setNewCategory("");
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
   return (
-    <Form onSubmit={handleSubmit}>
-      <InputGroup>
-        <InputGroup.Text id="inputGroup-sizing-default">제목</InputGroup.Text>
-        <Form.Control
-          aria-label="Default"
-          aria-describedby="inputGroup-sizing-default"
-          placeholder="제목을 입력하세요."
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-        />
-        <Form.Select
-          aria-label="Default select example"
-          name="category"
-          value={formData.category}
-          onChange={handleChange}
-        >
-          <option>카테고리</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </Form.Select>
-      </InputGroup>
-      <Editor
-        placeholder="게시글을 작성해주세요"
-        name="content"
-        value={formData.content}
-        editorState={editorState}
-        onEditorStateChange={updateTextDescription}
-        toolbar={{
-          image: {
-            uploadenabled: true,
-            uploadCallback: uploadImageCallBack,
-            previewimage: true,
-            inputaccept: "image/gif,image/jpeg,image/jpg,image/png,image/svg",
-            alt: { present: false, mandatory: false },
-            defaultsize: {
-              height: "auto",
-              width: "auto",
+    <div>
+      <Form onSubmit={handleSubmit}>
+        <InputGroup>
+          <InputGroup.Text id="inputGroup-sizing-default">제목</InputGroup.Text>
+          <Form.Control
+            aria-label="Default"
+            aria-describedby="inputGroup-sizing-default"
+            placeholder="제목을 입력하세요."
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+          />
+          <Form.Select
+            aria-label="Default select example"
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+          >
+            <option>카테고리</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </Form.Select>
+          <button
+            type="button"
+            onClick={() => {
+              setShowModal(true);
+            }}
+          >
+            새로운 카테고리
+          </button>
+        </InputGroup>
+        <Editor
+          placeholder="게시글을 작성해주세요"
+          name="content"
+          value={formData.content}
+          editorState={editorState}
+          onEditorStateChange={updateTextDescription}
+          toolbar={{
+            image: {
+              uploadenabled: true,
+              uploadCallback: uploadImageCallBack,
+              previewimage: true,
+              inputaccept: "image/gif,image/jpeg,image/jpg,image/png,image/svg",
+              alt: { present: false, mandatory: false },
+              defaultsize: {
+                height: "auto",
+                width: "auto",
+              },
             },
-          },
+          }}
+          localization={{ locale: "ko" }}
+          editorStyle={{
+            height: "500px",
+            width: "100%",
+            border: "3px solid lightgray",
+            padding: "20px",
+          }}
+        />
+        <Button type="submit">작성하기</Button>
+      </Form>
+      <Modal
+        show={showModal}
+        onHide={handleCloseModal}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "absolute",
+          top: "0",
+          left: "0",
         }}
-        localization={{ locale: "ko" }}
-        editorStyle={{
-          height: "400px",
-          width: "100%",
-          border: "3px solid lightgray",
-          padding: "20px",
-        }}
-      />
-      <Button type="submit">작성하기</Button>
-    </Form>
+      >
+        <ModalHeader closeButton>
+          <ModalTitle>새로운 카테고리</ModalTitle>
+        </ModalHeader>
+        <ModalBody>
+          <Form>
+            <InputGroup>
+              <InputGroup.Text id="inputGroup-sizing-default">
+                카테고리 이름 :{" "}
+              </InputGroup.Text>
+              <Form.Control
+                type="text"
+                id="newCategory"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                required
+              ></Form.Control>
+              <Button type="submit" onClick={handleNewCategory}>
+                추가
+              </Button>
+            </InputGroup>
+          </Form>
+        </ModalBody>
+      </Modal>
+    </div>
   );
 };

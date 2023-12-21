@@ -9,6 +9,7 @@ import {
   cancelBoardLike,
   getBoard,
   getBoardLikeStatus,
+  getComments,
 } from "../../services/boardApi";
 import Parser from "html-react-parser";
 import { CommentList } from "../Comments/CommentList";
@@ -22,9 +23,11 @@ const BoardDetail = () => {
     title: "",
     content: "",
     uploadDate: "",
+    views: "",
     likes: "",
-    comments: [],
   });
+
+  const [comments, setComments] = useState([]);
   const handleBoardLike = (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
@@ -55,10 +58,14 @@ const BoardDetail = () => {
         title: data.title,
         content: data.content,
         uploadDate: data.uploadDate,
+        views: data.views,
         likes: data.likes,
-        comments: data.comments,
       });
     });
+    getComments(boardId).then((data) => {
+      setComments(data);
+    });
+
     if (isLoggedIn) {
       getBoardLikeStatus(boardId, accessToken)
         .then((data) => setIsBoardLiked(data))
@@ -73,6 +80,8 @@ const BoardDetail = () => {
       <div>{Parser(board.content)}</div>
       <div className="board-info">
         <div className="board-like">
+          <span>조회수 {board.views}</span>
+          <br></br>
           {isBoardLiked ? (
             <i
               className="fa-solid fa-heart board-like-status"
@@ -94,7 +103,7 @@ const BoardDetail = () => {
       ) : (
         <p>로그인을 하면 댓글을 작성할 수 있습니다.</p>
       )}
-      <CommentList comments={board.comments} />
+      <CommentList comments={comments} />
     </div>
   );
 };

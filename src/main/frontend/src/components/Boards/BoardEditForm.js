@@ -3,12 +3,7 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import {
-  deleteBoard,
-  editBoard,
-  getBoard,
-  getCategories,
-} from "../../services/boardApi";
+import { deleteBoard, editBoard, getBoard } from "../../services/boardApi";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { selectAccessToken } from "../../redux/userSlice";
@@ -16,6 +11,7 @@ import { ContentState, EditorState, convertToRaw } from "draft-js";
 import { Editor } from "react-draft-wysiwyg";
 import draftToHtml from "draftjs-to-html";
 import htmlToDraft from "html-to-draftjs";
+import { getCategories } from "../../services/categoryApi";
 
 export const BoardEditForm = () => {
   const accessToken = useSelector(selectAccessToken);
@@ -120,7 +116,7 @@ export const BoardEditForm = () => {
         }}
         localization={{ locale: "ko" }}
         editorStyle={{
-          height: "700px",
+          height: "500px",
           width: "100%",
           border: "3px solid lightgray",
           padding: "20px",

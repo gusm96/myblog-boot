@@ -26,27 +26,33 @@ const BoardList = ({ boards, pageCount, categoryName, adminMode }) => {
 
   return (
     <div className="board-list">
-      {boards.map((board) => (
-        <div key={board.id} className="mb-3 board-item">
-          <a
-            href={
-              adminMode
-                ? `/management/boards/${board.id}`
-                : `/boards/${board.id}`
-            }
-            style={cardStyle}
-          >
-            <span className="board-title">{board.title}</span>
-            <p className="board-content">
-              {Parser(truncateText(board.content, 500), parserOptions)}
-            </p>
-            <span className="text-muted board-date">
-              {moment(board.upload_date).format("YYYY-MM-DD")}
-            </span>
-          </a>
+      {boards.length === 0 ? (
+        <h3>게시글이 존재하지 않습니다</h3>
+      ) : (
+        <div>
+          {boards.map((board) => (
+            <div key={board.id} className="mb-3 board-item">
+              <a
+                href={
+                  adminMode
+                    ? `/management/boards/${board.id}`
+                    : `/boards/${board.id}`
+                }
+                style={cardStyle}
+              >
+                <span className="board-title">{board.title}</span>
+                <p className="board-content">
+                  {Parser(truncateText(board.content, 500), parserOptions)}
+                </p>
+                <span className="text-muted board-date">
+                  {moment(board.upload_date).format("YYYY-MM-DD")}
+                </span>
+              </a>
+            </div>
+          ))}
+          <hr></hr>
         </div>
-      ))}
-      <hr></hr>
+      )}
       <PageButton
         pageCount={pageCount}
         categoryName={categoryName ? categoryName : null}

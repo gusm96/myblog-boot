@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import BoardList from "../components/Boards/BoardList";
 import { useSearchParams } from "react-router-dom";
