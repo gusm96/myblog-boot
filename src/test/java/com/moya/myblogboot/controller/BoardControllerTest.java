@@ -37,7 +37,6 @@ class BoardControllerTest extends AbstractContainerBaseTest {
     MockMvc mockMvc;
     @Autowired
     EntityManager em;
-
     @Autowired
     BoardRepository boardRepository;
     @Autowired
@@ -242,6 +241,31 @@ class BoardControllerTest extends AbstractContainerBaseTest {
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.delete(path)
                         .header(HttpHeaders.AUTHORIZATION, accessToken));
 
+        // then
+        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+    }
+    @Test
+    @DisplayName("게시글 조회 V3")
+    void getBoardDetailV3() throws Exception{
+        // given
+        String path = "/api/v3/boards/" + boardId;
+        // when
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path));
+        // then
+        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.id").value(boardId));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.views").value(1L));
+    }
+
+    @Test
+    @DisplayName("게시글 좋아요 V2")
+    void requestToAddBoardLikeV2() throws Exception {
+        // given
+        String path = "/api/v2/likes/" + boardId;
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v3/boards/" + boardId));
+        // when
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(path)
+                .header(HttpHeaders.AUTHORIZATION, accessToken));
         // then
         resultActions.andExpect(MockMvcResultMatchers.status().isOk());
     }

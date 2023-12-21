@@ -6,8 +6,6 @@ import com.moya.myblogboot.repository.BoardRedisRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
-
-import javax.swing.text.html.Option;
 import java.util.*;
 import java.util.stream.Collectors;
 

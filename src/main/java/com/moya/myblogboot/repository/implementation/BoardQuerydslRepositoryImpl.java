@@ -34,14 +34,14 @@ public class BoardQuerydslRepositoryImpl implements BoardQuerydslRepository {
     public Page<Board> findBySearchType(Pageable pageable, SearchType searchType, String contents) {
         queryFactory = new JPAQueryFactory(em);
         List<Board> boards =  queryFactory.selectFrom(board)
-                .where(searchType == SearchType.TITLE ? board.title.eq(contents) : board.content.like(contents))
+                .where(searchType == SearchType.TITLE ? board.title.contains(contents) : board.content.contains(contents))
                 .orderBy(board.updateDate.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
         Long count = (long) queryFactory.selectFrom(board)
-                .where(searchType == SearchType.TITLE ? board.title.eq(contents) : board.content.like(contents))
+                .where(searchType == SearchType.TITLE ? board.title.contains(contents) : board.content.contains(contents))
                 .fetch().size();
 
         return new PageImpl<>(boards, pageable, count);

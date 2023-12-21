@@ -2,10 +2,8 @@ package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.BoardLike;
-import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.repository.BoardLikeRepository;
 import com.moya.myblogboot.repository.BoardRedisRepository;
-import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardLikeService;
 import com.moya.myblogboot.service.BoardService;
 import jakarta.persistence.EntityNotFoundException;
@@ -14,9 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -78,7 +75,8 @@ public class BoardLikeServiceImpl implements BoardLikeService {
        return boardRedisRepository.addLikeV2(boardId, memberId);
     }
 
-    private boolean isBoardLikedV2(Long boardId ,Long memberId ) {
+    @Override
+    public boolean isBoardLikedV2(Long boardId ,Long memberId ) {
         return boardRedisRepository.existsMember(boardId, memberId);
     }
 
@@ -99,9 +97,9 @@ public class BoardLikeServiceImpl implements BoardLikeService {
 
     @Async
     public void deleteBoardLikeV2(Long boardId, Long memberId) {
-        BoardLike boardLike = boardLikeRepository.findByBoardIdAndMemberId(boardId, memberId).orElseThrow(
-                () -> new EntityNotFoundException("해당 게시글 좋아요 정보를 찾지 못했습니다.")
-        );
-        boardLikeRepository.delete(boardLike);
+        Optional<BoardLike> boardLike = boardLikeRepository.findByBoardIdAndMemberId(boardId, memberId);
+        if(boardLike.isPresent()) {
+            boardLikeRepository.delete(boardLike.get());
+        }
     }
 }
