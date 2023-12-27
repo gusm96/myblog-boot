@@ -44,37 +44,16 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public BoardListResDto retrieveBoardList(int page) {
         PageRequest pageRequest = PageRequest.of(page, LIMIT,Sort.by(Sort.Direction.DESC, "createDate"));
-        // 페이지 별 게시글 조회
         Page<Board> boards = boardRepository.findAll(BoardStatus.VIEW, pageRequest);
-        // 조회한 Board Entity List를 DTO 객체로 변환.
-        List<BoardResDto> resultList = boards.stream().map(board
-                        -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
-                .toList();
-        // 화면에 보여질 List와 개시글 총 개수 반환.
-        return BoardListResDto.builder()
-                .list(resultList)
-                .totalPage(boards.getTotalPages())
-                .build();
+        return convertToBoardListResDto(boards);
     }
 
     // 카테고리별 게시글 리스트
     @Override
     public BoardListResDto retrieveBoardListByCategory(String categoryName, int page){
-        // Category 조회
-        Category category = categoryService.retrieveCategoryByName(categoryName);
-
         PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC, "createDate"));
-        Page<Board> boards = boardRepository.findAllByCategory(category, pageRequest);
-
-        // DTO 객체로 변환
-        List<BoardResDto> resultList = boards.stream().map(board
-                        -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
-                .toList();
-
-        return BoardListResDto.builder()
-                .list(resultList)
-                .totalPage(boards.getTotalPages())
-                .build();
+        Page<Board> boards = boardRepository.findAllByCategory(categoryName, pageRequest);
+        return convertToBoardListResDto(boards);
     }
 
     // 검색한 게시글 리스트
@@ -83,10 +62,22 @@ public class BoardServiceImpl implements BoardService {
         PageRequest pageRequest = PageRequest.of(page, LIMIT);
         // 검색어 + 페이지 게시글 조회
         Page<Board> boards = boardRepository.findBySearchType(pageRequest, searchType, searchContents);
-        // DTO 객체로 변환
-        List<BoardResDto> resultList = boards.getContent().stream().map(board
+        return convertToBoardListResDto(boards);
+    }
+    // 삭제 예정 게시글 리스트
+    @Override
+    public BoardListResDto retrieveDeletedBoards(int page) {
+        PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC, "deleteDate"));
+        Page<Board> boards = boardRepository.findByDeletionStatus(pageRequest);
+        return convertToBoardListResDto(boards);
+    }
+
+    private BoardListResDto convertToBoardListResDto(Page<Board> boards){
+        // 조회한 Board Entity List를 DTO 객체로 변환.
+        List<BoardResDto> resultList = boards.stream().map(board
                         -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
                 .toList();
+        // 화면에 보여질 List와 개시글 총 개수 반환.
         return BoardListResDto.builder()
                 .list(resultList)
                 .totalPage(boards.getTotalPages())
@@ -169,6 +160,7 @@ public class BoardServiceImpl implements BoardService {
             throw new UnauthorizedAccessException("권한이 없습니다");
         Category modifiedCategory = categoryService.retrieveCategoryById(modifiedDto.getCategory());
         board.updateBoard(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent()); // 변경감지
+        updateBoardForRedis(board);
         return board.getId();
     }
 
@@ -180,6 +172,7 @@ public class BoardServiceImpl implements BoardService {
         Board board = retrieveBoardById(boardId);
         if (board.getMember().getId().equals(memberId)) {
             board.deleteBoard(); // 15일 이후 자동 삭제
+            updateBoardForRedis(board);
             return true;
         }else {
             throw new UnauthorizedAccessException("권한이 없습니다.");
@@ -187,6 +180,7 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
+    @Transactional
     public void deletePermanently(LocalDateTime thresholdDate) {
         List<Board> boards = boardRepository.findByDeleteDate(thresholdDate);
         for (Board b : boards) {
@@ -200,6 +194,14 @@ public class BoardServiceImpl implements BoardService {
                 throw new RuntimeException("게시글 삭제를 실패했습니다.");
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public void undeleteBoard(Long boardId) {
+        Board board = retrieveBoardById(boardId);
+        board.undeleteBoard();
+        updateBoardForRedis(board);
     }
 
     // 게시글 Entity 조회
@@ -226,4 +228,13 @@ public class BoardServiceImpl implements BoardService {
                 .map(image -> imageFileRepository.save(image.toEntity(board))).collect(Collectors.toList());
         imageFiles.forEach(board::addImageFile);
     }
+
+    private void updateBoardForRedis (Board board){
+        try {
+            boardRedisRepository.update(board);
+        } catch (Exception e) {
+            throw new RuntimeException("게시글 수정을 실패했습니다.");
+        }
+    }
 }
+

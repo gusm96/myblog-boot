@@ -163,7 +163,6 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
     @Override
     public Long addLikeV2(Long boardId, Long memberId) {
         String key = "board:" + boardId;
-        String viewsKey = "views";
         BoardForRedis boardForRedis = (BoardForRedis) redisTemplate.opsForValue().get(key);
         boardForRedis.addLike(memberId);
         redisTemplate.opsForValue().set(key, boardForRedis);
@@ -177,5 +176,13 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
         boardForRedis.cancelLike(memberId);
         redisTemplate.opsForValue().set(key, boardForRedis);
         return (long) boardForRedis.getLikes().size();
+    }
+
+    @Override
+    public void update(Board board) {
+        String key = "board:" + board.getId();
+        BoardForRedis boardForRedis = (BoardForRedis) redisTemplate.opsForValue().get(key);
+        boardForRedis.update(board);
+        redisTemplate.opsForValue().set(key, boardForRedis);
     }
 }

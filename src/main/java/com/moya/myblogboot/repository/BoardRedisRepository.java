@@ -45,4 +45,6 @@ public interface BoardRedisRepository {
     Long addLikeV2(Long boardId, Long memberId);
 
     Long deleteMembers(Long boardId, Long memberId);
+
+    void update(Board board);
 }

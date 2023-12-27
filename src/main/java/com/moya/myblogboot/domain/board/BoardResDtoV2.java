@@ -17,6 +17,7 @@ public class BoardResDtoV2 {
     private Long likes;
     private LocalDateTime creatDate;
     private LocalDateTime updateDate;
+    private LocalDateTime deleteDate;
     private BoardStatus boardStatus;
 
 
@@ -28,7 +29,8 @@ public class BoardResDtoV2 {
         this.views = boardForRedis.getViews() + boardForRedis.getUpdateViews();
         this.likes = (long) boardForRedis.getLikes().size();
         this.creatDate = boardForRedis.getCreateDate();
-        this.updateDate = boardForRedis.getUploadDate();
+        this.updateDate = boardForRedis.getUpdateDate();
+        this.deleteDate = boardForRedis.getDeleteDate();
         this.boardStatus = boardForRedis.getBoardStatus();
     }
 }

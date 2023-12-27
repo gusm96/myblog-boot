@@ -95,4 +95,9 @@ public class Board extends BaseTimeEntity {
         this.delete();
         this.boardStatus = BoardStatus.HIDE;
     }
+
+    public void undeleteBoard() {
+        this.undelete();
+        this.boardStatus = BoardStatus.VIEW;
+    }
 }

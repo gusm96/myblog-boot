@@ -11,9 +11,11 @@ public class BoardResDto {
     private String title;
     private String content;
     private String category;
+    private Long likes;
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
-    private Long likes;
+    private LocalDateTime deleteDate;
+    private BoardStatus boardStatus;
 
     @Builder
     public BoardResDto(Board board, Long likes) {
@@ -21,9 +23,11 @@ public class BoardResDto {
         this.title = board.getTitle();
         this.content = board.getContent();
         this.category = board.getCategory().getName();
+        this.likes = likes;
         this.createDate = board.getCreateDate();
         this.updateDate = board.getUpdateDate();
-        this.likes = likes;
+        this.deleteDate = board.getDeleteDate();
+        this.boardStatus = board.getBoardStatus();
     }
 
     // List<Board> to List<BoardResDto>

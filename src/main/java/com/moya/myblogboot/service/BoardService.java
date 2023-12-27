@@ -25,5 +25,9 @@ public interface BoardService {
     BoardResDtoV2 retrieveBoardDetail(Long boardId);
 
     void deletePermanently(LocalDateTime thresholdDate);
+
+    BoardListResDto retrieveDeletedBoards(int page);
+
+    void undeleteBoard(Long boardId);
 }
 

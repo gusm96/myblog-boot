@@ -117,6 +117,17 @@ public class BoardController {
         return ResponseEntity.ok().body(boardLikeService.cancelLikes(boardId, memberId));
     }
 
+    @GetMapping("/api/v1/deleted-boards")
+    public ResponseEntity<?> requestDeletedBoards(@RequestParam(name = "p", defaultValue = "1") int page){
+        return ResponseEntity.ok().body(boardService.retrieveDeletedBoards(getPage(page)));
+    }
+
+    @DeleteMapping("/api/v1/deleted-boards/{boardId}")
+    public ResponseEntity<?> requestCancelDeletedBoard(@PathVariable("boardId") Long boardId) {
+        boardService.undeleteBoard(boardId);
+        return ResponseEntity.ok().body("게시글 삭제 취소 완료");
+    }
+
     private Long getMemberId(Principal principal) {
         Long memberId = -1L;
         if(principal instanceof UsernamePasswordAuthenticationToken){

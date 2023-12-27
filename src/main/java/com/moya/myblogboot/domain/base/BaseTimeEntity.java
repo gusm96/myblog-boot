@@ -33,4 +33,8 @@ public abstract class BaseTimeEntity {
 
     public void delete(){
         this.deleteDate = LocalDateTime.now();
-}}
+}
+    public void undelete() {
+        this.deleteDate = null;
+    }
+}

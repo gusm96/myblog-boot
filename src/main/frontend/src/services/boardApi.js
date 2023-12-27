@@ -1,18 +1,18 @@
 import axios from "axios";
 import {
-  BOARD_CUD,
+  BOARD_CRUD,
   BOARD_GET,
   BOARD_LIKE_CRUD,
-  BOARD_LIST,
   CATEGORY_OF_BOARD_LIST,
   COMMENT_CRUD,
+  DELETED_BOARDS,
   IMAGE_FILE_CRUD,
 } from "../apiConfig";
 export const getBoard = (boardId) => {
   return axios.get(`${BOARD_GET(boardId)}`).then((res) => res.data);
 };
 export const getBoardList = (page) => {
-  return axios.get(`${BOARD_LIST}?${page}`).then((res) => res.data);
+  return axios.get(`${BOARD_CRUD}?${page}`).then((res) => res.data);
 };
 
 export const getCategoryOfBoardList = (categoryName, page) => {
@@ -23,7 +23,7 @@ export const getCategoryOfBoardList = (categoryName, page) => {
 
 export const uploadBoard = (formData, htmlString, accessToken) => {
   return axios.post(
-    `${BOARD_CUD}`,
+    `${BOARD_CRUD}`,
     {
       title: formData.title,
       content: htmlString,
@@ -43,7 +43,7 @@ export const uploadBoard = (formData, htmlString, accessToken) => {
 export const editBoard = (boardId, board, htmlString, accessToken) => {
   return axios
     .put(
-      `${BOARD_CUD}/${boardId}`,
+      `${BOARD_CRUD}/${boardId}`,
       {
         title: board.title,
         content: htmlString,
@@ -60,7 +60,7 @@ export const editBoard = (boardId, board, htmlString, accessToken) => {
 
 export const deleteBoard = (boardId, accessToken) => {
   return axios
-    .delete(`${BOARD_CUD}/${boardId}`, {
+    .delete(`${BOARD_CRUD}/${boardId}`, {
       headers: {
         Authorization: getToken(accessToken),
       },
@@ -132,6 +132,26 @@ export const uploadImageFile = (formData, accessToken) => {
     .post(`${IMAGE_FILE_CRUD}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
+        Authorization: getToken(accessToken),
+      },
+    })
+    .then((res) => res.data);
+};
+
+export const getDeletedBoards = (accessToken, page) => {
+  return axios
+    .get(`${DELETED_BOARDS}?${page}`, {
+      headers: {
+        Authorization: getToken(accessToken),
+      },
+    })
+    .then((res) => res.data);
+};
+
+export const undeleteBoard = (boardId, accessToken) => {
+  return axios
+    .delete(`${DELETED_BOARDS}/${boardId}`, {
+      headers: {
         Authorization: getToken(accessToken),
       },
     })

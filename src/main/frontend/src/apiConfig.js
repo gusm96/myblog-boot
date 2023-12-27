@@ -12,9 +12,7 @@ export const BOARD_GET = (boardId) => {
 };
 
 // 게시글 등록/수정/삭제  HTTP Method GET POST DELETE
-export const BOARD_CUD = `${BASE_URL}/api/v1/boards`;
-// 게시글 리스트
-export const BOARD_LIST = `${BASE_URL}/api/v1/boards`;
+export const BOARD_CRUD = `${BASE_URL}/api/v1/boards`;
 
 export const CATEGORY_OF_BOARD_LIST = (categoryName) => {
   return `${BASE_URL}/api/v1/boards/${categoryName}`;
@@ -23,6 +21,8 @@ export const CATEGORY_OF_BOARD_LIST = (categoryName) => {
 export const BOARD_LIKE_CRUD = (boardId) => {
   return `${BASE_URL}/api/v2/likes/${boardId}`;
 };
+
+export const DELETED_BOARDS = `${BASE_URL}/api/v1/deleted-boards`;
 
 // 이미지 파일 CRUD
 export const IMAGE_FILE_CRUD = `${BASE_URL}/api/v1/images`;

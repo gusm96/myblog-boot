@@ -3,6 +3,7 @@ package com.moya.myblogboot.domain.board;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.*;
+import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -19,7 +20,8 @@ public class BoardForRedis {
     private Long updateViews;
     private Set<Long> likes = new HashSet<>();
     private LocalDateTime createDate;
-    private LocalDateTime uploadDate;
+    private LocalDateTime updateDate;
+    private LocalDateTime deleteDate;
     private BoardStatus boardStatus;
 
 
@@ -31,7 +33,8 @@ public class BoardForRedis {
         this.views = board.getViews();
         this.likes.addAll(memberIds);
         this.createDate = board.getCreateDate();
-        this.uploadDate = board.getUpdateDate();
+        this.updateDate = board.getUpdateDate();
+        this.deleteDate = board.getDeleteDate();
         this.boardStatus = board.getBoardStatus();
     }
 
@@ -49,6 +52,14 @@ public class BoardForRedis {
 
     public void cancelLike(Long memberId) {
         this.likes.remove(memberId);
+    }
+
+    public void update(Board board) {
+        this.title = board.getTitle();
+        this.content = board.getContent();
+        this.updateDate= board.getUpdateDate();
+        this.deleteDate = board.getDeleteDate();
+        this.boardStatus = board.getBoardStatus();
     }
 }
 

@@ -26,5 +26,9 @@ public interface BoardRepository extends JpaRepository<Board, Long> ,BoardQueryd
     @Query("SELECT b FROM Board b WHERE b.boardStatus = :boardStatus")
     Page<Board> findAll(@Param("boardStatus") BoardStatus boardStatus,Pageable pageable);
 
-    Page<Board> findAllByCategory(Category category, PageRequest pageRequest);
+    @Query("select b from Board b where b.category.name = : category")
+    Page<Board> findAllByCategory(String category, PageRequest pageRequest);
+
+    @Query("select b from Board b where b.deleteDate is not null")
+    Page<Board> findByDeletionStatus(PageRequest pageRequest);
 }

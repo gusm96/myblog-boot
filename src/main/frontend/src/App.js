@@ -16,6 +16,7 @@ import { JoinForm } from "./screens/Member/JoinForm";
 import { NotFound } from "./screens/error/NotFound";
 import { NavigateBack } from "./screens/error/NavigateBack";
 import { CategoryList } from "./components/Category/CategoryList";
+import { TemporaryStorage } from "./screens/TemporaryStorage";
 
 export default App;
 
@@ -70,6 +71,7 @@ function App() {
           <Route path="boards" element={<Management />} />
           <Route path="boards/:boardId" element={<BoardEditForm />} />
           <Route path="categories" element={<CategoryList />} />
+          <Route path="temporary-storage" element={<TemporaryStorage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
