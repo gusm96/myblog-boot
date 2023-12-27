@@ -7,5 +7,5 @@ public interface FileUploadService {
 
     ImageFileDto saveImageFile(MultipartFile file);
 
-    String deleteImageFile(ImageFileDto imageFileDto);
+    boolean deleteImageFile(String imageFileName);
 }

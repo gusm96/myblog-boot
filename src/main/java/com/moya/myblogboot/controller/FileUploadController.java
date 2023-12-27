@@ -22,7 +22,6 @@ public class FileUploadController {
 
     @DeleteMapping("/api/v1/images")
     public ResponseEntity<?> requestDeleteImageFile(@RequestBody @Valid ImageFileDto imageFileDto) {
-        // 경로로 이미지 찾아서 삭제.
-        return ResponseEntity.ok().body(fileUploadService.deleteImageFile(imageFileDto));
+        return ResponseEntity.ok().body(fileUploadService.deleteImageFile(imageFileDto.getFileName()));
     }
 }

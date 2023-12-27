@@ -23,17 +23,17 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class ScheduledTaskService {
-    private final BoardRepository boardRepository;
     private final BoardRedisRepository boardRedisRepository;
-    private final MemberRepository memberRepository;
     private final BoardLikeRepository boardLikeRepository;
+    private final BoardService boardService;
+    private final AuthService authService;
     private static final Long SECONDS_INT_15DAYS = 15L * 24L * 60L * 60L; // 15일
 
     @Scheduled(cron = "0 0 0 * * ?")// 매일 자정에 실행되도록 스케줄링
     @Transactional
     public void deleteExpiredBoards() {
         LocalDateTime thresholdDate = LocalDateTime.now().minusSeconds(SECONDS_INT_15DAYS);
-        boardRepository.deleteWithinPeriod(thresholdDate);
+        boardService.deletePermanently(thresholdDate);
         log.info("삭제 후 15일이 지난 게시글 영구삭제");
     }
 
@@ -47,7 +47,7 @@ public class ScheduledTaskService {
             BoardForRedis boardForRedis = boardRedisRepository.findOne(key).get();
             if(boardForRedis != null){
                 // 수정할 대상 게시글 엔터티 조회
-                Board findBoard = getBoard(boardForRedis.getId());
+                Board findBoard = boardService.retrieveBoardById(boardForRedis.getId());
                 // 조회수 업데이트
                 findBoard.updateViews(boardForRedis.getViews() + boardForRedis.getUpdateViews());
                 // 좋아요 한 회원ID
@@ -63,7 +63,7 @@ public class ScheduledTaskService {
 
     private void saveBoardLikes(Board board, List<Long> membersId) {
         for (Long memberId : membersId) {
-            Member member = getMember(memberId);
+            Member member = authService.retrieveMemberById(memberId);
             BoardLike boardLike = BoardLike.builder().board(board).member(member).build();
             boardLikeRepository.save(boardLike);
         }
@@ -73,15 +73,4 @@ public class ScheduledTaskService {
         return boardRedisRepository.getKeysValues(key);
     }
 
-    private Member getMember(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow(
-                () -> new EntityNotFoundException("회원이 존재하지 않습니다")
-        );
-    }
-
-    private Board getBoard(Long boardId) {
-        return boardRepository.findById(boardId).orElseThrow(
-                () -> new EntityNotFoundException("게시글이 존재하지 않습니다.")
-        );
-    }
 }
