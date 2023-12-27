@@ -178,30 +178,46 @@ public class BoardServiceImpl implements BoardService {
             throw new UnauthorizedAccessException("권한이 없습니다.");
         }
     }
-
-    @Override
-    @Transactional
-    public void deletePermanently(LocalDateTime thresholdDate) {
-        List<Board> boards = boardRepository.findByDeleteDate(thresholdDate);
-        for (Board b : boards) {
-            // 이미지 파일 찾아서 S3에서 삭제
-            b.getImageFiles().stream().map(imageFile ->
-                    fileUploadService.deleteImageFile(imageFile.getFileName())
-            );
-            try {
-                boardRepository.delete(b);
-            } catch (Exception e) {
-                throw new RuntimeException("게시글 삭제를 실패했습니다.");
-            }
-        }
-    }
-
+    // 게시글 삭제 취소
     @Override
     @Transactional
     public void undeleteBoard(Long boardId) {
         Board board = retrieveBoardById(boardId);
         board.undeleteBoard();
         updateBoardForRedis(board);
+    }
+
+    // 게시글 영구 삭제
+    @Override
+    @Transactional
+    public void deletePermanently(LocalDateTime thresholdDate) {
+        List<Board> boards = boardRepository.findByDeleteDate(thresholdDate);
+        for (Board b : boards) {
+            // 이미지 파일 찾아서 S3에서 삭제
+            b.getImageFiles().stream().forEach(imageFile ->
+                    fileUploadService.deleteImageFile(imageFile.getFileName())
+            );
+            try {
+                boardRepository.delete(b);
+                boardRedisRepository.delete(b.getId());
+            } catch (Exception e) {
+                throw new RuntimeException("게시글 삭제를 실패했습니다.");
+            }
+        }
+    }
+    @Override
+    @Transactional
+    public void deletePermanently(Long boardId) {
+        Board board = retrieveBoardById(boardId);
+            // 이미지 파일 찾아서 S3에서 삭제
+            try {
+                board.getImageFiles().stream().forEach(imageFile
+                        -> fileUploadService.deleteImageFile(imageFile.getFileName()));
+                boardRepository.delete(board);
+                boardRedisRepository.delete(boardId);
+            } catch (Exception e) {
+                throw new RuntimeException("게시글 삭제를 실패했습니다.");
+            }
     }
 
     // 게시글 Entity 조회

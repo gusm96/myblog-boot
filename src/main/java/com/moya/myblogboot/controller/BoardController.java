@@ -122,10 +122,16 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.retrieveDeletedBoards(getPage(page)));
     }
 
-    @DeleteMapping("/api/v1/deleted-boards/{boardId}")
+    @PutMapping("/api/v1/deleted-boards/{boardId}")
     public ResponseEntity<?> requestCancelDeletedBoard(@PathVariable("boardId") Long boardId) {
         boardService.undeleteBoard(boardId);
         return ResponseEntity.ok().body("게시글 삭제 취소 완료");
+    }
+
+    @DeleteMapping("/api/v1/deleted-boards/{boardId}")
+    public ResponseEntity<?> requestDeleteBoard(@PathVariable("boardId")Long boardId) {
+        boardService.deletePermanently(boardId);
+        return ResponseEntity.ok("게시글이 영구 삭제되었습니다.");
     }
 
     private Long getMemberId(Principal principal) {
