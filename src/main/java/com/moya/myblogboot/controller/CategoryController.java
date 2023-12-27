@@ -23,6 +23,11 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.getCategoryList());
     }
 
+    // 카테고리 리스트 V2
+    @GetMapping("/api/v2/categories")
+    public ResponseEntity<List> getCategoryListV2() {
+        return ResponseEntity.ok().body(categoryService.retrieveCategoriesDto());
+    }
     // 카테고리 작성
     @PostMapping("/api/v1/categories")
     public ResponseEntity<String> newCategory(@RequestBody @Valid CategoryReqDto categoryReqDto) {

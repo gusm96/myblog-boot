@@ -27,7 +27,6 @@ public class Board extends BaseTimeEntity {
     private String content;
     private Long views;
 
-
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<BoardLike> boardLikes = new HashSet<>();
 

@@ -6,4 +6,6 @@ import org.springframework.web.multipart.MultipartFile;
 public interface FileUploadService {
 
     ImageFileDto saveImageFile(MultipartFile file);
+
+    boolean deleteImageFile(String imageFileName);
 }

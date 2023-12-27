@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
-public class BoardRedisRepositoryTest {
+public class BoardRedisRepositoryTest extends AbstractContainerBaseTest{
 
     @Autowired
     MemberRepository memberRepository;

@@ -11,4 +11,6 @@ public interface BoardLikeService {
     Long addLikeV2(Long boardId, Long memberId);
 
     Long cancelLikes(Long boardId, Long memberId);
+
+    boolean isBoardLikedV2(Long boardId, Long memberId);
 }

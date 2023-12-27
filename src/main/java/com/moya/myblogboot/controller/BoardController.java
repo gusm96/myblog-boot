@@ -87,6 +87,12 @@ public class BoardController {
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.isBoardLiked(memberId, boardId));
     }
+    // 게시글 좋아요 여부 확인 V2
+    @GetMapping("/api/v2/likes/{boardId}")
+    public ResponseEntity<?> requestToCheckBoardLikeV2( @PathVariable("boardId") Long boardId, Principal principal){
+        Long memberId = getMemberId(principal);
+        return ResponseEntity.ok().body(boardLikeService.isBoardLikedV2(boardId, memberId));
+    }
 
     // 게시글 좋아요
     @PostMapping("/api/v1/likes/{boardId}")
