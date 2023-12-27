@@ -1,14 +1,10 @@
 package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.board.*;
-import com.moya.myblogboot.domain.token.TokenInfo;
-import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardLikeService;
 import com.moya.myblogboot.service.BoardService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -119,6 +115,23 @@ public class BoardController {
     public ResponseEntity<?> requestToCancelBoardLikeV2 ( @PathVariable("boardId") Long boardId, Principal principal){
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.cancelLikes(boardId, memberId));
+    }
+
+    @GetMapping("/api/v1/deleted-boards")
+    public ResponseEntity<?> requestDeletedBoards(@RequestParam(name = "p", defaultValue = "1") int page){
+        return ResponseEntity.ok().body(boardService.retrieveDeletedBoards(getPage(page)));
+    }
+
+    @PutMapping("/api/v1/deleted-boards/{boardId}")
+    public ResponseEntity<?> requestCancelDeletedBoard(@PathVariable("boardId") Long boardId) {
+        boardService.undeleteBoard(boardId);
+        return ResponseEntity.ok().body("게시글 삭제 취소 완료");
+    }
+
+    @DeleteMapping("/api/v1/deleted-boards/{boardId}")
+    public ResponseEntity<?> requestDeleteBoard(@PathVariable("boardId")Long boardId) {
+        boardService.deletePermanently(boardId);
+        return ResponseEntity.ok("게시글이 영구 삭제되었습니다.");
     }
 
     private Long getMemberId(Principal principal) {

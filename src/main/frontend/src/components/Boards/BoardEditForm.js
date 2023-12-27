@@ -3,7 +3,12 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import { deleteBoard, editBoard, getBoard } from "../../services/boardApi";
+import {
+  deleteBoard,
+  editBoard,
+  getBoard,
+  undeleteBoard,
+} from "../../services/boardApi";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { selectAccessToken } from "../../redux/userSlice";
@@ -19,6 +24,7 @@ export const BoardEditForm = () => {
   const [board, setBoard] = useState({
     title: "",
     category: "",
+    deleteDate: "",
   });
 
   const [categories, setCategories] = useState([]);
@@ -36,6 +42,7 @@ export const BoardEditForm = () => {
       setBoard({
         title: data.title,
         category: data.category,
+        deleteDate: data.deleteDate,
       });
       setEditorState(newEditorState);
     });
@@ -74,6 +81,16 @@ export const BoardEditForm = () => {
     if (window.confirm("정말로 삭제하시겠습니까?")) {
       deleteBoard(boardId, accessToken)
         .then((data) => (window.location.href = "/management"))
+        .catch((error) => console.log(error));
+    } else {
+      return;
+    }
+  };
+  const handleUndelete = (e) => {
+    e.preventDefault();
+    if (window.confirm("삭제를 취소하시겠습니까?")) {
+      undeleteBoard(boardId, accessToken)
+        .then((data) => alert(data))
         .catch((error) => console.log(error));
     } else {
       return;
@@ -123,9 +140,15 @@ export const BoardEditForm = () => {
         }}
       />
       <Button type="submit">수정</Button>
-      <Button type="button" onClick={handleDelete}>
-        삭제
-      </Button>
+      {board.deleteDate === null || "" ? (
+        <Button type="button" onClick={handleDelete}>
+          삭제
+        </Button>
+      ) : (
+        <Button type="button" onClick={handleUndelete}>
+          삭제 취소
+        </Button>
+      )}
     </Form>
   );
 };

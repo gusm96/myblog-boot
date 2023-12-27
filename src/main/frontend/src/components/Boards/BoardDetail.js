@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import moment from "moment";
-import { Comment } from "../Comments/Comment";
 import { useSelector } from "react-redux";
 import { selectAccessToken, selectIsLoggedIn } from "../../redux/userSlice";
 import {
@@ -14,6 +13,7 @@ import {
 import Parser from "html-react-parser";
 import { CommentList } from "../Comments/CommentList";
 import "../Styles/Board/boardDetail.css";
+import { CommentForm } from "../Comments/CommentForm";
 const BoardDetail = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const [isBoardLiked, setIsBoardLiked] = useState(false);
@@ -99,7 +99,7 @@ const BoardDetail = () => {
       </div>
       <hr></hr>
       {isLoggedIn ? (
-        <Comment boardId={boardId} accessToken={accessToken} />
+        <CommentForm boardId={boardId} accessToken={accessToken} />
       ) : (
         <p>로그인을 하면 댓글을 작성할 수 있습니다.</p>
       )}
