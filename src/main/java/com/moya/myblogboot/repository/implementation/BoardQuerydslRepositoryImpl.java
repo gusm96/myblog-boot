@@ -23,11 +23,12 @@ public class BoardQuerydslRepositoryImpl implements BoardQuerydslRepository {
     private JPAQueryFactory queryFactory;
 
     @Override
-    public void deleteWithinPeriod(LocalDateTime deleteDate) {
+    public List<Board> findByDeleteDate (LocalDateTime deleteDate) {
         queryFactory = new JPAQueryFactory(em);
-        queryFactory.delete(board)
-                .where(board.deleteDate.loe(deleteDate))
-                .execute();
+        return queryFactory.selectFrom(board)
+                .leftJoin(board.imageFiles).fetchJoin()
+                        .where(board.deleteDate.loe(deleteDate))
+                                .fetch();
     }
 
     @Override

@@ -10,6 +10,7 @@ import com.moya.myblogboot.repository.*;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardService;
 import com.moya.myblogboot.service.CategoryService;
+import com.moya.myblogboot.service.FileUploadService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,6 +36,7 @@ public class BoardServiceImpl implements BoardService {
     private final BoardRepository boardRepository;
     private final ImageFileRepository imageFileRepository;
     private final BoardRedisRepository boardRedisRepository;
+    private final FileUploadService fileUploadService;
     // 페이지별 최대 게시글 수
     private static final int LIMIT = 4;
 
@@ -180,6 +183,22 @@ public class BoardServiceImpl implements BoardService {
             return true;
         }else {
             throw new UnauthorizedAccessException("권한이 없습니다.");
+        }
+    }
+
+    @Override
+    public void deletePermanently(LocalDateTime thresholdDate) {
+        List<Board> boards = boardRepository.findByDeleteDate(thresholdDate);
+        for (Board b : boards) {
+            // 이미지 파일 찾아서 S3에서 삭제
+            b.getImageFiles().stream().map(imageFile ->
+                    fileUploadService.deleteImageFile(imageFile.getFileName())
+            );
+            try {
+                boardRepository.delete(b);
+            } catch (Exception e) {
+                throw new RuntimeException("게시글 삭제를 실패했습니다.");
+            }
         }
     }
 

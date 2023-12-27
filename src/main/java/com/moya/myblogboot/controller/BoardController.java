@@ -1,14 +1,10 @@
 package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.board.*;
-import com.moya.myblogboot.domain.token.TokenInfo;
-import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardLikeService;
 import com.moya.myblogboot.service.BoardService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;

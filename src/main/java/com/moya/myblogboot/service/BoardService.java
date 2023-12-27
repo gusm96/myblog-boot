@@ -1,6 +1,9 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.board.*;
+import org.springframework.cglib.core.Local;
+
+import java.time.LocalDateTime;
 
 public interface BoardService {
 
@@ -20,5 +23,7 @@ public interface BoardService {
     Board retrieveBoardById(Long boardId);
 
     BoardResDtoV2 retrieveBoardDetail(Long boardId);
+
+    void deletePermanently(LocalDateTime thresholdDate);
 }
 

@@ -10,6 +10,6 @@ import java.util.List;
 
 public interface BoardQuerydslRepository {
 
-    void deleteWithinPeriod(LocalDateTime deleteDate);
+    List<Board> findByDeleteDate(LocalDateTime deleteDate);
     Page<Board> findBySearchType(Pageable pageable, SearchType searchType, String contents);
 }
