@@ -8,20 +8,10 @@
   
   - 프로젝트 ‘MyBlog’는 개인 블로그 플랫폼으로 게시글을 작성하고 공유하며 소통하는 서비스를 제공합니다.
   
-- **프로젝트 구조**
-
-  <img width="816" alt="스크린샷 2023-12-27 174137" src="https://github.com/gusm96/myblog-boot/assets/77833389/e88733f7-0fba-4f3c-8b2d-cb9fa947e75e">
-
-
-* **서버 CI/CD 구조**
-
-  <img width="954" alt="스크린샷 2023-12-27 151745" src="https://github.com/gusm96/myblog-boot/assets/77833389/4230cde7-a02f-4a43-80d9-4d390e00798a">
-
-- **플로우 차트**
-
-  ![%ED%94%8C%EB%A1%9C%EC%9A%B0_%EC%B0%A8%ED%8A%B8](https://github.com/gusm96/myblog-boot/assets/77833389/ae414311-b831-4616-bc07-0213ccb112fa)
-
+  <img width="877" alt="image" src="https://github.com/gusm96/myblog-boot/assets/77833389/ce61dadd-0cb0-4734-b861-e29bc5342abf">
+  
 - **프로젝트 주요 기능**
+
   - Spring Security와 JWT를 사용해 인증/인가 필터 구현
   - Auth API (회원 및 인증 관련 API)
     - 회원 등록, 로그인, 로그아웃 ,토큰 검증 , 토큰 재발급
@@ -42,6 +32,7 @@
     - 댓글 리스트 조회, 수정, 삭제
 
 - **기술 스택**
+
   - Backend
     - Java 17, Spring Boot, Spring Data JPA, MariaDB, Redis
 
@@ -51,6 +42,21 @@
     - Docker, Jenkins, AWS EC2, AWS S3
   - Tools
     - Intellj, Jmeter, Postman
+
+  
+
+- **프로젝트 구조**
+
+  <img width="816" alt="스크린샷 2023-12-27 174137" src="https://github.com/gusm96/myblog-boot/assets/77833389/e88733f7-0fba-4f3c-8b2d-cb9fa947e75e">
+
+
+* **서버 CI/CD 구조**
+
+  <img width="954" alt="스크린샷 2023-12-27 151745" src="https://github.com/gusm96/myblog-boot/assets/77833389/4230cde7-a02f-4a43-80d9-4d390e00798a">
+
+- **플로우 차트**
+
+  ![%ED%94%8C%EB%A1%9C%EC%9A%B0_%EC%B0%A8%ED%8A%B8](https://github.com/gusm96/myblog-boot/assets/77833389/ae414311-b831-4616-bc07-0213ccb112fa)
 
 
 ---
