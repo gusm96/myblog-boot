@@ -17,6 +17,7 @@ public interface CategoryService {
 
     Category retrieveCategoryById(Long categoryId);
 
+    List<CategoriesResDto> retrieveCategoriesDtoWithViewBoards();
     Category retrieveCategoryByName(String categoryName);
 
     List<CategoriesResDto> retrieveCategoriesDto();

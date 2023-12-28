@@ -26,8 +26,14 @@ public class CategoryController {
     // 카테고리 리스트 V2
     @GetMapping("/api/v2/categories")
     public ResponseEntity<List> getCategoryListV2() {
+        return ResponseEntity.ok().body(categoryService.retrieveCategoriesDtoWithViewBoards());
+    }
+    // 관리자용 카테고리 리스트
+    @GetMapping("/api/v1/categories-management")
+    public ResponseEntity<List> getCategoryListForAdmin (){
         return ResponseEntity.ok().body(categoryService.retrieveCategoriesDto());
     }
+
     // 카테고리 작성
     @PostMapping("/api/v1/categories")
     public ResponseEntity<String> newCategory(@RequestBody @Valid CategoryReqDto categoryReqDto) {
