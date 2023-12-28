@@ -44,6 +44,10 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public List<CategoriesResDto> retrieveCategoriesDtoWithViewBoards() {
+        return categoryRepository.findCategoriesWithViewBoards();
+    }
+    @Override
     public List<CategoriesResDto> retrieveCategoriesDto() {
         return categoryRepository.findAllDto();
     }
