@@ -6,6 +6,7 @@ export const BASE_URL = "http://localhost:8080";
 // 카테고리 등록/조회/수정/삭제 HTTP Method GET POST PUT DELETE
 export const CATEGORY_CRUD = `${BASE_URL}/api/v1/categories`;
 export const CATEGORIES = `${BASE_URL}/api/v2/categories`;
+export const CATEGORIES_FOR_ADMIN = `${BASE_URL}/api/v1/categories-management`;
 // 게시글 상세
 export const BOARD_GET = (boardId) => {
   return `${BASE_URL}/api/v3/boards/${boardId}`;

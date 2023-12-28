@@ -3,7 +3,7 @@ import "../Styles/css/categories.css";
 import {
   addNewCategory,
   deleteCategory,
-  getCategoriesV2,
+  getCategoiresForAdmin,
 } from "../../services/categoryApi";
 import {
   Button,
@@ -22,8 +22,8 @@ export const CategoryList = () => {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    getCategoriesV2().then((data) => setCategories(data));
-  }, []);
+    getCategoiresForAdmin(accessToken).then((data) => setCategories(data));
+  }, [accessToken]);
   const handleOnChange = (e) => {
     e.preventDefault();
     setCategory(e.target.value);
