@@ -1,8 +1,6 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.board.*;
-import org.springframework.cglib.core.Local;
-
 import java.time.LocalDateTime;
 
 public interface BoardService {
@@ -12,24 +10,24 @@ public interface BoardService {
     BoardListResDto retrieveBoardListByCategory(String categoryName, int page);
 
     BoardListResDto retrieveBoardListBySearch(SearchType searchType, String searchContents, int page);
-    BoardDetailResDto boardToResponseDto(Long boardId);
-
-    Long editBoard(Long memberId, Long boardId, BoardReqDto boardReqDto);
-
-    boolean deleteBoard(Long boardId, Long memberId);
-
-    Long uploadBoard(BoardReqDto boardReqDto, Long memberId);
 
     Board retrieveBoardById(Long boardId);
 
     BoardResDtoV2 retrieveBoardDetail(Long boardId);
 
-    void deletePermanently(LocalDateTime thresholdDate);
+    BoardListResDto retrieveDeletedBoards(int page);
+
+    Long uploadBoard(BoardReqDto boardReqDto, Long memberId);
+
+    Long editBoard(Long memberId, Long boardId, BoardReqDto boardReqDto);
+
+    void undeleteBoard(Long boardId);
+
+    boolean deleteBoard(Long boardId, Long memberId);
 
     void deletePermanently(Long boardId);
 
-    BoardListResDto retrieveDeletedBoards(int page);
+    void deletePermanently(LocalDateTime thresholdDate);
 
-    void undeleteBoard(Long boardId);
 }
 
