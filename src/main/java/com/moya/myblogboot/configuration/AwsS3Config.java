@@ -1,4 +1,4 @@
-package com.moya.myblogboot.controller;
+package com.moya.myblogboot.configuration;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
