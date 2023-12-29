@@ -52,7 +52,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public BoardListResDto retrieveBoardListByCategory(String categoryName, int page){
         PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC, "createDate"));
-        Page<Board> boards = boardRepository.findAllByCategory(categoryName, pageRequest);
+        Page<Board> boards = boardRepository.findAllByCategoryName(categoryName, pageRequest);
         return convertToBoardListResDto(boards);
     }
 
@@ -75,7 +75,7 @@ public class BoardServiceImpl implements BoardService {
     private BoardListResDto convertToBoardListResDto(Page<Board> boards){
         // 조회한 Board Entity List를 DTO 객체로 변환.
         List<BoardResDto> resultList = boards.stream().map(board
-                        -> BoardResDto.of(board, getBoardLikeCount(board.getId())))
+                        -> BoardResDto.of(board))
                 .toList();
         // 화면에 보여질 List와 개시글 총 개수 반환.
         return BoardListResDto.builder()
@@ -105,49 +105,23 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
-    // 게시글 상세 조회 V2
-    @Override
-    @Transactional
-    public BoardDetailResDto boardToResponseDto(Long boardId) {
-        // Board Entity 조회
-        Board findBoard = retrieveBoardById(boardId);
-        // Redis에 저장된 좋아요 수
-        Long likes = getBoardLikeCount(boardId);
-        // Redis에서 조회수 가져오기
-        Long views = getViews(findBoard);
-
-        // 응답용 DTO 객체로 변환
-        return BoardDetailResDto.builder()
-                .board(findBoard)
-                .likes(likes)
-                .views(views)
-                .build();
-    }
-    // Redis에서 조회수 가져오기
-    private Long getViews(Board board) {
-        Long views = boardRedisRepository.getViews(board.getId());
-        // 조회수 갱신 로직
-        if (views == null || views < board.getViews()) {
-            // 조회수가 null 이거나 DB에 저장된 값보다 작은 경우 캐시에 DB 데이터 저장
-            views = boardRedisRepository.setViews(board.getId(), board.getViews() + 1L);
-        } else {
-            // 조회수 증가 후 결과 값 반환
-            views = boardRedisRepository.viewsIncrement(board.getId());
-        }
-        return views;
-    }
-
-    // 게시글 상세 조회 V3
+    // 게시글 상세 조회
     @Override
     public BoardResDtoV2 retrieveBoardDetail(Long boardId) {
-        Optional<BoardForRedis> boardForRedis = boardRedisRepository.findById(boardId);
-        // Memory에 데이터 없으면 DB에서 조회
-        if(boardForRedis.isEmpty()){
+        // Redis Store에서 데이터 조회
+        Optional<BoardForRedis> boardForRedis = boardRedisRepository.findOne(boardId);
+        // Redis Store에 데이트 없으면 DB에서 조회
+        if (boardForRedis.isEmpty()) {
+            // DB에서 조회
             Board board = retrieveBoardById(boardId);
+            // Redis Store에 Dada Set();
             BoardForRedis saveBoard = boardRedisRepository.save(board);
-            return BoardResDtoV2.builder().boardForRedis(saveBoard).build();
+            // 조회수 증가 후 응답
+            return BoardResDtoV2.builder().boardForRedis(boardRedisRepository.incrementViews(saveBoard)).build();
+        }else {
+            // 조회수 증가 후 응답
+            return BoardResDtoV2.builder().boardForRedis(boardRedisRepository.incrementViews(boardForRedis.get())).build();
         }
-        return BoardResDtoV2.builder().boardForRedis(boardForRedis.get()).build();
     }
 
     // 게시글 수정
@@ -164,7 +138,7 @@ public class BoardServiceImpl implements BoardService {
         return board.getId();
     }
 
-    // 게시글 삭제
+    // 게시글 삭제 (영구 삭제 X)
     @Override
     @Transactional
     public boolean deleteBoard(Long boardId, Long memberId){
@@ -172,12 +146,13 @@ public class BoardServiceImpl implements BoardService {
         Board board = retrieveBoardById(boardId);
         if (board.getMember().getId().equals(memberId)) {
             board.deleteBoard(); // 15일 이후 자동 삭제
-            updateBoardForRedis(board);
+            updateBoardForRedis(board); // 현재 게시글 상태 Redis Store에 Update
             return true;
         }else {
             throw new UnauthorizedAccessException("권한이 없습니다.");
         }
     }
+
     // 게시글 삭제 취소
     @Override
     @Transactional
@@ -187,7 +162,7 @@ public class BoardServiceImpl implements BoardService {
         updateBoardForRedis(board);
     }
 
-    // 게시글 영구 삭제
+    // 보관 기간이 만료된 게시글 영구 삭제
     @Override
     @Transactional
     public void deletePermanently(LocalDateTime thresholdDate) {
@@ -205,6 +180,7 @@ public class BoardServiceImpl implements BoardService {
             }
         }
     }
+    // 지정 게시글 영구 삭제
     @Override
     @Transactional
     public void deletePermanently(Long boardId) {
@@ -231,11 +207,6 @@ public class BoardServiceImpl implements BoardService {
             e.printStackTrace();
             throw new RuntimeException("게시글 조회중 오류 발생.");
         }
-    }
-
-    // 게시글 좋아요 수 조회 - Redis
-    private Long getBoardLikeCount(Long boardId) {
-        return boardRedisRepository.getLikesCount(boardId);
     }
 
     // 이미지 파일 저장
