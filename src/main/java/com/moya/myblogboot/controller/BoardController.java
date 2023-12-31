@@ -5,6 +5,7 @@ import com.moya.myblogboot.service.BoardLikeService;
 import com.moya.myblogboot.service.BoardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -25,9 +26,9 @@ public class BoardController {
     }
 
     // 카테고리별 게시글 리스트
-    @GetMapping("/api/v1/boards/{category}")
+    @GetMapping("/api/v1/boards/category")
     public ResponseEntity<BoardListResDto> requestCategoryOfBoards(
-            @PathVariable("category") String category,
+            @RequestParam("c") String category,
             @RequestParam(name = "p", defaultValue = "1") int page
     ) {
         return ResponseEntity.ok().body(boardService.retrieveBoardListByCategory(category, getPage(page)));
@@ -44,7 +45,13 @@ public class BoardController {
 
     // 게시글 상세 V4
     @GetMapping("/api/v4/boards/{boardId}")
-    public ResponseEntity<BoardResDtoV2> getBoardDetailV4(@PathVariable("boardId") Long boardId) {
+    public ResponseEntity<BoardDetailResDto> getBoardDetail(@PathVariable("boardId") Long boardId) {
+        return ResponseEntity.ok().body(boardService.retrieveBoardAndIncrementViews(boardId));
+    }
+
+    // 게시글 상세 관리자용
+    @GetMapping("/api/v1/management/boards/{boardId}")
+    public ResponseEntity<BoardDetailResDto> getBoardDetailForAdmin (@PathVariable("boardId") Long boardId){
         return ResponseEntity.ok().body(boardService.retrieveBoardDetail(boardId));
     }
 
@@ -56,7 +63,7 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, memberId));
     }
 
-    // 게시글 수정
+    // 게시글 수정 PUT
     @PutMapping("/api/v1/boards/{boardId}")
     public ResponseEntity<Long> editBoard(@PathVariable("boardId") Long boardId,
                                           @RequestBody @Valid BoardReqDto boardReqDto,
@@ -65,57 +72,59 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.editBoard(memberId, boardId, boardReqDto));
     }
 
-    // 게시글 삭제
+    // 게시글 삭제 DELETE
     @DeleteMapping("/api/v1/boards/{boardId}")
-    public ResponseEntity<Boolean> deleteBoard( @PathVariable("boardId") Long boardId, Principal principal) {
+    public ResponseEntity<Boolean> deleteBoard(@PathVariable("boardId") Long boardId, Principal principal) {
         Long memberId = getMemberId(principal);
-        return ResponseEntity.ok().body(boardService.deleteBoard(boardId, memberId));
+        boardService.deleteBoard(boardId, memberId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    // 게시글 좋아요 여부 확인
+    // 삭제 예정 게시글 리스트 GET
+    @GetMapping("/api/v1/deleted-boards")
+    public ResponseEntity<?> requestDeletedBoards(@RequestParam(name = "p", defaultValue = "1") int page) {
+        return ResponseEntity.ok().body(boardService.retrieveDeletedBoards(getPage(page)));
+    }
+
+    // 게시글 삭제 취소 PUT
+    @PutMapping("/api/v1/deleted-boards/{boardId}")
+    public ResponseEntity<?> requestCancelDeletedBoard(@PathVariable("boardId") Long boardId, Principal principal) {
+        Long memberId = getMemberId(principal);
+        boardService.undeleteBoard(boardId, memberId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    // 게시글 영구 삭제 DELETE
+    @DeleteMapping("/api/v1/deleted-boards/{boardId}")
+    public ResponseEntity<?> requestDeleteBoard(@PathVariable("boardId") Long boardId) {
+        boardService.deletePermanently(boardId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    // 게시글 좋아요 여부 확인 GET
     @GetMapping("/api/v2/likes/{boardId}")
-    public ResponseEntity<?> requestToCheckBoardLike( @PathVariable("boardId") Long boardId, Principal principal){
+    public ResponseEntity<?> requestToCheckBoardLike(@PathVariable("boardId") Long boardId, Principal principal) {
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.isBoardLiked(boardId, memberId));
     }
 
-    // 게시글 좋아요
+    // 게시글 좋아요 POST
     @PostMapping("/api/v2/likes/{boardId}")
     public ResponseEntity<Long> requestToAddBoardLike(@PathVariable("boardId") Long boardId, Principal principal) {
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.addLike(boardId, memberId));
     }
 
-    // 게시글 좋아요 취소
+    // 게시글 좋아요 취소 DELETE
     @DeleteMapping("/api/v2/likes/{boardId}")
-    public ResponseEntity<?> requestToCancelBoardLike ( @PathVariable("boardId") Long boardId, Principal principal){
+    public ResponseEntity<?> requestToCancelBoardLike(@PathVariable("boardId") Long boardId, Principal principal) {
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.cancelLikes(boardId, memberId));
     }
 
-    // 삭제 예정 게시글 리스트
-    @GetMapping("/api/v1/deleted-boards")
-    public ResponseEntity<?> requestDeletedBoards(@RequestParam(name = "p", defaultValue = "1") int page){
-        return ResponseEntity.ok().body(boardService.retrieveDeletedBoards(getPage(page)));
-    }
-
-    // 게시글 삭제 취소
-    @PutMapping("/api/v1/deleted-boards/{boardId}")
-    public ResponseEntity<?> requestCancelDeletedBoard(@PathVariable("boardId") Long boardId) {
-        boardService.undeleteBoard(boardId);
-        return ResponseEntity.ok().body("게시글 삭제 취소 완료");
-    }
-
-    // 게시글 영구 삭제
-    @DeleteMapping("/api/v1/deleted-boards/{boardId}")
-    public ResponseEntity<?> requestDeleteBoard(@PathVariable("boardId")Long boardId) {
-        boardService.deletePermanently(boardId);
-        return ResponseEntity.ok("게시글이 영구 삭제되었습니다.");
-    }
-
     private Long getMemberId(Principal principal) {
         Long memberId = -1L;
-        if(principal instanceof UsernamePasswordAuthenticationToken){
+        if (principal instanceof UsernamePasswordAuthenticationToken) {
             memberId = (Long) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
         }
         return memberId;

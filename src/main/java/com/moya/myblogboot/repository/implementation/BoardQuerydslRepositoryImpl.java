@@ -40,7 +40,6 @@ public class BoardQuerydslRepositoryImpl implements BoardQuerydslRepository {
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
-
         Long count = (long) queryFactory.selectFrom(board)
                 .where(searchType == SearchType.TITLE ? board.title.contains(contents) : board.content.contains(contents))
                 .fetch().size();

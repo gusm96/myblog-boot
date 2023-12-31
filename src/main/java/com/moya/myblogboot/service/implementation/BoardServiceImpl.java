@@ -37,20 +37,21 @@ public class BoardServiceImpl implements BoardService {
     private final ImageFileRepository imageFileRepository;
     private final BoardRedisRepository boardRedisRepository;
     private final FileUploadService fileUploadService;
+
     // 페이지별 최대 게시글 수
     private static final int LIMIT = 4;
 
     // 모든 게시글 리스트
     @Override
     public BoardListResDto retrieveBoardList(int page) {
-        PageRequest pageRequest = PageRequest.of(page, LIMIT,Sort.by(Sort.Direction.DESC, "createDate"));
+        PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC, "createDate"));
         Page<Board> boards = boardRepository.findAll(BoardStatus.VIEW, pageRequest);
         return convertToBoardListResDto(boards);
     }
 
     // 카테고리별 게시글 리스트
     @Override
-    public BoardListResDto retrieveBoardListByCategory(String categoryName, int page){
+    public BoardListResDto retrieveBoardListByCategory(String categoryName, int page) {
         PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC, "createDate"));
         Page<Board> boards = boardRepository.findAllByCategoryName(categoryName, pageRequest);
         return convertToBoardListResDto(boards);
@@ -58,13 +59,14 @@ public class BoardServiceImpl implements BoardService {
 
     // 검색한 게시글 리스트
     @Override
-    public BoardListResDto retrieveBoardListBySearch (SearchType searchType, String searchContents, int page) {
-        PageRequest pageRequest = PageRequest.of(page, LIMIT);
+    public BoardListResDto retrieveBoardListBySearch(SearchType searchType, String searchContents, int page) {
+        PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC, "createDate"));
         // 검색어 + 페이지 게시글 조회
         Page<Board> boards = boardRepository.findBySearchType(pageRequest, searchType, searchContents);
         return convertToBoardListResDto(boards);
     }
-    // 삭제 예정 게시글 리스트
+
+    // 삭제 예정(휴지통) 게시글 리스트
     @Override
     public BoardListResDto retrieveDeletedBoards(int page) {
         PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC, "deleteDate"));
@@ -72,16 +74,18 @@ public class BoardServiceImpl implements BoardService {
         return convertToBoardListResDto(boards);
     }
 
-    private BoardListResDto convertToBoardListResDto(Page<Board> boards){
-        // 조회한 Board Entity List를 DTO 객체로 변환.
-        List<BoardResDto> resultList = boards.stream().map(board
-                        -> BoardResDto.of(board))
-                .toList();
-        // 화면에 보여질 List와 개시글 총 개수 반환.
-        return BoardListResDto.builder()
-                .list(resultList)
-                .totalPage(boards.getTotalPages())
-                .build();
+    // 게시글 상세 조회
+    @Override
+    public BoardDetailResDto retrieveBoardDetail(Long boardId) {
+        BoardForRedis boardForRedis = retrieveBoardInRedisStore(boardId);
+        return BoardDetailResDto.builder().boardForRedis(boardForRedis).build();
+    }
+
+    // 게시글 조회 및 조회수 증가
+    @Override
+    public BoardDetailResDto retrieveBoardAndIncrementViews(Long boardId) {
+        BoardForRedis boardForRedis = retrieveBoardInRedisStore(boardId);
+        return BoardDetailResDto.builder().boardForRedis(incrementViews(boardForRedis)).build();
     }
 
     // 게시글 업로드
@@ -92,7 +96,7 @@ public class BoardServiceImpl implements BoardService {
         Category category = categoryService.retrieveCategoryById(boardReqDto.getCategory());
         Board newBoard = boardReqDto.toEntity(category, member);
         try {
-            if (boardReqDto.getImages() != null && boardReqDto.getImages().size() > 0 ) {
+            if (boardReqDto.getImages() != null && boardReqDto.getImages().size() > 0) {
                 saveImageFile(boardReqDto.getImages(), newBoard);
             }
             Board result = boardRepository.save(newBoard);
@@ -105,60 +109,47 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
-    // 게시글 상세 조회
-    @Override
-    public BoardResDtoV2 retrieveBoardDetail(Long boardId) {
-        // Redis Store에서 데이터 조회
-        Optional<BoardForRedis> boardForRedis = boardRedisRepository.findOne(boardId);
-        // Redis Store에 데이트 없으면 DB에서 조회
-        if (boardForRedis.isEmpty()) {
-            // DB에서 조회
-            Board board = retrieveBoardById(boardId);
-            // Redis Store에 Dada Set();
-            BoardForRedis saveBoard = boardRedisRepository.save(board);
-            // 조회수 증가 후 응답
-            return BoardResDtoV2.builder().boardForRedis(boardRedisRepository.incrementViews(saveBoard)).build();
-        }else {
-            // 조회수 증가 후 응답
-            return BoardResDtoV2.builder().boardForRedis(boardRedisRepository.incrementViews(boardForRedis.get())).build();
-        }
-    }
-
     // 게시글 수정
     @Override
     @Transactional
-    public Long editBoard(Long memberId, Long boardId, BoardReqDto modifiedDto){
+    public Long editBoard(Long memberId, Long boardId, BoardReqDto modifiedDto) {
         // Entity 조회
         Board board = retrieveBoardById(boardId);
-        if(!board.getMember().getId().equals(memberId))
-            throw new UnauthorizedAccessException("권한이 없습니다");
+        // 게시글 수정/삭제 권한 검사.
+        verifyBoardAccessAuthorization(board.getId(), memberId);
+
         Category modifiedCategory = categoryService.retrieveCategoryById(modifiedDto.getCategory());
         board.updateBoard(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent()); // 변경감지
+        // 변경 된 내용 Redis Store에 업데이트
         updateBoardForRedis(board);
-        return board.getId();
+        return boardId;
     }
 
     // 게시글 삭제 (영구 삭제 X)
     @Override
     @Transactional
-    public boolean deleteBoard(Long boardId, Long memberId){
+    public void deleteBoard(Long boardId, Long memberId) {
         // Entity 조회
         Board board = retrieveBoardById(boardId);
-        if (board.getMember().getId().equals(memberId)) {
-            board.deleteBoard(); // 15일 이후 자동 삭제
-            updateBoardForRedis(board); // 현재 게시글 상태 Redis Store에 Update
-            return true;
-        }else {
-            throw new UnauthorizedAccessException("권한이 없습니다.");
-        }
+        // 게시글 수정/삭제 권한 검사.
+        verifyBoardAccessAuthorization(board.getId(), memberId);
+        // 삭제 요청일 갱신
+        board.deleteBoard();
+        // 현재 게시글 상태 Redis Store에 Update
+        updateBoardForRedis(board);
     }
 
     // 게시글 삭제 취소
     @Override
     @Transactional
-    public void undeleteBoard(Long boardId) {
+    public void undeleteBoard(Long boardId, Long memberId) {
+        // DB에서 게시글 조회
         Board board = retrieveBoardById(boardId);
+        // 게시글 수정/삭제 권한 검사.
+        verifyBoardAccessAuthorization(board.getId(), memberId);
+        // DeleteDate, BoardStatus 업데이트
         board.undeleteBoard();
+        // Redis Store에 저장된 Data 업데이트
         updateBoardForRedis(board);
     }
 
@@ -167,33 +158,15 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     public void deletePermanently(LocalDateTime thresholdDate) {
         List<Board> boards = boardRepository.findByDeleteDate(thresholdDate);
-        for (Board b : boards) {
-            // 이미지 파일 찾아서 S3에서 삭제
-            b.getImageFiles().stream().forEach(imageFile ->
-                    fileUploadService.deleteImageFile(imageFile.getFileName())
-            );
-            try {
-                boardRepository.delete(b);
-                boardRedisRepository.delete(b.getId());
-            } catch (Exception e) {
-                throw new RuntimeException("게시글 삭제를 실패했습니다.");
-            }
-        }
+        boards.stream().forEach(Board::deleteBoard);
     }
+
     // 지정 게시글 영구 삭제
     @Override
     @Transactional
     public void deletePermanently(Long boardId) {
         Board board = retrieveBoardById(boardId);
-            // 이미지 파일 찾아서 S3에서 삭제
-            try {
-                board.getImageFiles().stream().forEach(imageFile
-                        -> fileUploadService.deleteImageFile(imageFile.getFileName()));
-                boardRepository.delete(board);
-                boardRedisRepository.delete(boardId);
-            } catch (Exception e) {
-                throw new RuntimeException("게시글 삭제를 실패했습니다.");
-            }
+        deleteBoards(board);
     }
 
     // 게시글 Entity 조회
@@ -209,6 +182,59 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
+    private BoardListResDto convertToBoardListResDto(Page<Board> boards) {
+        // 조회한 Board Entity List를 DTO 객체로 변환.
+        List<BoardResDto> resultList = boards.stream().map(board
+                        -> BoardResDto.of(board))
+                .toList();
+        // 화면에 보여질 List와 개시글 총 개수 반환.
+        return BoardListResDto.builder()
+                .list(resultList)
+                .totalPage(boards.getTotalPages())
+                .build();
+    }
+
+    // 게시글 수정/삭제 권한 검사.
+    private void verifyBoardAccessAuthorization(Long boardId, Long memberId) {
+        if (!boardId.equals(memberId))
+            throw new UnauthorizedAccessException("게시글 수정 권한이 없습니다.");
+    }
+
+    // 게시글 영구 삭제
+    private void deleteBoards(Board board) {
+        // 이미지 파일 찾아서 S3에서 삭제
+        fileUploadService.deleteImageFile(board.getImageFiles());
+        try {
+            // Redis Store에 저장된 Data Delete
+            boardRedisRepository.delete(board.getId());
+            // DB에 저장된 Data Delete
+            boardRepository.delete(board);
+        } catch (Exception e) {
+            throw new RuntimeException("게시글 삭제를 실패했습니다.");
+        }
+    }
+
+    // Board Entity 조회 후 Redis Store에 저장.
+    private BoardForRedis retrieveBoardAndSetRedisStore(Long boardId) {
+        Board board = retrieveBoardById(boardId);
+        return boardRedisRepository.save(board);
+    }
+
+    // 조회 수 증가.
+    private BoardForRedis incrementViews(BoardForRedis boardForRedis) {
+        return boardRedisRepository.incrementViews(boardForRedis);
+    }
+
+    // Redis Store에서 데이터 조회
+    private BoardForRedis retrieveBoardInRedisStore(Long boardId) {
+        Optional<BoardForRedis> boardForRedis = boardRedisRepository.findOne(boardId);
+        if (boardForRedis.isEmpty()) {
+            // DB에서 Board 조회 후 Redis store에 저장.
+            return retrieveBoardAndSetRedisStore(boardId);
+        }
+        return boardForRedis.get();
+    }
+
     // 이미지 파일 저장
     private void saveImageFile(List<ImageFileDto> images, Board board) {
         List<ImageFile> imageFiles = images.stream()
@@ -216,7 +242,7 @@ public class BoardServiceImpl implements BoardService {
         imageFiles.forEach(board::addImageFile);
     }
 
-    private void updateBoardForRedis (Board board){
+    private void updateBoardForRedis(Board board) {
         try {
             boardRedisRepository.update(board);
         } catch (Exception e) {
