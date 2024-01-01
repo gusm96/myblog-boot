@@ -3,8 +3,7 @@ import PropTypes from "prop-types";
 import moment from "moment";
 import Parser, { domToReact } from "html-react-parser";
 import "../Styles/css/boardList.css";
-import { PageButton } from "./PageButton";
-const BoardList = ({ boards, pageCount, categoryName, adminMode }) => {
+const BoardList = ({ boards, path }) => {
   const parserOptions = {
     replace: ({ attribs, children }) => {
       if (attribs) {
@@ -32,20 +31,13 @@ const BoardList = ({ boards, pageCount, categoryName, adminMode }) => {
         <div>
           {boards.map((board) => (
             <div key={board.id} className="mb-3 board-item">
-              <a
-                href={
-                  adminMode
-                    ? `/management/boards/${board.id}`
-                    : `/boards/${board.id}`
-                }
-                style={cardStyle}
-              >
+              <a href={`${path}/${board.id}`} style={cardStyle}>
                 <span className="board-title">{board.title}</span>
                 <p className="board-content">
                   {Parser(truncateText(board.content, 500), parserOptions)}
                 </p>
                 <span className="text-muted board-date">
-                  {moment(board.upload_date).format("YYYY-MM-DD")}
+                  {moment(board.createDate).format("YYYY-MM-DD")}
                 </span>
               </a>
             </div>
@@ -53,19 +45,13 @@ const BoardList = ({ boards, pageCount, categoryName, adminMode }) => {
           <hr></hr>
         </div>
       )}
-      <PageButton
-        pageCount={pageCount}
-        categoryName={categoryName ? categoryName : null}
-        adminMode={adminMode}
-      />
     </div>
   );
 };
 
 BoardList.prototype = {
   boards: PropTypes.array,
-  pageCount: PropTypes.number,
-  categoryName: PropTypes.string,
+  path: PropTypes.string,
 };
 
 export default BoardList;

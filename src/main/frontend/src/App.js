@@ -10,13 +10,14 @@ import { LoginForm } from "./screens/Member/LoginForm";
 import { useDispatch, useSelector } from "react-redux";
 import { selectAccessToken, selectIsLoggedIn } from "./redux/userSlice";
 import { useEffect } from "react";
-import { reissuingAccessToken, validateAccessToken } from "./services/authApi";
+import { reissuingAccessToken } from "./services/authApi";
 import { updateUserAccessToken, userLogout } from "./redux/authAction";
 import { JoinForm } from "./screens/Member/JoinForm";
 import { NotFound } from "./screens/error/NotFound";
 import { NavigateBack } from "./screens/error/NavigateBack";
 import { CategoryList } from "./components/Category/CategoryList";
 import { TemporaryStorage } from "./screens/TemporaryStorage";
+import { SearchPage } from "./screens/SearchPage";
 
 export default App;
 
@@ -26,26 +27,19 @@ function App() {
   const dispatch = useDispatch();
   useEffect(() => {
     // 로그인 상태면 access Token 주기적으로 검증.
-    if (access_token !== null) {
-      validateAccessToken(access_token).catch((error) => {
-        if (error.response.status === 401) {
-          reissuingAccessToken()
-            .then((data) => {
-              dispatch(updateUserAccessToken(data));
-            })
-            .catch((error) => {
-              if (
-                error.response.status === 401 ||
-                error.response.status === 500
-              ) {
-                alert("토큰이 만료되어 로그아웃 합니다.");
-                dispatch(userLogout());
-              }
-            });
-        }
-      });
+    if (isLoggedIn && access_token !== null) {
+      reissuingAccessToken()
+        .then((data) => {
+          dispatch(updateUserAccessToken(data));
+        })
+        .catch((error) => {
+          if (error.response.status === 401 || error.response.status === 500) {
+            alert("토큰이 만료되어 로그아웃 합니다.");
+            dispatch(userLogout());
+          }
+        });
     }
-  }, [access_token, dispatch]);
+  }, [isLoggedIn, access_token, dispatch]);
 
   return (
     <Router>
@@ -55,12 +49,16 @@ function App() {
           <Route index element={<Home />} />
           <Route path="boards" element={<Home />} />
           <Route path=":categoryName" element={<Home />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="boards/:boardId" element={<BoardDetail />} />
           <Route
             path="login"
             element={isLoggedIn ? <NavigateBack /> : <LoginForm />}
           />
-          <Route path="join" element={<JoinForm />} />
+          <Route
+            path="join"
+            element={isLoggedIn ? <NavigateBack /> : <JoinForm />}
+          />
           <Route path="*" element={<NotFound />} />
         </Route>
 

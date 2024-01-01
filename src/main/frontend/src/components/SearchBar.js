@@ -1,10 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Col, Form, InputGroup, Row } from "react-bootstrap";
-export const SearchBar = (page) => {
+export const SearchBar = ({ type, contents }) => {
   const [formData, setFormData] = useState({
     type: "TITLE",
     contents: "",
   });
+  useEffect(() => {
+    if (type && contents) {
+      setFormData({
+        type: type,
+        contents: contents,
+      });
+    }
+  }, [type, contents]);
   const handleOnSubmit = (e) => {
     e.preventDefault();
     // 리다이렉트

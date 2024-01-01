@@ -8,7 +8,6 @@ import {
   cancelBoardLike,
   getBoard,
   getBoardLikeStatus,
-  getComments,
 } from "../../services/boardApi";
 import Parser from "html-react-parser";
 import { CommentList } from "../Comments/CommentList";
@@ -16,7 +15,6 @@ import "../Styles/Board/boardDetail.css";
 import { CommentForm } from "../Comments/CommentForm";
 const BoardDetail = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
-  const [isBoardLiked, setIsBoardLiked] = useState(false);
   const accessToken = useSelector(selectAccessToken);
   const { boardId } = useParams();
   const [board, setBoard] = useState({
@@ -26,8 +24,29 @@ const BoardDetail = () => {
     views: "",
     likes: "",
   });
-
-  const [comments, setComments] = useState([]);
+  const [isBoardLiked, setIsBoardLiked] = useState(false);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const boardData = await getBoard(boardId);
+        setBoard({
+          title: boardData.title,
+          content: boardData.content,
+          uploadDate: boardData.uploadDate,
+          views: boardData.views,
+          likes: boardData.likes,
+        });
+        if (isLoggedIn) {
+          const likeStatusData = await getBoardLikeStatus(boardId, accessToken);
+          setIsBoardLiked(likeStatusData);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchData();
+  }, [isLoggedIn, boardId, accessToken]);
+  const uploadDateFormat = moment(board.uploadDate).format("YYYY-MM-DD");
   const handleBoardLike = (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
@@ -52,27 +71,6 @@ const BoardDetail = () => {
       setIsBoardLiked(false);
     });
   };
-  useEffect(() => {
-    getBoard(boardId).then((data) => {
-      setBoard({
-        title: data.title,
-        content: data.content,
-        uploadDate: data.uploadDate,
-        views: data.views,
-        likes: data.likes,
-      });
-    });
-    getComments(boardId).then((data) => {
-      setComments(data);
-    });
-
-    if (isLoggedIn) {
-      getBoardLikeStatus(boardId, accessToken)
-        .then((data) => setIsBoardLiked(data))
-        .catch((error) => console.log(error));
-    }
-  }, [isLoggedIn, boardId, accessToken]);
-  const uploadDateFormat = moment(board.uploadDate).format("YYYY-MM-DD");
   return (
     <div>
       <h1>{board.title}</h1>
@@ -103,7 +101,7 @@ const BoardDetail = () => {
       ) : (
         <p>로그인을 하면 댓글을 작성할 수 있습니다.</p>
       )}
-      <CommentList comments={comments} />
+      <CommentList boardId={boardId} />
     </div>
   );
 };
