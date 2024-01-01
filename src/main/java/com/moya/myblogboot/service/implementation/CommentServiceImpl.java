@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,16 +30,15 @@ public class CommentServiceImpl implements CommentService {
 
     // 댓글 리스트
     @Override
-    public List<CommentResDto> getCommentList(Long boardId) {
-        List<Comment> comments = commentRepository.findAllByBoardId(boardId);
-        return comments.stream()
-                .map(parent -> CommentResDto.builder()
-                        .comment(parent)
-                        .child(parent.getChild().stream().map(CommentResDto::of).collect(Collectors.toList()))
-                        .build())
-                .collect(Collectors.toList());
-
+    public List<CommentResDto> retrieveComments(Long boardId) {
+        return commentRepository.findAllByBoardId(boardId);
     }
+
+    @Override
+    public List<CommentResDto> retrieveChildComments(Long parentId) {
+        return commentRepository.findChildByParentId( parentId);
+    }
+
     @Override
     @Transactional
     public String addComment(CommentReqDto commentReqDto, Long memberId, Long boardId) {
@@ -50,8 +48,8 @@ public class CommentServiceImpl implements CommentService {
         // 대댓글.
         if (commentReqDto.getParentId() != null) {
             Comment parent = retrieveCommentById(commentReqDto.getParentId());
-            comment.addParentComment(parent);
-            parent.addChildComment(comment);
+            parent.addChildComment(comment); // 부모 엔터에 자식 등록 => 변경 감지
+            comment.addParentComment(parent); // 자식 엔터티에 부모 등록
         }
         try {
             // Comment Persist
@@ -72,7 +70,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public String updateComment(Long commentId, Long memberId, String modifiedComment) {
         Comment findComment = retrieveCommentById(commentId);
-        if(!findComment.getMember().getId().equals(memberId)){
+        if (!findComment.getMember().getId().equals(memberId)) {
             throw new UnauthorizedAccessException("권한이 없습니다.");
         }
         findComment.updateComment(modifiedComment);

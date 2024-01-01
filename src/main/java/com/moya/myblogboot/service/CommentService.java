@@ -15,7 +15,9 @@ public interface CommentService {
 
     String deleteComment(Long commentId, Long memberId);
 
-    List<CommentResDto> getCommentList(Long boardId);
+    List<CommentResDto> retrieveComments(Long boardId);
+
+    List<CommentResDto> retrieveChildComments(Long parentId);
 
     Comment retrieveCommentById(Long commentId);
 }
