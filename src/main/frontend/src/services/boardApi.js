@@ -1,6 +1,7 @@
 import axios from "axios";
 import {
   BOARD_CRUD,
+  BOARD_FOR_ADMIN,
   BOARD_GET,
   BOARD_LIKE_CRUD,
   CATEGORY_OF_BOARD_LIST,
@@ -11,13 +12,22 @@ import {
 export const getBoard = (boardId) => {
   return axios.get(`${BOARD_GET(boardId)}`).then((res) => res.data);
 };
+export const getBoardForAdmin = (boardId) => {
+  return axios.get(`${BOARD_FOR_ADMIN}/${boardId}`).then((res) => res.data);
+};
 export const getBoardList = (page) => {
   return axios.get(`${BOARD_CRUD}?${page}`).then((res) => res.data);
 };
 
 export const getCategoryOfBoardList = (categoryName, page) => {
   return axios
-    .get(`${CATEGORY_OF_BOARD_LIST(categoryName)}?${page}`)
+    .get(`${CATEGORY_OF_BOARD_LIST}?c=${categoryName}&${page}`)
+    .then((res) => res.data);
+};
+
+export const getSearchedBoardList = (type, contents, page) => {
+  return axios
+    .get(`${BOARD_CRUD}/search?type=${type}&contents=${contents}&p=${page}`)
     .then((res) => res.data);
 };
 
@@ -101,12 +111,16 @@ export const checkBoardLike = (page) => {
 export const getComments = (boardId) => {
   return axios.get(`${COMMENT_CRUD}/${boardId}`).then((res) => res.data);
 };
+export const getChildComments = (parentId) => {
+  return axios.get(`${COMMENT_CRUD}/child/${parentId}`).then((res) => res.data);
+};
 export const addComment = (boardId, commentData, accessToken) => {
   return axios
     .post(
       `${COMMENT_CRUD}/${boardId}`,
       {
         comment: commentData.comment,
+        parentId: commentData.parentId,
       },
       {
         headers: {
@@ -149,13 +163,23 @@ export const getDeletedBoards = (accessToken, page) => {
 };
 
 export const undeleteBoard = (boardId, accessToken) => {
-  return axios
-    .delete(`${DELETED_BOARDS}/${boardId}`, {
+  return axios.put(
+    `${DELETED_BOARDS}/${boardId}`,
+    {},
+    {
       headers: {
         Authorization: getToken(accessToken),
       },
-    })
-    .then((res) => res.data);
+    }
+  );
+};
+
+export const deletePermanently = (boardId, accessToken) => {
+  return axios.delete(`${DELETED_BOARDS}/${boardId}`, {
+    headers: {
+      Authorization: getToken(accessToken),
+    },
+  });
 };
 
 const getToken = (accessToken) => {

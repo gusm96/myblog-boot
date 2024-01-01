@@ -63,6 +63,7 @@ public class Board extends BaseTimeEntity {
         this.category = category;
         this.title = title;
         this.content = content;
+        this.update();
     }
 
     // 게시글 숨김 상태 수정

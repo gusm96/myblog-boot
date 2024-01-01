@@ -1,6 +1,7 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.board.*;
+
 import java.time.LocalDateTime;
 
 public interface BoardService {
@@ -13,7 +14,9 @@ public interface BoardService {
 
     Board retrieveBoardById(Long boardId);
 
-    BoardResDtoV2 retrieveBoardDetail(Long boardId);
+    BoardDetailResDto retrieveBoardDetail(Long boardId);
+
+    BoardDetailResDto retrieveBoardAndIncrementViews(Long boardId);
 
     BoardListResDto retrieveDeletedBoards(int page);
 
@@ -21,9 +24,9 @@ public interface BoardService {
 
     Long editBoard(Long memberId, Long boardId, BoardReqDto boardReqDto);
 
-    void undeleteBoard(Long boardId);
+    void undeleteBoard(Long boardId, Long memberId);
 
-    boolean deleteBoard(Long boardId, Long memberId);
+    void deleteBoard(Long boardId, Long memberId);
 
     void deletePermanently(Long boardId);
 

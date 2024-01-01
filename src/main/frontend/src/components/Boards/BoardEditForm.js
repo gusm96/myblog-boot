@@ -5,8 +5,9 @@ import { useParams } from "react-router-dom";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import {
   deleteBoard,
+  deletePermanently,
   editBoard,
-  getBoard,
+  getBoardForAdmin,
   undeleteBoard,
 } from "../../services/boardApi";
 import { Button, Form, InputGroup } from "react-bootstrap";
@@ -31,7 +32,7 @@ export const BoardEditForm = () => {
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const [htmlString, setHtmlString] = useState("");
   useEffect(() => {
-    getBoard(boardId).then((data) => {
+    getBoardForAdmin(boardId).then((data) => {
       const blocksFromHTML = htmlToDraft(data.content);
       const { contentBlocks, entityMap } = blocksFromHTML;
       const contentState = ContentState.createFromBlockArray(
@@ -56,7 +57,9 @@ export const BoardEditForm = () => {
         alert("게시글이 수정 되었습니다");
         window.location.href = `/management/boards/${data}`;
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   const handleChange = (e) => {
@@ -80,7 +83,7 @@ export const BoardEditForm = () => {
     e.preventDefault();
     if (window.confirm("정말로 삭제하시겠습니까?")) {
       deleteBoard(boardId, accessToken)
-        .then((data) => (window.location.href = "/management"))
+        .then(window.history.go(-1))
         .catch((error) => console.log(error));
     } else {
       return;
@@ -90,7 +93,28 @@ export const BoardEditForm = () => {
     e.preventDefault();
     if (window.confirm("삭제를 취소하시겠습니까?")) {
       undeleteBoard(boardId, accessToken)
-        .then((data) => alert(data))
+        .then((res) => {
+          if (res.status === 200) {
+            window.location.href = "/management/temporary-storage";
+          }
+        })
+        .catch((error) => console.log(error));
+    } else {
+      return;
+    }
+  };
+  const handleDeletePermanently = (e) => {
+    if (
+      window.confirm(
+        "영구 삭제시 게시글을 복구할 수 없습니다.\n정말로 삭제하시겠습니까?"
+      )
+    ) {
+      deletePermanently(boardId, accessToken)
+        .then((res) => {
+          if (res.status === 200) {
+            window.location.href = "/management/temporary-storage";
+          }
+        })
         .catch((error) => console.log(error));
     } else {
       return;
@@ -145,9 +169,14 @@ export const BoardEditForm = () => {
           삭제
         </Button>
       ) : (
-        <Button type="button" onClick={handleUndelete}>
-          삭제 취소
-        </Button>
+        <div>
+          <Button type="button" onClick={handleUndelete}>
+            삭제 취소
+          </Button>
+          <Button type="button" onClick={handleDeletePermanently}>
+            영구삭제
+          </Button>
+        </div>
       )}
     </Form>
   );

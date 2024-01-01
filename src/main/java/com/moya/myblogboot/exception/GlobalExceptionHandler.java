@@ -2,6 +2,8 @@ package com.moya.myblogboot.exception;
 
 import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
+import com.moya.myblogboot.exception.custom.ImageDeleteFailException;
+import com.moya.myblogboot.exception.custom.ImageUploadFailException;
 import com.moya.myblogboot.utils.CookieUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.persistence.EntityNotFoundException;
@@ -64,6 +66,12 @@ public class GlobalExceptionHandler {
     // Internal Sever Error
     @ExceptionHandler({RuntimeException.class, PersistenceException.class})
     public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+
+    // ImageFile 업로드/삭제 실패
+    @ExceptionHandler({ImageUploadFailException.class, ImageDeleteFailException.class})
+    public ResponseEntity<?> handleS3ImageUploadAndDeleteFailException(Exception e){
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 

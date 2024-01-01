@@ -14,17 +14,8 @@ public class CommentResDto {
     private String comment;
     private LocalDateTime write_date;
     private ModificationStatus modificationStatus;
-    private List<CommentResDto> child;
+    private Long childCount = 0L;
 
-    @Builder
-    public CommentResDto(Comment comment , List<CommentResDto> child) {
-        this.id = comment.getId();
-        this.writer = comment.getMember().getNickname();
-        this.comment = comment.getComment();
-        this.write_date = comment.getWrite_date();
-        this.modificationStatus = comment.getModificationStatus();
-        this.child = child;
-    }
     @Builder
     public CommentResDto(Comment comment) {
         this.id = comment.getId();
@@ -32,6 +23,7 @@ public class CommentResDto {
         this.comment = comment.getComment();
         this.write_date = comment.getWrite_date();
         this.modificationStatus = comment.getModificationStatus();
+        this.childCount = (long) comment.getChild().size();
     }
 
     public static CommentResDto of(Comment comment) {
@@ -39,6 +31,4 @@ public class CommentResDto {
                 .comment(comment)
                 .build();
     }
-
-
 }

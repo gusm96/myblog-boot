@@ -6,14 +6,5 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface CommentRepository extends JpaRepository<Comment, Long> {
-
-    @Query("SELECT c FROM Comment c " +
-            "LEFT JOIN FETCH c.parent " +
-            "LEFT JOIN FETCH c.child " +
-            "WHERE c.board.id = :boardId " +
-            "AND (c.parent IS NULL OR c.parent.id IS NULL) " +
-            "ORDER BY c.write_date DESC")
-    List<Comment> findAllByBoardId(Long boardId);
-
+public interface CommentRepository extends JpaRepository<Comment, Long>, CommentQuerydslRepository{
 }

@@ -1,34 +1,36 @@
 package com.moya.myblogboot.domain.board;
 
-import com.moya.myblogboot.domain.comment.CommentResDto;
+
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class BoardDetailResDto {
+
     private Long id;
-    private String category;
     private String title;
     private String content;
-    private Long likes;
     private Long views;
-    private LocalDateTime createDate;
+    private Long likes;
+    private LocalDateTime creatDate;
     private LocalDateTime updateDate;
+    private LocalDateTime deleteDate;
+    private BoardStatus boardStatus;
+
 
     @Builder
-    public BoardDetailResDto(Board board, Long likes, Long views) {
-        this.id = board.getId();
-        this.category = board.getCategory().getName();
-        this.title = board.getTitle();
-        this.content = board.getContent();
-        this.likes = likes;
-        this.views = views;
-        this.createDate = board.getCreateDate();
-        this.updateDate = board.getUpdateDate();
+    public BoardDetailResDto(BoardForRedis boardForRedis) {
+        this.id = boardForRedis.getId();
+        this.title = boardForRedis.getTitle();
+        this.content = boardForRedis.getContent();
+        this.views = boardForRedis.getViews() + boardForRedis.getUpdateViews();
+        this.likes = (long) boardForRedis.getLikes().size();
+        this.creatDate = boardForRedis.getCreateDate();
+        this.updateDate = boardForRedis.getUpdateDate();
+        this.deleteDate = boardForRedis.getDeleteDate();
+        this.boardStatus = boardForRedis.getBoardStatus();
     }
 }

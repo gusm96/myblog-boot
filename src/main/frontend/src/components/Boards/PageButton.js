@@ -2,17 +2,9 @@ import React from "react";
 import PropTypes from "prop-types";
 import "../Styles/css/pageButton.css";
 import { Button } from "react-bootstrap";
-export const PageButton = ({ categoryName, pageCount, adminMode }) => {
+export const PageButton = ({ pageCount, path }) => {
   const handleOnClick = (page) => {
-    if (adminMode) {
-      window.location.href = categoryName
-        ? `/management/${categoryName}?p=${page}`
-        : `/management/boards?p=${page}`;
-    } else {
-      window.location.href = categoryName
-        ? `/${categoryName}?p=${page}`
-        : `/boards?p=${page}`;
-    }
+    window.location.href = `${path}p=${page}`;
   };
   const pageButton = () => {
     const buttons = [];

@@ -3,21 +3,21 @@ import { Container } from "../components/Styles/Container/Container.style";
 import BoardList from "../components/Boards/BoardList";
 import { useParams, useSearchParams } from "react-router-dom";
 import { getBoardList, getCategoryOfBoardList } from "../services/boardApi";
-import "../components/Styles/css/fonts.css";
 import { SearchBar } from "../components/SearchBar";
+import { PageButton } from "../components/Boards/PageButton";
+import "../components/Styles/css/fonts.css";
 const Home = () => {
   const [boards, setBoards] = useState([]);
-  const { categoryName } = useParams();
   const [pageCount, setPageCount] = useState("");
+  const { categoryName } = useParams();
   const [page] = useSearchParams("p");
+
   useEffect(() => {
     if (categoryName) {
-      getCategoryOfBoardList(categoryName, page)
-        .then((data) => {
-          setBoards(data.list);
-          setPageCount(data.totalPage);
-        })
-        .catch((error) => console.log(error));
+      getCategoryOfBoardList(categoryName).then((data) => {
+        setBoards(data.list);
+        setPageCount(data.totalPage);
+      });
     } else {
       getBoardList(page)
         .then((data) => {
@@ -31,11 +31,8 @@ const Home = () => {
   return (
     <Container>
       <SearchBar />
-      <BoardList
-        boards={boards}
-        pageCount={pageCount}
-        categoryName={categoryName ? categoryName : null}
-      />
+      <BoardList boards={boards} path="/boards" />
+      <PageButton pageCount={pageCount} path="/boards?" />
     </Container>
   );
 };

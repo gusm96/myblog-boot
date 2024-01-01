@@ -17,7 +17,7 @@ public class BoardForRedis {
     private String title;
     private String content;
     private Long views;
-    private Long updateViews;
+    private Long updateViews = 0L;
     private Set<Long> likes = new HashSet<>();
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
