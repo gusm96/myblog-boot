@@ -51,14 +51,13 @@ public class BoardController {
 
     // 게시글 상세 관리자용
     @GetMapping("/api/v1/management/boards/{boardId}")
-    public ResponseEntity<BoardDetailResDto> getBoardDetailForAdmin (@PathVariable("boardId") Long boardId){
+    public ResponseEntity<BoardDetailResDto> getBoardDetailForAdmin(@PathVariable("boardId") Long boardId) {
         return ResponseEntity.ok().body(boardService.retrieveBoardDetail(boardId));
     }
 
     // 게시글 작성 Post
     @PostMapping("/api/v1/boards")
     public ResponseEntity<Long> postBoard(@RequestBody @Valid BoardReqDto boardReqDto, Principal principal) {
-
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardService.uploadBoard(boardReqDto, memberId));
     }

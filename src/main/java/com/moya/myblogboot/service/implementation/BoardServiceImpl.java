@@ -116,7 +116,7 @@ public class BoardServiceImpl implements BoardService {
         // Entity 조회
         Board board = retrieveBoardById(boardId);
         // 게시글 수정/삭제 권한 검사.
-        verifyBoardAccessAuthorization(board.getId(), memberId);
+        verifyBoardAccessAuthorization(board.getMember().getId(), memberId);
 
         Category modifiedCategory = categoryService.retrieveCategoryById(modifiedDto.getCategory());
         board.updateBoard(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent()); // 변경감지
@@ -132,7 +132,7 @@ public class BoardServiceImpl implements BoardService {
         // Entity 조회
         Board board = retrieveBoardById(boardId);
         // 게시글 수정/삭제 권한 검사.
-        verifyBoardAccessAuthorization(board.getId(), memberId);
+        verifyBoardAccessAuthorization(board.getMember().getId(), memberId);
         // 삭제 요청일 갱신
         board.deleteBoard();
         // 현재 게시글 상태 Redis Store에 Update
@@ -146,7 +146,7 @@ public class BoardServiceImpl implements BoardService {
         // DB에서 게시글 조회
         Board board = retrieveBoardById(boardId);
         // 게시글 수정/삭제 권한 검사.
-        verifyBoardAccessAuthorization(board.getId(), memberId);
+        verifyBoardAccessAuthorization(board.getMember().getId(), memberId);
         // DeleteDate, BoardStatus 업데이트
         board.undeleteBoard();
         // Redis Store에 저장된 Data 업데이트
@@ -195,8 +195,8 @@ public class BoardServiceImpl implements BoardService {
     }
 
     // 게시글 수정/삭제 권한 검사.
-    private void verifyBoardAccessAuthorization(Long boardId, Long memberId) {
-        if (!boardId.equals(memberId))
+    private void verifyBoardAccessAuthorization(Long boardsMemberId, Long memberId) {
+        if (!boardsMemberId.equals(memberId))
             throw new UnauthorizedAccessException("게시글 수정 권한이 없습니다.");
     }
 

@@ -28,6 +28,7 @@ public class ScheduledTaskService {
     private final BoardService boardService;
     private final AuthService authService;
     private static final Long SECONDS_INT_15DAYS = 15L * 24L * 60L * 60L; // 15일
+    private static final String BOARD_KEY = "board:";
 
     @Scheduled(cron = "0 0 0 * * ?")// 매일 자정에 실행되도록 스케줄링
     @Transactional
@@ -40,7 +41,7 @@ public class ScheduledTaskService {
     @Scheduled(fixedRate = 600000) // 10분마다 DB 갱싱 및 메모리 정리
     @Transactional
     public void updateBoards() {
-        Set<Long> keys = getKeys("board:");
+        Set<Long> keys = getKeys(BOARD_KEY);
         for(Long key : keys) {
             log.info("Key = {}" + key);
             // 메모리에서 데이터 조회
@@ -63,6 +64,7 @@ public class ScheduledTaskService {
 
     private void saveBoardLikes(Board board, List<Long> membersId) {
         for (Long memberId : membersId) {
+         if(boardLikeRepository.existsByBoardIdAndMemberId(board.getId(), memberId)) continue;
             Member member = authService.retrieveMemberById(memberId);
             BoardLike boardLike = BoardLike.builder().board(board).member(member).build();
             boardLikeRepository.save(boardLike);
