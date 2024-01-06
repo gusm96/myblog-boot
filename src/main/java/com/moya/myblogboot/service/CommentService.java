@@ -9,15 +9,15 @@ import com.moya.myblogboot.domain.member.Member;
 import java.util.List;
 
 public interface CommentService {
-    String addComment(CommentReqDto commentReqDto, Long memberId, Long boardId);
+    String write(CommentReqDto commentReqDto, Long memberId, Long boardId);
 
-    String updateComment(Long commentId, Long memberId, String modifiedComment);
+    String update(Long commentId, Long memberId, String modifiedComment);
 
-    String deleteComment(Long commentId, Long memberId);
+    String delete(Long commentId, Long memberId);
 
-    List<CommentResDto> retrieveComments(Long boardId);
+    List<CommentResDto> retrieveAll(Long boardId);
 
-    List<CommentResDto> retrieveChildComments(Long parentId);
+    List<CommentResDto> retrieveAllChild(Long parentId);
 
-    Comment retrieveCommentById(Long commentId);
+    Comment retrieve(Long commentId);
 }

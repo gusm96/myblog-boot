@@ -30,24 +30,24 @@ public class CommentServiceImpl implements CommentService {
 
     // 댓글 리스트
     @Override
-    public List<CommentResDto> retrieveComments(Long boardId) {
+    public List<CommentResDto> retrieveAll(Long boardId) {
         return commentRepository.findAllByBoardId(boardId);
     }
 
     @Override
-    public List<CommentResDto> retrieveChildComments(Long parentId) {
+    public List<CommentResDto> retrieveAllChild(Long parentId) {
         return commentRepository.findChildByParentId( parentId);
     }
 
     @Override
     @Transactional
-    public String addComment(CommentReqDto commentReqDto, Long memberId, Long boardId) {
+    public String write(CommentReqDto commentReqDto, Long memberId, Long boardId) {
         Member member = authService.retrieveMemberById(memberId);
-        Board board = boardService.retrieveBoardById(boardId);
+        Board board = boardService.retrieve(boardId);
         Comment comment = commentReqDto.toEntity(member, board);
         // 대댓글.
         if (commentReqDto.getParentId() != null) {
-            Comment parent = retrieveCommentById(commentReqDto.getParentId());
+            Comment parent = retrieve(commentReqDto.getParentId());
             parent.addChildComment(comment); // 부모 엔터에 자식 등록 => 변경 감지
             comment.addParentComment(parent); // 자식 엔터티에 부모 등록
         }
@@ -68,8 +68,8 @@ public class CommentServiceImpl implements CommentService {
     // 댓글 수정
     @Override
     @Transactional
-    public String updateComment(Long commentId, Long memberId, String modifiedComment) {
-        Comment findComment = retrieveCommentById(commentId);
+    public String update(Long commentId, Long memberId, String modifiedComment) {
+        Comment findComment = retrieve(commentId);
         if (!findComment.getMember().getId().equals(memberId)) {
             throw new UnauthorizedAccessException("권한이 없습니다.");
         }
@@ -80,8 +80,8 @@ public class CommentServiceImpl implements CommentService {
     // 댓글 삭제
     @Override
     @Transactional
-    public String deleteComment(Long commentId, Long memberId) {
-        Comment findComment = retrieveCommentById(commentId);
+    public String delete(Long commentId, Long memberId) {
+        Comment findComment = retrieve(commentId);
         if (!findComment.getMember().getId().equals(memberId)) {
             throw new UnauthorizedAccessException("권한이 없습니다.");
         }
@@ -96,7 +96,7 @@ public class CommentServiceImpl implements CommentService {
 
     // 댓글 찾기
     @Override
-    public Comment retrieveCommentById(Long commentId) {
+    public Comment retrieve(Long commentId) {
         return commentRepository.findById(commentId).orElseThrow(()
                 -> new EntityNotFoundException("해당 댓글은 삭제되었거나 존재하지 않습니다."));
     }
