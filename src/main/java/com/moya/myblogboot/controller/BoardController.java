@@ -104,14 +104,14 @@ public class BoardController {
     @GetMapping("/api/v2/likes/{boardId}")
     public ResponseEntity<?> checkBoardLike(@PathVariable("boardId") Long boardId, Principal principal) {
         Long memberId = getMemberId(principal);
-        return ResponseEntity.ok().body(boardLikeService.isBoardLiked(boardId, memberId));
+        return ResponseEntity.ok().body(boardLikeService.isLiked(boardId, memberId));
     }
 
     // 게시글 좋아요 POST
     @PostMapping("/api/v2/likes/{boardId}")
     public ResponseEntity<Long> addBoardLike(@PathVariable("boardId") Long boardId, Principal principal) {
         Long memberId = getMemberId(principal);
-        return ResponseEntity.ok().body(boardLikeService.addLike(boardId, memberId));
+        return ResponseEntity.ok().body(boardLikeService.addLikes(boardId, memberId));
     }
 
     // 게시글 좋아요 취소 DELETE

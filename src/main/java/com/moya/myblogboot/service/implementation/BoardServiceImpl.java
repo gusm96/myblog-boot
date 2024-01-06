@@ -93,7 +93,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public Long write(BoardReqDto boardReqDto, Long memberId) {
-        Member member = authService.retrieveMemberById(memberId);
+        Member member = authService.retrieve(memberId);
         Category category = categoryService.retrieve(boardReqDto.getCategory());
         Board newBoard = boardReqDto.toEntity(category, member);
         try {
