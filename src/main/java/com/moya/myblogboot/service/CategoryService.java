@@ -7,18 +7,17 @@ import com.moya.myblogboot.domain.category.CategoryResDto;
 import java.util.List;
 
 public interface CategoryService {
-    String createCategory(String categoryName);
+    String create(String categoryName);
 
-    List<CategoryResDto> getCategoryList();
+    List<CategoryResDto> retrieveAll();
 
-    String updateCategory(Long categoryId, String modifiedCategoryName);
+    String update(Long categoryId, String modifiedCategoryName);
 
-    String deleteCategory(Long categoryId);
+    String delete(Long categoryId);
 
-    Category retrieveCategoryById(Long categoryId);
+    Category retrieve(Long categoryId);
 
-    List<CategoriesResDto> retrieveCategoriesDtoWithViewBoards();
-    Category retrieveCategoryByName(String categoryName);
+    List<CategoriesResDto> retrieveAllWithViewBoards();
 
-    List<CategoriesResDto> retrieveCategoriesDto();
+    List<CategoriesResDto> retrieveDto();
 }

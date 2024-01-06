@@ -6,27 +6,27 @@ import java.time.LocalDateTime;
 
 public interface BoardService {
 
-    BoardListResDto retrieveBoardList(int page);
+    BoardListResDto retrieveAll(int page);
 
-    BoardListResDto retrieveBoardListByCategory(String categoryName, int page);
+    BoardListResDto retrieveAllByCategory(String categoryName, int page);
 
-    BoardListResDto retrieveBoardListBySearch(SearchType searchType, String searchContents, int page);
+    BoardListResDto retrieveAllBySearched(SearchType searchType, String searchContents, int page);
 
-    Board retrieveBoardById(Long boardId);
+    Board retrieve(Long boardId);
 
-    BoardDetailResDto retrieveBoardDetail(Long boardId);
+    BoardDetailResDto retrieveDto(Long boardId);
 
-    BoardDetailResDto retrieveBoardAndIncrementViews(Long boardId);
+    BoardDetailResDto retrieveAndIncrementViewsDto(Long boardId);
 
-    BoardListResDto retrieveDeletedBoards(int page);
+    BoardListResDto retrieveAllDeleted(int page);
 
-    Long uploadBoard(BoardReqDto boardReqDto, Long memberId);
+    Long write(BoardReqDto boardReqDto, Long memberId);
 
-    Long editBoard(Long memberId, Long boardId, BoardReqDto boardReqDto);
+    Long edit(Long memberId, Long boardId, BoardReqDto boardReqDto);
 
-    void undeleteBoard(Long boardId, Long memberId);
+    void undelete(Long boardId, Long memberId);
 
-    void deleteBoard(Long boardId, Long memberId);
+    void delete(Long boardId, Long memberId);
 
     void deletePermanently(Long boardId);
 

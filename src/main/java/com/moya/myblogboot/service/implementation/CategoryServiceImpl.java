@@ -23,12 +23,12 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
 
     @Override
-    public List<CategoryResDto> getCategoryList() {
+    public List<CategoryResDto> retrieveAll() {
         return categoryRepository.findAll().stream().map(CategoryResDto::of).toList();
     }
     @Override
     @Transactional
-    public String createCategory(String categoryName){
+    public String create(String categoryName){
         // Category 중복 검사
         if(categoryRepository.existsByName(categoryName)){
             throw new DuplicateKeyException("이미 존재하는 카테고리입니다.");
@@ -44,18 +44,18 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<CategoriesResDto> retrieveCategoriesDtoWithViewBoards() {
+    public List<CategoriesResDto> retrieveAllWithViewBoards() {
         return categoryRepository.findCategoriesWithViewBoards();
     }
     @Override
-    public List<CategoriesResDto> retrieveCategoriesDto() {
+    public List<CategoriesResDto> retrieveDto() {
         return categoryRepository.findAllDto();
     }
 
     @Override
     @Transactional
-    public String updateCategory(Long categoryId, String modifiedCategoryName) {
-        Category category = retrieveCategoryById(categoryId);
+    public String update(Long categoryId, String modifiedCategoryName) {
+        Category category = retrieve(categoryId);
         try {
             category.editCategory(modifiedCategoryName);
             return category.getName();
@@ -67,8 +67,8 @@ public class CategoryServiceImpl implements CategoryService {
     // 카테고리 삭제
     @Override
     @Transactional
-    public String deleteCategory(Long categoryId) {
-        Category category = retrieveCategoryById(categoryId);
+    public String delete(Long categoryId) {
+        Category category = retrieve(categoryId);
         if(category.getBoards().size() > 0) {
             throw new RuntimeException("등록된 게시글이 존재해 삭제할 수 없습니다.");
         }
@@ -81,13 +81,8 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
     @Override
-    public Category retrieveCategoryById(Long categoryId) {
+    public Category retrieve(Long categoryId) {
         return categoryRepository.findById(categoryId).orElseThrow(()
-                -> new EntityNotFoundException("해당 카테고리를 찾을 수 없습니다."));
-    }
-    @Override
-    public Category retrieveCategoryByName(String categoryName) {
-        return categoryRepository.findByName(categoryName).orElseThrow(()
                 -> new EntityNotFoundException("해당 카테고리를 찾을 수 없습니다."));
     }
 }

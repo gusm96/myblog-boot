@@ -21,8 +21,8 @@ public class BoardLikeServiceImpl implements BoardLikeService {
 
     // 게시글 좋아요
     @Override
-    public Long addLike(Long boardId, Long memberId ) {
-        if(isBoardLiked(boardId, memberId)){
+    public Long addLikes(Long boardId, Long memberId ) {
+        if(isLiked(boardId, memberId)){
             throw new DuplicateKeyException("이미 \"좋아요\"한 게시글 입니다.");
         }
        return boardRedisRepository.addLike(boardId, memberId);
@@ -30,18 +30,18 @@ public class BoardLikeServiceImpl implements BoardLikeService {
 
     // 게시글 좋아요 확인
     @Override
-    public boolean isBoardLiked(Long boardId ,Long memberId ) {
+    public boolean isLiked(Long boardId ,Long memberId ) {
         return boardRedisRepository.existsMember(boardId, memberId);
     }
 
     // 게시글 좋아요 취소
     @Override
     public Long cancelLikes(Long boardId, Long memberId) {
-        if (!isBoardLiked( boardId, memberId)) {
+        if (!isLiked( boardId, memberId)) {
             throw new NoSuchElementException("잘못된 요청입니다.");
         }
         try {
-            deleteBoardLikeV2(boardId, memberId);
+            deleteBoardLike(boardId, memberId);
             return boardRedisRepository.deleteMembers(boardId, memberId);
         } catch (Exception e) {
             e.printStackTrace();
@@ -52,7 +52,7 @@ public class BoardLikeServiceImpl implements BoardLikeService {
 
     // 게시글 좋아요 취소시 BoardLke Entity delete();
     @Async
-    public void deleteBoardLikeV2(Long boardId, Long memberId) {
+    public void deleteBoardLike(Long boardId, Long memberId) {
         Optional<BoardLike> boardLike = boardLikeRepository.findByBoardIdAndMemberId(boardId, memberId);
         if(boardLike.isPresent()) {
             boardLikeRepository.delete(boardLike.get());
