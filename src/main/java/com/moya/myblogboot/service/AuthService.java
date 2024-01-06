@@ -12,7 +12,7 @@ public interface AuthService {
 
     Token memberLogin(MemberLoginReqDto memberLoginReqDto);
 
-    Member retrieveMemberById(Long memberId);
+    Member retrieve(Long memberId);
 
     String reissuingAccessToken(String refreshToken);
 

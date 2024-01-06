@@ -44,12 +44,12 @@ public class AuthController {
 
     // 로그아웃
     @GetMapping("/api/v1/logout")
-    public ResponseEntity<HttpStatus> logout(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         // Cookie 에서 Refresh Token 찾는다.
         Cookie refreshTokenCookie = CookieUtil.findCookie(request, "refresh_token");
         if (refreshTokenCookie != null && refreshTokenCookie.getValue() != null && !refreshTokenCookie.getValue().equals(""))
             CookieUtil.deleteCookie(response, refreshTokenCookie); // Refresh Token 삭제 -> Refresh Token의 정보 소멸
-        return ResponseEntity.ok().body(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     // 토큰 권한 조회
