@@ -11,6 +11,7 @@ import com.moya.myblogboot.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.util.Set;
 
 @Slf4j
 @Service
+@Profile("!test")
 @RequiredArgsConstructor
 public class ScheduledTaskService {
     private final BoardRedisRepository boardRedisRepository;
@@ -45,10 +47,10 @@ public class ScheduledTaskService {
         for(Long key : keys) {
             log.info("Key = {}" + key);
             // 메모리에서 데이터 조회
-            BoardForRedis boardForRedis = boardRedisRepository.findOne(key).get();
+            BoardForRedis boardForRedis = boardService.retrieveBoardInRedisStore(key);
             if(boardForRedis != null){
                 // 수정할 대상 게시글 엔터티 조회
-                Board findBoard = boardService.retrieveBoardById(boardForRedis.getId());
+                Board findBoard = boardService.retrieve(boardForRedis.getId());
                 // 조회수 업데이트
                 findBoard.updateViews(boardForRedis.getViews() + boardForRedis.getUpdateViews());
                 // 좋아요 한 회원ID
@@ -56,7 +58,7 @@ public class ScheduledTaskService {
                 // BoardLike Entity 생성
                 saveBoardLikes(findBoard, membersId);
                 // 메모리 데이터 삭제
-                boardRedisRepository.delete(findBoard.getId());
+                boardRedisRepository.delete(boardForRedis);
             }
         }
         log.info("DataBase Update 완료");
@@ -65,7 +67,7 @@ public class ScheduledTaskService {
     private void saveBoardLikes(Board board, List<Long> membersId) {
         for (Long memberId : membersId) {
          if(boardLikeRepository.existsByBoardIdAndMemberId(board.getId(), memberId)) continue;
-            Member member = authService.retrieveMemberById(memberId);
+            Member member = authService.retrieve(memberId);
             BoardLike boardLike = BoardLike.builder().board(board).member(member).build();
             boardLikeRepository.save(boardLike);
         }
