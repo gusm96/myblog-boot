@@ -32,7 +32,7 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
 
     @Override
     public Optional<BoardForRedis> findOne(Long boardId) {
-        String key = KEY + boardId;
+        String key = getKey(boardId);
         BoardForRedis boardForRedis = getBoardForRedis(key);
         if (boardForRedis == null) {
             return Optional.empty();
@@ -42,19 +42,19 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
     }
 
     @Override
-    public BoardForRedis incrementViews(BoardForRedis boardForRedis) {
-        String key = KEY + boardForRedis.getId();
-        String viewsKey = key + VIEWS_KEY;
+    public BoardForRedis incrementViews(BoardForRedis board) {
+        String key = getKey(board.getId());
+        String viewsKey = getViewsKey(key);
         Long updateViews = redisTemplate.opsForValue().increment(viewsKey);
-        boardForRedis.setUpdateViews(updateViews);
+        board.setUpdateViews(updateViews);
         // 수정된 데이터 저장.
-        setBoardForRedis(key, boardForRedis);
-        return boardForRedis;
+        setBoardForRedis(key, board);
+        return board;
     }
 
     @Override
     public BoardForRedis save(Board board) {
-        String key = KEY + board.getId();
+        String key = getKey(board.getId());
         Set<Long> memberIds = board.getBoardLikes().stream().map(boardLike
                 -> boardLike.getMember().getId()).collect(Collectors.toSet());
         BoardForRedis boardForRedis = BoardForRedis.builder().board(board).memberIds(memberIds).build();
@@ -63,53 +63,39 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
     }
 
     @Override
-    public void delete(Long boardId) {
-        String key = KEY + boardId;
-        String viewsKey = key + VIEWS_KEY;
+    public void delete(BoardForRedis board) {
+        String key = getKey(board.getId());
+        String viewsKey = getViewsKey(key);
         redisTemplate.delete(key);
         redisTemplate.delete(viewsKey);
     }
 
     @Override
     public boolean existsMember(Long boardId, Long memberId) {
-        String key = KEY + boardId;
+        String key = getKey(boardId);
         BoardForRedis boardForRedis = getBoardForRedis(key);
         return boardForRedis.getLikes().contains(memberId);
     }
 
     @Override
-    public Long addLike(Long boardId, Long memberId) {
-        String key = KEY + boardId;
-        BoardForRedis boardForRedis = getBoardForRedis(key);
-        boardForRedis.addLike(memberId);
-        setBoardForRedis(key, boardForRedis);
-        return (long) boardForRedis.getLikes().size();
+    public void update(BoardForRedis board) {
+        String key = getKey(board.getId());
+        setBoardForRedis(key, board);
     }
 
-    @Override
-    public Long deleteMembers(Long boardId, Long memberId) {
-        String key = KEY + boardId;
-        BoardForRedis boardForRedis = getBoardForRedis(key);
-        boardForRedis.cancelLike(memberId);
-        setBoardForRedis(key, boardForRedis);
-        return (long) boardForRedis.getLikes().size();
-    }
-
-    @Override
-    public void update(Board board) {
-        String key = KEY + board.getId();
-        BoardForRedis boardForRedis = getBoardForRedis(key);
-        if (boardForRedis != null) {
-            boardForRedis.update(board);
-            setBoardForRedis(key, boardForRedis);
-        }else{
-            save(board);
-        }
-    }
     private BoardForRedis getBoardForRedis(String key) {
         return (BoardForRedis) redisTemplate.opsForValue().get(key);
     }
+
     private void setBoardForRedis(String key, BoardForRedis boardForRedis) {
         redisTemplate.opsForValue().set(key, boardForRedis);
+    }
+
+    private String getKey(Long boardId) {
+        return KEY + boardId;
+    }
+
+    private String getViewsKey(String key) {
+        return key + VIEWS_KEY;
     }
 }

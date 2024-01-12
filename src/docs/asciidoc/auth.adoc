@@ -1,0 +1,21 @@
+= AuthAPI
+
+== 회원 관리
+=== 회원 가입
+operation::auth-controller-test/join[snippets='request-body,http-request,http-response']
+
+=== 로그인
+operation::auth-controller-test/login[snippets='request-body,http-request,http-response']
+
+=== 로그아웃
+operation::auth-controller-test/logout[snippets='http-request,http-response']
+
+== 토큰 관리
+=== 토큰 인증
+operation::auth-controller-test/token-validate[snippets='http-request,http-response']
+
+=== 토큰 권한 정보
+operation::auth-controller-test/get-token-from-role[snippets='http-request,http-response']
+
+=== 토큰 재발급
+operation::auth-controller-test/reissuing-access-token[snippets='http-request,http-response']

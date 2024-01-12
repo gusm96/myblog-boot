@@ -8,8 +8,8 @@ import java.util.List;
 
 public interface FileUploadService {
 
-    ImageFileDto saveImageFile(MultipartFile file);
+    ImageFileDto upload(MultipartFile file);
 
-    void deleteImageFile(String imageFileName);
-    void deleteImageFile(List<ImageFile> imageFiles);
+    void delete(String imageFileName);
+    void deleteFiles(List<ImageFile> imageFiles);
 }

@@ -31,7 +31,7 @@ public class FileUploadServiceImpl implements FileUploadService {
 
     // S3에 ImageFile 저장
     @Override
-    public ImageFileDto saveImageFile(MultipartFile file) {
+    public ImageFileDto upload(MultipartFile file) {
             try{
                 // 파일 저장
                 String fileName = file.getOriginalFilename(); // 오리지널 파일명
@@ -55,7 +55,7 @@ public class FileUploadServiceImpl implements FileUploadService {
 
     // S3에서 ImageFile 삭제
     @Override
-    public void deleteImageFile(String imageFileName) {
+    public void delete(String imageFileName) {
         try {
             amazonS3.deleteObject(bucketName, imageFileName);
         } catch (Exception e) {
@@ -65,7 +65,7 @@ public class FileUploadServiceImpl implements FileUploadService {
     }
     // S3에서 ImageFile 삭제
     @Override
-    public void deleteImageFile(List<ImageFile> imageFiles) {
+    public void deleteFiles(List<ImageFile> imageFiles) {
         try {
             imageFiles.stream().forEach(imageFile ->
                     amazonS3.deleteObject(bucketName, imageFile.getFileName()));
