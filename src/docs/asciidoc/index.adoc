@@ -1,0 +1,12 @@
+= Myblog Application API Document
+:doctype: book
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
+:sectlinks:
+
+include::auth.adoc[]
+include::board.adoc[]
+include::category.adoc[]
+include::comment.adoc[]
+include::fileupload.adoc[]

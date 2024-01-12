@@ -1,0 +1,33 @@
+= BoardAPI
+
+== 게시글 작성/조회/수정/삭제
+=== 게시글 등록
+operation::board-controller-test/write-board[snippets='request-body,http-request,http-response']
+=== 전체 게시글 조회
+operation::board-controller-test/get-all-boards[snippets='http-request,http-response']
+=== 카테고리별 게시글 조회
+operation::board-controller-test/get-category-boards[snippets='http-request,http-response']
+=== 검색 결과별 게시글 조회
+operation::board-controller-test/get-searched-boards[snippets='http-request,http-response']
+=== 삭제 예정 게시글 조회
+operation::board-controller-test/get-deleted-boards[snippets='http-request,http-response']
+=== 게시글 상세 조회
+operation::board-controller-test/get-board-detail[snippets='http-request,http-response']
+=== 게시글 상세 조회 (관리자용)
+operation::board-controller-test/get-board-detail-for-admin[snippets='http-request,http-response']
+=== 게시글 수정
+operation::board-controller-test/edit-board[snippets='request-body,http-request,http-response']
+=== 게시글 삭제
+operation::board-controller-test/delete-board[snippets='http-request,http-response']
+=== 게시글 삭제 취소
+operation::board-controller-test/cancel-deleted-board[snippets='http-request,http-response']
+=== 게시글 영구 삭제
+operation::board-controller-test/delete-board-permanently[snippets='http-request,http-response']
+
+== 게시글 좋아요/확인/취소
+=== 게시글 좋아요
+operation::board-controller-test/add-board-like[snippets='http-request,http-response']
+=== 게시글 좋아요 확인
+operation::board-controller-test/check-board-like[snippets='http-request,http-response']
+=== 게시글 좋아요 취소
+operation::board-controller-test/cancel-board-like[snippets='http-request,http-response']

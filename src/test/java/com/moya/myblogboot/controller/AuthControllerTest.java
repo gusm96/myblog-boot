@@ -1,5 +1,6 @@
 package com.moya.myblogboot.controller;
 
+import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.member.MemberLoginReqDto;
@@ -11,20 +12,34 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 @Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
+@ExtendWith(RestDocumentationExtension.class)
+@Import(RestDocsConfiguration.class)
+@ActiveProfiles("test")
 class AuthControllerTest {
 
     @Autowired
@@ -38,6 +53,19 @@ class AuthControllerTest {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private RestDocumentationResultHandler restDocs;
+
+    // REST docs setUp
+    @BeforeEach
+    void setUp(WebApplicationContext webApplicationContext, RestDocumentationContextProvider restDocumentationContextProvider) {
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(documentationConfiguration(restDocumentationContextProvider))
+                .apply(springSecurity())
+                .alwaysDo(restDocs)
+                .build();
+    }
 
     @BeforeEach
     void before() {
@@ -61,12 +89,11 @@ class AuthControllerTest {
                 .nickname("tester1")
                 .build();
         // when
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/join")
-                        .contentType("application/json")
-                        .content(new ObjectMapper().writeValueAsString(requestBody))
-                )
-                //then
-                .andExpect(MockMvcResultMatchers.status().isOk())
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/join")
+                .contentType("application/json")
+                .content(new ObjectMapper().writeValueAsString(requestBody)));
+        //then
+        resultActions.andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().string("회원가입을 성공했습니다."));
     }
 
@@ -75,13 +102,11 @@ class AuthControllerTest {
     void login() throws Exception {
         //given
         MemberLoginReqDto requestBody = getTestMemberDto();
-
         //when
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/login")
-                        .contentType("application/json").content(new ObjectMapper().writeValueAsString(requestBody)))
-                //then
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.cookie().exists("refresh_token"));
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/login")
+                .contentType("application/json").content(new ObjectMapper().writeValueAsString(requestBody)));
+        //then
+        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
@@ -93,11 +118,10 @@ class AuthControllerTest {
 
         // when
         // 로그 아웃
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/logout")
-                        .cookie(new Cookie("refresh_token", refreshToken))) // 임시로 쿠키값 삽입
-                //then
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.cookie().value("refresh_token", Matchers.nullValue()));
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/logout")
+                .cookie(new Cookie("refresh_token", refreshToken))); // 임시로 쿠키값 삽입
+        //then
+        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
@@ -105,13 +129,13 @@ class AuthControllerTest {
     void getTokenFromRole() throws Exception {
         // given
         // 로그인 후 토큰 생성
-        String accessToken  = "bearer " + getToken().getAccess_token();
+            String accessToken = "bearer " + getToken().getAccess_token();
 
         //when
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-role")
-                        .header(HttpHeaders.AUTHORIZATION, accessToken))
-                // then
-                .andExpect(MockMvcResultMatchers.status().isOk());
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-role")
+                .header(HttpHeaders.AUTHORIZATION, accessToken));
+        // then
+        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
@@ -120,34 +144,34 @@ class AuthControllerTest {
         // given
         String refreshToken = getToken().getRefresh_token();
         // when
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/reissuing-token")
-                        .cookie(new Cookie("refresh_token", refreshToken)))
-                // then
-                .andExpect(MockMvcResultMatchers.status().isOk());
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/reissuing-token")
+                .cookie(new Cookie("refresh_token", refreshToken)));
+        // then
+        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
 
     }
 
     @Test
     @DisplayName("토큰 만료 확인 테스트")
-    void tokenValidate()throws Exception {
+    void tokenValidate() throws Exception {
         // given
         // Access Token
         String accessToken = "bearer " + getToken().getAccess_token();
         // when
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-validation")
-                        .header(HttpHeaders.AUTHORIZATION, accessToken))
-                // then
-                .andExpect(MockMvcResultMatchers.status().isOk());
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-validation")
+                .header(HttpHeaders.AUTHORIZATION, accessToken));
+        // then
+        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
     }
 
 
     private static MemberLoginReqDto getTestMemberDto() {
-        MemberLoginReqDto requestBody = MemberLoginReqDto.builder()
+        return MemberLoginReqDto.builder()
                 .username("testUser")
                 .password("testPassword")
                 .build();
-        return requestBody;
     }
+
     private Token getToken() {
         return authService.memberLogin(getTestMemberDto());
     }

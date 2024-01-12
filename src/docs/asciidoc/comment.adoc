@@ -1,0 +1,13 @@
+= CommentAPI
+
+== 댓글 작성/조회/수정/삭제
+=== 댓글 작성
+operation::comment-controller-test/write-comment[snippets='request-body,http-request,http-response']
+=== 댓글 리스트
+operation::comment-controller-test/get-comments[snippets='http-request,http-response']
+=== 대댓글 리스트
+operation::comment-controller-test/get-child-comments[snippets='http-request,http-response']
+=== 댓글 수정
+operation::comment-controller-test/edit-comment[snippets='request-body,http-request,http-response']
+=== 댓글 삭제
+operation::comment-controller-test/delete-comment[snippets='http-request,http-response']
