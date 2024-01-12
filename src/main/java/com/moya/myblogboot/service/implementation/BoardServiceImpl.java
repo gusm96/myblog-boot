@@ -120,6 +120,7 @@ public class BoardServiceImpl implements BoardService {
         verifyBoardAccessAuthorization(board.getMember().getId(), memberId);
 
         Category modifiedCategory = categoryService.retrieve(modifiedDto.getCategory());
+
         board.updateBoard(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent()); // 변경감지
         // 변경 된 내용 Redis Store에 업데이트
         updateBoardForRedis(board);
@@ -204,10 +205,10 @@ public class BoardServiceImpl implements BoardService {
     // 게시글 영구 삭제
     private void deleteBoards(Board board) {
         // 이미지 파일 찾아서 S3에서 삭제
-        fileUploadService.deleteImageFile(board.getImageFiles());
+        fileUploadService.deleteFiles(board.getImageFiles());
         try {
             // Redis Store에 저장된 Data Delete
-            boardRedisRepository.delete(board.getId());
+            deleteBoardForRedis(board.getId());
             // DB에 저장된 Data Delete
             boardRepository.delete(board);
         } catch (Exception e) {
@@ -227,7 +228,8 @@ public class BoardServiceImpl implements BoardService {
     }
 
     // Redis Store에서 데이터 조회
-    private BoardForRedis retrieveBoardInRedisStore(Long boardId) {
+    @Override
+    public BoardForRedis retrieveBoardInRedisStore(Long boardId) {
         Optional<BoardForRedis> boardForRedis = boardRedisRepository.findOne(boardId);
         if (boardForRedis.isEmpty()) {
             // DB에서 Board 조회 후 Redis store에 저장.
@@ -245,10 +247,23 @@ public class BoardServiceImpl implements BoardService {
 
     @Async
     protected void updateBoardForRedis(Board board) {
+        BoardForRedis boardForRedis = retrieveBoardInRedisStore(board.getId());
+        boardForRedis.update(board);
         try {
-            boardRedisRepository.update(board);
+            boardRedisRepository.update(boardForRedis);
         } catch (Exception e) {
-            throw new RuntimeException("게시글 수정을 실패했습니다.");
+            throw new RuntimeException("메모리에서 게시글 수정을 실패했습니다.");
+        }
+    }
+
+    @Async
+    protected void deleteBoardForRedis(Long boardId) {
+        BoardForRedis boardForRedis = retrieveBoardInRedisStore(boardId);
+        try {
+            boardRedisRepository.delete(boardForRedis);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("메모리에서 게시글 삭제를 실패했습니다.");
         }
     }
 }

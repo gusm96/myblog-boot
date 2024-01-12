@@ -18,6 +18,8 @@ public interface BoardService {
 
     BoardDetailResDto retrieveAndIncrementViewsDto(Long boardId);
 
+    BoardForRedis retrieveBoardInRedisStore(Long boardId);
+
     BoardListResDto retrieveAllDeleted(int page);
 
     Long write(BoardReqDto boardReqDto, Long memberId);

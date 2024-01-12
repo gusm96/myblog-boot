@@ -1,10 +1,6 @@
 package com.moya.myblogboot.domain.board;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.*;
-import org.springframework.cglib.core.Local;
-
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
