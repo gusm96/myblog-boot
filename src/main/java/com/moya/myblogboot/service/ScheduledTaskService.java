@@ -2,13 +2,7 @@ package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.BoardForRedis;
-import com.moya.myblogboot.domain.board.BoardLike;
-import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.repository.BoardLikeRepository;
 import com.moya.myblogboot.repository.BoardRedisRepository;
-import com.moya.myblogboot.repository.BoardRepository;
-import com.moya.myblogboot.repository.MemberRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -17,8 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
+
+import static com.moya.myblogboot.domain.keys.RedisKey.*;
 
 @Slf4j
 @Service
@@ -26,11 +21,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ScheduledTaskService {
     private final BoardRedisRepository boardRedisRepository;
-    private final BoardLikeRepository boardLikeRepository;
     private final BoardService boardService;
-    private final AuthService authService;
     private static final Long SECONDS_INT_15DAYS = 15L * 24L * 60L * 60L; // 15일
-    private static final String BOARD_KEY = "board:";
 
     @Scheduled(cron = "0 0 0 * * ?")// 매일 자정에 실행되도록 스케줄링
     @Transactional
@@ -40,41 +32,43 @@ public class ScheduledTaskService {
         log.info("삭제 후 15일이 지난 게시글 영구삭제");
     }
 
-    @Scheduled(fixedRate = 600000) // 10분마다 DB 갱싱 및 메모리 정리
+    @Scheduled(fixedRate = 600000) // 10분마다 DB 갱싱 및 캐시 정리
     @Transactional
-    public void updateBoards() {
-        Set<Long> keys = getKeys(BOARD_KEY);
-        for(Long key : keys) {
-            log.info("Key = {}" + key);
-            // 메모리에서 데이터 조회
-            BoardForRedis boardForRedis = boardService.retrieveBoardInRedisStore(key);
-            if(boardForRedis != null){
-                // 수정할 대상 게시글 엔터티 조회
-                Board findBoard = boardService.retrieve(boardForRedis.getId());
-                // 조회수 업데이트
-                findBoard.updateViews(boardForRedis.getViews() + boardForRedis.getUpdateViews());
-                // 좋아요 한 회원ID
-                List<Long> membersId = boardForRedis.getLikes().stream().toList();
-                // BoardLike Entity 생성
-                saveBoardLikes(findBoard, membersId);
-                // 메모리 데이터 삭제
-                boardRedisRepository.delete(boardForRedis);
+    public void updateFromRedisStoreToDB() {
+        String keyPattern = BOARD_KEY + "*";
+        Set<Long> keys = boardRedisRepository.getKeys(keyPattern);
+        try{
+            for (Long key : keys) {
+                // 메모리에서 데이터 조회
+                BoardForRedis boardForRedis = boardService.retrieveBoardInRedisStore(key);
+                if (boardForRedis != null) {
+                    // 수정할 대상 게시글 엔터티 조회
+                    updateBoards(boardForRedis);
+                    deleteFromCache(boardForRedis);
+                }
             }
-        }
-        log.info("DataBase Update 완료");
-    }
-
-    private void saveBoardLikes(Board board, List<Long> membersId) {
-        for (Long memberId : membersId) {
-         if(boardLikeRepository.existsByBoardIdAndMemberId(board.getId(), memberId)) continue;
-            Member member = authService.retrieve(memberId);
-            BoardLike boardLike = BoardLike.builder().board(board).member(member).build();
-            boardLikeRepository.save(boardLike);
+            log.info("Updated from Cache to DB");
+        }catch (Exception e){
+            log.error(e.getMessage());
+            throw new RuntimeException("Failed To Update from Cache to DB");
         }
     }
 
-    private Set<Long> getKeys(String key) {
-        return boardRedisRepository.getKeysValues(key);
+    // 게시글 업데이트
+    private void updateBoards(BoardForRedis boardForRedis) {
+        Board findBoard = boardService.retrieve(boardForRedis.getId());
+        // 조회수 업데이트
+        findBoard.updateViews(boardForRedis.totalViews());
+        // 좋아요수 업데이트
+        findBoard.updateLikes(boardForRedis.totalLikes());
     }
 
+    // 캐시 데이터 삭제
+    private void deleteFromCache (BoardForRedis boardForRedis){
+        try {
+         boardRedisRepository.delete(boardForRedis);
+        }catch (Exception e){
+            throw new RuntimeException("Failed To delete from Cache");
+        }
+    }
 }
