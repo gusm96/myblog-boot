@@ -10,7 +10,6 @@ public class BoardResDto {
     private Long id;
     private String title;
     private String content;
-    private String category;
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
     private LocalDateTime deleteDate;
@@ -21,7 +20,6 @@ public class BoardResDto {
         this.id = board.getId();
         this.title = board.getTitle();
         this.content = board.getContent();
-        this.category = board.getCategory().getName();
         this.createDate = board.getCreateDate();
         this.updateDate = board.getUpdateDate();
         this.deleteDate = board.getDeleteDate();

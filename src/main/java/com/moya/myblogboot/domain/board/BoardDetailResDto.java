@@ -26,8 +26,8 @@ public class BoardDetailResDto {
         this.id = boardForRedis.getId();
         this.title = boardForRedis.getTitle();
         this.content = boardForRedis.getContent();
-        this.views = boardForRedis.getViews() + boardForRedis.getUpdateViews();
-        this.likes = (long) boardForRedis.getLikes().size();
+        this.views = boardForRedis.totalViews();
+        this.likes = boardForRedis.totalLikes();
         this.creatDate = boardForRedis.getCreateDate();
         this.updateDate = boardForRedis.getUpdateDate();
         this.deleteDate = boardForRedis.getDeleteDate();
