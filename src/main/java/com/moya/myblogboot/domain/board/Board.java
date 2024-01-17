@@ -26,7 +26,7 @@ public class Board extends BaseTimeEntity {
     @Column(nullable = false, columnDefinition = "longtext")
     private String content;
     private Long views;
-
+    private Long likes;
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<BoardLike> boardLikes = new HashSet<>();
 
@@ -54,6 +54,7 @@ public class Board extends BaseTimeEntity {
         this.content = content;
         this.category = category;
         this.views = 0L;
+        this.likes = 0L;
         this.member = member;
         this.boardStatus = BoardStatus.VIEW;
     }
@@ -90,6 +91,10 @@ public class Board extends BaseTimeEntity {
 
     public void updateViews(Long views){
         this.views = views;
+    }
+
+    public void updateLikes(Long likes) {
+        this.likes = likes;
     }
 
     public void deleteBoard() {
