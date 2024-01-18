@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(indexes = {
+        @Index(name = "idx_board_like_member", columnList = "board_id, member_id")
+})
 public class BoardLike {
 
     @Id
@@ -24,7 +27,6 @@ public class BoardLike {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
-
 
     @Builder
     public BoardLike(Board board, Member member) {

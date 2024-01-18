@@ -1,9 +1,11 @@
 package com.moya.myblogboot.domain.board;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -13,8 +15,9 @@ public class BoardForRedis {
     private String title;
     private String content;
     private Long views;
-    private Long updateViews = 0L;
-    private Set<Long> likes = new HashSet<>();
+    private Long updateViews;
+    private Long likes;
+    private Long updateLikes;
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
     private LocalDateTime deleteDate;
@@ -22,12 +25,14 @@ public class BoardForRedis {
 
 
     @Builder
-    public BoardForRedis(Board board, Set<Long> memberIds) {
+    public BoardForRedis(Board board) {
         this.id = board.getId();
-        this.title= board.getTitle();
+        this.title = board.getTitle();
         this.content = board.getContent();
         this.views = board.getViews();
-        this.likes.addAll(memberIds);
+        this.updateViews = 0L;
+        this.likes = board.getLikes();
+        this.updateLikes = 0L;
         this.createDate = board.getCreateDate();
         this.updateDate = board.getUpdateDate();
         this.deleteDate = board.getDeleteDate();
@@ -42,18 +47,22 @@ public class BoardForRedis {
         this.updateViews = updateViews;
     }
 
-    public void addLike(Long memberId) {
-        this.likes.add(memberId);
+    public void setUpdateLikes(Long updateLikes) {
+        this.updateLikes = updateLikes;
     }
 
-    public void cancelLike(Long memberId) {
-        this.likes.remove(memberId);
+    public Long totalViews() {
+        return this.views + this.updateViews;
+    }
+
+    public Long totalLikes() {
+        return this.likes + this.updateLikes;
     }
 
     public void update(Board board) {
         this.title = board.getTitle();
         this.content = board.getContent();
-        this.updateDate= board.getUpdateDate();
+        this.updateDate = board.getUpdateDate();
         this.deleteDate = board.getDeleteDate();
         this.boardStatus = board.getBoardStatus();
     }

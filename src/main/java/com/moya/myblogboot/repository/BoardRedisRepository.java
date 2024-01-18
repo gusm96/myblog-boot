@@ -8,17 +8,19 @@ import java.util.Set;
 
 public interface BoardRedisRepository {
 
-    Set<Long> getKeysValues(String key);
+    Set<Long> getKeys(String pattern);
 
     Optional<BoardForRedis> findOne(Long boardId);
 
     BoardForRedis incrementViews(BoardForRedis boardForRedis);
 
+    BoardForRedis incrementLikes(BoardForRedis board);
+
+    BoardForRedis decrementLikes(BoardForRedis board);
+
     BoardForRedis save(Board board);
 
     void delete(BoardForRedis board);
-
-    boolean existsMember(Long boardId, Long memberId);
 
     void update(BoardForRedis board);
 }
