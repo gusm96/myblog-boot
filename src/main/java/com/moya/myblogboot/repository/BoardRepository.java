@@ -14,7 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
 
-public interface BoardRepository extends JpaRepository<Board, Long> ,BoardQuerydslRepository {
+public interface BoardRepository extends JpaRepository<Board, Long>, BoardQuerydslRepository {
 
     @Query("select distinct b from Board b " +
             "join fetch b.member " +
@@ -23,8 +23,8 @@ public interface BoardRepository extends JpaRepository<Board, Long> ,BoardQueryd
             "join fetch b.category where b.id = :boardId ")
     Optional<Board> findById(@Param("boardId") Long boardId);
 
-    @Query("SELECT b FROM Board b WHERE b.boardStatus = :boardStatus")
-    Page<Board> findAll(@Param("boardStatus") BoardStatus boardStatus,Pageable pageable);
+    @Query("select b from Board b where b.boardStatus = :boardStatus")
+    Page<Board> findAll(@Param("boardStatus") BoardStatus boardStatus, Pageable pageable);
 
     @Query("select b from Board b where b.category.name = :categoryName and b.boardStatus = 'VIEW'")
     Page<Board> findAllByCategoryName(@Param("categoryName") String categoryName, PageRequest pageRequest);

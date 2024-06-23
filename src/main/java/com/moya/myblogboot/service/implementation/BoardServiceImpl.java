@@ -38,7 +38,6 @@ public class BoardServiceImpl implements BoardService {
     private final ImageFileRepository imageFileRepository;
     private final BoardRedisRepository boardRedisRepository;
     private final FileUploadService fileUploadService;
-
     // 페이지별 최대 게시글 수
     private static final int LIMIT = 4;
 
@@ -118,9 +117,7 @@ public class BoardServiceImpl implements BoardService {
         Board board = retrieve(boardId);
         // 게시글 수정/삭제 권한 검사.
         verifyBoardAccessAuthorization(board.getMember().getId(), memberId);
-
         Category modifiedCategory = categoryService.retrieve(modifiedDto.getCategory());
-
         board.updateBoard(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent()); // 변경감지
         // 변경 된 내용 Redis Store에 업데이트
         updateBoardForRedis(board);
@@ -206,9 +203,9 @@ public class BoardServiceImpl implements BoardService {
     private void deleteBoards(Board board) {
         // 이미지 파일 찾아서 S3에서 삭제
         fileUploadService.deleteFiles(board.getImageFiles());
+        // Redis Store에 저장된 Data Delete
+        deleteBoardForRedis(board.getId());
         try {
-            // Redis Store에 저장된 Data Delete
-            deleteBoardForRedis(board.getId());
             // DB에 저장된 Data Delete
             boardRepository.delete(board);
         } catch (Exception e) {
@@ -229,7 +226,7 @@ public class BoardServiceImpl implements BoardService {
 
     // Redis Store에서 데이터 조회
     @Override
-    public BoardForRedis retrieveBoardInRedisStore(Long boardId) {
+    public synchronized BoardForRedis retrieveBoardInRedisStore(Long boardId) {
         Optional<BoardForRedis> boardForRedis = boardRedisRepository.findOne(boardId);
         if (boardForRedis.isEmpty()) {
             // DB에서 Board 조회 후 Redis store에 저장.
@@ -252,7 +249,7 @@ public class BoardServiceImpl implements BoardService {
         try {
             boardRedisRepository.update(boardForRedis);
         } catch (Exception e) {
-            throw new RuntimeException("메모리에서 게시글 수정을 실패했습니다.");
+            throw new RuntimeException("Failed to update board from Redis store");
         }
     }
 
@@ -263,8 +260,10 @@ public class BoardServiceImpl implements BoardService {
             boardRedisRepository.delete(boardForRedis);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("메모리에서 게시글 삭제를 실패했습니다.");
+            throw new RuntimeException("Failed to delete board from Redis store");
         }
     }
+
+
 }
 

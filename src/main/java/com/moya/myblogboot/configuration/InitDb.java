@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
 @RequiredArgsConstructor
 public class InitDb {
     private final InitService initService;
@@ -34,7 +35,6 @@ public class InitDb {
         private final EntityManager em;
         private final PasswordEncoder passwordEncoder;
         private final BoardService boardService;
-        private final BoardRepository boardRepository;
         @Transactional
         public Member initAdminMember(){
             Member member = Member.builder()
@@ -78,7 +78,7 @@ public class InitDb {
                     .content(content)
                     .category(category.getId())
                     .build();
-            boardService.uploadBoard(boardReqDto, member.getId());
+            boardService.write(boardReqDto, member.getId());
         }
 
     }

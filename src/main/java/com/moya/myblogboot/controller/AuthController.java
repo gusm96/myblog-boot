@@ -35,6 +35,7 @@ public class AuthController {
     @PostMapping("/api/v1/login")
     public ResponseEntity<String> login(@RequestBody @Valid MemberLoginReqDto memberLoginReqDto, HttpServletResponse response) {
         Token newToken = authService.memberLogin(memberLoginReqDto);
+
         // Http Only Cookie에 Refersh Token 저장.
         Cookie refreshTokenCookie = CookieUtil.addCookie("refresh_token", newToken.getRefresh_token());
         // Cookie Response

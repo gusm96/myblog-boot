@@ -10,7 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+
 import java.security.Principal;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -51,7 +53,9 @@ public class BoardController {
 
     // 게시글 상세 관리자용
     @GetMapping("/api/v1/management/boards/{boardId}")
-    public ResponseEntity<BoardDetailResDto> getBoardDetailForAdmin(@PathVariable("boardId") Long boardId) {
+    public ResponseEntity<BoardDetailResDto> getBoardDetailForAdmin(@PathVariable("boardId") Long boardId, Principal principal) {
+        Long memberId = getMemberId(principal);
+        log.info("MemberId = {}", memberId);
         return ResponseEntity.ok().body(boardService.retrieveDto(boardId));
     }
 
@@ -60,6 +64,7 @@ public class BoardController {
     public ResponseEntity<Long> writeBoard(@RequestBody @Valid BoardReqDto boardReqDto, Principal principal) {
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardService.write(boardReqDto, memberId));
+
     }
 
     // 게시글 수정 PUT
@@ -120,6 +125,20 @@ public class BoardController {
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.cancelLikes(boardId, memberId));
     }
+
+    // Test Code
+    // 조회수 갱신용
+    @GetMapping("/api/v1/boards/{boardId}/views")
+    public ResponseEntity<Long> getViews(@PathVariable("boardId") Long boardId) {
+        return ResponseEntity.ok().body(boardService.retrieveDto(boardId).getViews());
+    }
+
+    // 좋아요수 갱신용
+    @GetMapping("/api/v1/boards/{boardId}/likes")
+    public ResponseEntity<Long> getLikes(@PathVariable("boardId") Long boardId) {
+        return ResponseEntity.ok().body(boardService.retrieveDto(boardId).getLikes());
+    }
+
 
     private Long getMemberId(Principal principal) {
         Long memberId = -1L;
