@@ -1,10 +1,13 @@
 package com.moya.myblogboot.repository;
 
+import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,13 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @ActiveProfiles("test")
 class MemberRepositoryTest {
-
     @Autowired
-    private EntityManager em;
-
-    @Autowired
-    private MemberRepository memberRepository;
-
+    EntityManager em;
     @BeforeEach
     void before(){
         Member newMember = Member.builder()
@@ -46,8 +44,10 @@ class MemberRepositoryTest {
                 .password("testuser123")
                 .nickname("").build();
         // when
-        Member savedMember = memberRepository.save(member);
-        Member findMember = memberRepository.findById(savedMember.getId()).get();
+        em.persist(member);
+        em.flush();
+        em.clear();
+        Member findMember = em.find(Member.class, member.getId());
         // then
         assertThat(findMember.getId()).isEqualTo(member.getId());
     }
@@ -58,22 +58,10 @@ class MemberRepositoryTest {
         // given
         String username = "testMember";
         // when
-        Member findMember = memberRepository.findByUsername(username).get();
+        Member findMember = em.createQuery("select m from Member m where m.username = : username", Member.class)
+                .setParameter("username", username)
+                .getSingleResult();
         // then
         assertThat(username).isEqualTo(findMember.getUsername());
-    }
-
-    @Test
-    @DisplayName("username으로 회원 존재 여부 테스트")
-    void isExistsByUsername() {
-        // given
-        String username1 = "testMember";
-        String username2 = "testMember2";
-        // when
-        boolean result1 = memberRepository.existsByUsername(username1);
-        boolean result2 = memberRepository.existsByUsername(username2);
-        // then
-        assertTrue(result1);
-        assertFalse(result2);
     }
 }

@@ -32,25 +32,27 @@ public class FileUploadServiceImpl implements FileUploadService {
     // S3에 ImageFile 저장
     @Override
     public ImageFileDto upload(MultipartFile file) {
-            try{
-                // 파일 저장
-                String fileName = file.getOriginalFilename(); // 오리지널 파일명
-                String ext = fileName.substring(fileName.lastIndexOf(".")); // 파일 확장자명
-                String randomFileName = randomImageName(fileName); // 이름 중복을 방지하기 위한 랜던 파일명
+        try {
+            // 파일 저장
+            String fileName = file.getOriginalFilename(); // 오리지널 파일명
+            String ext = fileName.substring(fileName.lastIndexOf(".")); // 파일 확장자명
+            String randomFileName = randomImageName(fileName); // 이름 중복을 방지하기 위한 랜던 파일명
 
-                ObjectMetadata metadata = new ObjectMetadata();
-                metadata.setContentType("image/" + ext);
-                metadata.setContentLength(file.getSize());
-                amazonS3.putObject(new PutObjectRequest(
-                        bucketName, randomFileName, file.getInputStream(), metadata
-                ).withCannedAcl(CannedAccessControlList.PublicRead));
-                return ImageFileDto.builder()
-                        .fileName(randomFileName)
-                        .filePath(amazonS3.getUrl(bucketName, randomFileName).toString())
-                        .build();
-            } catch (IOException e) {
-                throw new ImageUploadFailException("이미지 업로드를 실패했습니다.");
-            }
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentType("image/" + ext);
+            metadata.setContentLength(file.getSize());
+            amazonS3.putObject(new PutObjectRequest(
+                    bucketName, randomFileName, file.getInputStream(), metadata
+            ).withCannedAcl(CannedAccessControlList.PublicRead));
+            log.info("AWS S3 이미지 업로드 {}", randomFileName);
+            return ImageFileDto.builder()
+                    .fileName(randomFileName)
+                    .filePath(amazonS3.getUrl(bucketName, randomFileName).toString())
+                    .build();
+        } catch (IOException e) {
+            log.error("이미지 업로드 실패, {}", e.getMessage());
+            throw new ImageUploadFailException("이미지 업로드를 실패했습니다.");
+        }
     }
 
     // S3에서 ImageFile 삭제
@@ -58,11 +60,13 @@ public class FileUploadServiceImpl implements FileUploadService {
     public void delete(String imageFileName) {
         try {
             amazonS3.deleteObject(bucketName, imageFileName);
+            log.info("이미지 삭제 FileName = {}", imageFileName);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("이미지 삭제 실패 {}", e.getMessage());
             throw new ImageDeleteFailException("이미지 삭제를 실패했습니다.");
         }
     }
+
     // S3에서 ImageFile 삭제
     @Override
     public void deleteFiles(List<ImageFile> imageFiles) {
@@ -70,7 +74,7 @@ public class FileUploadServiceImpl implements FileUploadService {
             imageFiles.stream().forEach(imageFile ->
                     amazonS3.deleteObject(bucketName, imageFile.getFileName()));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("이미지 삭제 실패 {}", e.getMessage());
             throw new ImageDeleteFailException("이미지 삭제를 실패했습니다.");
         }
     }

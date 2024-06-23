@@ -8,7 +8,7 @@ pipeline {
         stage('Build') {
             steps {
                 // Gradle build
-                bat './gradlew build -x test'
+                bat './gradlew build'
             }
         }
         stage('Docker Hub Login and build image'){

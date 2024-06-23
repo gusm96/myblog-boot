@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -42,7 +41,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public String write(CommentReqDto commentReqDto, Long memberId, Long boardId) {
-        Member member = authService.retrieveMemberById(memberId);
+        Member member = authService.retrieve(memberId);
         Board board = boardService.retrieve(boardId);
         Comment comment = commentReqDto.toEntity(member, board);
         // 대댓글.

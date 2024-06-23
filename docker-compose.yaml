@@ -1,0 +1,55 @@
+version: '3'
+services:
+  db:
+    image : mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: myblog
+      MYSQL_USER : moyada
+      MYSQL_PASSWORD : moyada1343
+    ports:
+      - 3307:3307
+    volumes:
+      - dbdata:/var/lib/mysql
+  redis:
+    image: redis
+    restart: always
+    container_name: rediscache
+    ports:
+      - 6379:6379
+    networks:
+      - spring-net
+  spring-testcontainers-app:
+    build: .
+    image: spring-testcontainers-app
+    container_name: spring-testcontainers-app
+    environment:
+      REDIS_HOST: rediscache
+      REDIS_PORT: 6379
+    ports:
+      - 8080:8080
+    depends_on:
+      - redis
+    networks:
+      - spring-net
+  app:
+    build: .
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+      - redis
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/myblog
+      SPRING_DATASOURCE_USERNAME: moyada
+      SPRING_DATASOURCE_PASSWORD: moyada1343
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    networks:
+      - spring-net
+
+networks:
+  spring-net:
+volumes:
+  dbdata:

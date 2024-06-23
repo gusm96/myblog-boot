@@ -16,7 +16,6 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -25,7 +24,6 @@ import java.time.Duration;
 @Getter
 @Configuration
 @RequiredArgsConstructor
-@EnableRedisRepositories
 public class RedisConfig {
 
     @Value("${spring.data.redis.host}")
@@ -34,11 +32,13 @@ public class RedisConfig {
     private int port;
     @Value("${spring.data.redis.timeout}")
     private int timeout;
+    @Value("${spring.data.redis.database}")
+    private int database;
     private static final String REDISSON_HOST_PREFIX = "redis://";
 
     // Redis 연결
     @Bean
-    public LettuceConnectionFactory lettuceConnectionFactory (){
+    public LettuceConnectionFactory lettuceConnectionFactory() {
         final SocketOptions socketoptions = SocketOptions.builder().connectTimeout(Duration.ofSeconds(10)).build(); // 연결 시간제한.
         final ClientOptions clientoptions = ClientOptions.builder().socketOptions(socketoptions).build();
         LettuceClientConfiguration lettuceClientConfiguration = LettuceClientConfiguration.builder()
@@ -47,17 +47,16 @@ public class RedisConfig {
                 .shutdownTimeout(Duration.ZERO) // Redis 연결 종료시 타임아웃 설정. (강제 종료)
                 .build();
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(host, port);
-        configuration.setDatabase(0); // 0번 DB로 설정.
-        return new LettuceConnectionFactory(configuration,lettuceClientConfiguration);
+        configuration.setDatabase(database);
+        return new LettuceConnectionFactory(configuration, lettuceClientConfiguration);
     }
 
     // RedisConnection에서 넘겨준 byte값 객체 직렬화
     @Bean
-    public RedisTemplate<?,?> redisTemplate(){
+    public RedisTemplate<?, ?> redisTemplate() {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         // ConnectionFactory 설정.
         redisTemplate.setConnectionFactory(lettuceConnectionFactory());
-
 
         ObjectMapper objectMapper = new ObjectMapper();
         // ObjectMapper에 JavaTimeModule 등록 (LocalDateTime 타입 직/역직렬화 할 수 있도록 하기 위해 설정)

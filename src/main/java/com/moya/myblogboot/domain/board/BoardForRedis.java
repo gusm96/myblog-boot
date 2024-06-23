@@ -31,7 +31,7 @@ public class BoardForRedis {
         this.content = board.getContent();
         this.views = board.getViews();
         this.updateViews = 0L;
-        this.likes = board.getLikes();
+        this.likes = board.getLikes() == null ? 0L : board.getLikes();
         this.updateLikes = 0L;
         this.createDate = board.getCreateDate();
         this.updateDate = board.getUpdateDate();

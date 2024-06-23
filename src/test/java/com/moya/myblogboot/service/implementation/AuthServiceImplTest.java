@@ -101,7 +101,7 @@ class AuthServiceImplTest {
                 .build();
         Member saveMember = memberRepository.save(newMember);
 
-        Member findMember = authService.retrieveMemberById(saveMember.getId());
+        Member findMember = authService.retrieve(saveMember.getId());
         assertThat(findMember).isEqualTo(saveMember);
     }
 

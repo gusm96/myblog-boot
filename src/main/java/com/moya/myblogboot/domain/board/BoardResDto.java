@@ -32,4 +32,5 @@ public class BoardResDto {
                 .board(board)
                 .build();
     }
+
 }

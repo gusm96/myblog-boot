@@ -6,7 +6,6 @@ import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -27,7 +26,7 @@ public class JwtUtil {
     }
 
     // Token 만료
-    public static void validateToken(String token ,String secret) {
+    public static void validateToken(String token, String secret) {
         try {
             // JWT 파싱, Claims 추출
             Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
@@ -43,13 +42,14 @@ public class JwtUtil {
             throw new MalformedJwtException("잘못된 토큰 유형입니다");
         }
     }
+
     // Token 생성
-    public static Token createToken (Member member, Long accessTokenExpiration, Long refreshTokenExpiration, String secret){
+    public static Token createToken(Member member, Long accessTokenExpiration, Long refreshTokenExpiration, String secret) {
         Claims claims = Jwts.claims();
         claims.put("memberPrimaryKey", member.getId());
         claims.put("role", member.getRole());
         String accessToken = jwtBuild(claims, accessTokenExpiration, secret);
-        String refreshToken = jwtBuild(claims,refreshTokenExpiration, secret);
+        String refreshToken = jwtBuild(claims, refreshTokenExpiration, secret);
 
         return Token.builder()
                 .access_token(accessToken)
@@ -74,7 +74,6 @@ public class JwtUtil {
         claims.put("role", tokenInfo.getRole());
         return jwtBuild(claims, accessTokenExpiration, secret);
     }
-
 
 }
 

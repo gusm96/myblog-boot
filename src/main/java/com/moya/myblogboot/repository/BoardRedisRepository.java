@@ -15,7 +15,7 @@ public interface BoardRedisRepository {
     BoardForRedis incrementViews(BoardForRedis boardForRedis);
 
     BoardForRedis incrementLikes(BoardForRedis board);
-
+    
     BoardForRedis decrementLikes(BoardForRedis board);
 
     BoardForRedis save(Board board);

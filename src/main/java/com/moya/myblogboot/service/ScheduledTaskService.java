@@ -32,7 +32,7 @@ public class ScheduledTaskService {
         log.info("삭제 후 15일이 지난 게시글 영구삭제");
     }
 
-    @Scheduled(fixedRate = 600000) // 10분마다 DB 갱싱 및 캐시 정리
+    @Scheduled(fixedRate = 600000) // 10분마다 DB 데이터 동기화 및 캐시 정리
     @Transactional
     public void updateFromRedisStoreToDB() {
         String keyPattern = BOARD_KEY + "*";
