@@ -39,8 +39,12 @@ public class RedisConfig {
     // Redis 연결
     @Bean
     public LettuceConnectionFactory lettuceConnectionFactory() {
-        final SocketOptions socketoptions = SocketOptions.builder().connectTimeout(Duration.ofSeconds(10)).build(); // 연결 시간제한.
-        final ClientOptions clientoptions = ClientOptions.builder().socketOptions(socketoptions).build();
+        final SocketOptions socketoptions = SocketOptions.builder()
+                .connectTimeout(Duration.ofSeconds(10)) // 연결 시간제한.
+                .build();
+        final ClientOptions clientoptions = ClientOptions.builder()
+                .socketOptions(socketoptions)
+                .build();
         LettuceClientConfiguration lettuceClientConfiguration = LettuceClientConfiguration.builder()
                 .clientOptions(clientoptions)
                 .commandTimeout(Duration.ofMinutes(1)) // 명령 최대시간.
@@ -53,7 +57,7 @@ public class RedisConfig {
 
     // RedisConnection에서 넘겨준 byte값 객체 직렬화
     @Bean
-    public RedisTemplate<?, ?> redisTemplate() {
+    public RedisTemplate<String, Object> redisTemplate() {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         // ConnectionFactory 설정.
         redisTemplate.setConnectionFactory(lettuceConnectionFactory());
