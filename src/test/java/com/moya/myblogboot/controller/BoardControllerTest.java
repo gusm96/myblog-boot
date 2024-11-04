@@ -91,7 +91,7 @@ class BoardControllerTest extends AbstractContainerBaseTest {
                     .member(saveMember)
                     .category(saveCategory)
                     .title("title")
-                    .content("content")
+                    .content("content") 
                     .build();
             Board result = boardRepository.save(newBoard);
             boardId = result.getId();

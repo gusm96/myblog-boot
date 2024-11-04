@@ -11,6 +11,7 @@ import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -19,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -26,13 +28,14 @@ public class AuthServiceImpl implements AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     @Value("${jwt.secret}")
-    private  String secret;
+    private String secret;
 
     @Value("${jwt.access-token-expiration}")
-    private  Long accessTokenExpiration;
+    private Long accessTokenExpiration;
 
     @Value("${jwt.refresh-token-expiration}")
-    private  Long refreshTokenExpiration;
+    private Long refreshTokenExpiration;
+
     // 회원 가입
     @Override
     @Transactional
@@ -67,6 +70,7 @@ public class AuthServiceImpl implements AuthService {
         return memberRepository.findById(memberId).orElseThrow(()
                 -> new EntityNotFoundException("회원이 존재하지 않습니다."));
     }
+
     @Override
     public String reissuingAccessToken(String refreshToken) {
         // Refresh Token 검증.
@@ -104,7 +108,10 @@ public class AuthServiceImpl implements AuthService {
             throw new DuplicateKeyException("이미 존재하는 회원입니다.");
         }
     }
+
     private Token createToken(Member member) {
         return JwtUtil.createToken(member, accessTokenExpiration, refreshTokenExpiration, secret);
     }
+
+
 }

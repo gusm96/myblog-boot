@@ -4,9 +4,11 @@ import com.moya.myblogboot.domain.member.MemberLoginReqDto;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.member.PwStrengthCheckReqDto;
 import com.moya.myblogboot.domain.token.Token;
+import com.moya.myblogboot.dto.member.RandomUserNumberDto;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.PasswordStrengthCheck;
+import com.moya.myblogboot.service.RandomUserNumberService;
 import com.moya.myblogboot.utils.CookieUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,7 +37,6 @@ public class AuthController {
     @PostMapping("/api/v1/login")
     public ResponseEntity<String> login(@RequestBody @Valid MemberLoginReqDto memberLoginReqDto, HttpServletResponse response) {
         Token newToken = authService.memberLogin(memberLoginReqDto);
-
         // Http Only Cookie에 Refersh Token 저장.
         Cookie refreshTokenCookie = CookieUtil.addCookie("refresh_token", newToken.getRefresh_token());
         // Cookie Response
@@ -56,7 +57,8 @@ public class AuthController {
     // 토큰 권한 조회
     @GetMapping("/api/v1/token-role")
     public ResponseEntity<String> getRoleFromToken(HttpServletRequest request) {
-        return ResponseEntity.ok().body(authService.getTokenInfo(getToken(request)).getRole());}
+        return ResponseEntity.ok().body(authService.getTokenInfo(getToken(request)).getRole());
+    }
 
 
     // Access Token 재발급

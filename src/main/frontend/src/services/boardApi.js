@@ -12,9 +12,16 @@ import {
 export const getBoard = (boardId) => {
   return axios.get(`${BOARD_GET(boardId)}`).then((res) => res.data);
 };
-export const getBoardForAdmin = (boardId) => {
-  return axios.get(`${BOARD_FOR_ADMIN}/${boardId}`).then((res) => res.data);
+export const getBoardForAdmin = (boardId, accessToken) => {
+  return axios
+    .get(`${BOARD_FOR_ADMIN}/${boardId}`, {
+      headers: {
+        Authorization: getToken(accessToken),
+      },
+    })
+    .then((res) => res.data);
 };
+
 export const getBoardList = (page) => {
   return axios.get(`${BOARD_CRUD}?${page}`).then((res) => res.data);
 };

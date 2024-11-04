@@ -1,8 +1,9 @@
-package com.moya.myblogboot.service;
+package com.moya.myblogboot.scheduler;
 
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.BoardForRedis;
 import com.moya.myblogboot.repository.BoardRedisRepository;
+import com.moya.myblogboot.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -19,7 +20,7 @@ import static com.moya.myblogboot.domain.keys.RedisKey.*;
 @Service
 @Profile("!test")
 @RequiredArgsConstructor
-public class ScheduledTaskService {
+public class BoardScheduledTask {
     private final BoardRedisRepository boardRedisRepository;
     private final BoardService boardService;
     private static final Long SECONDS_INT_15DAYS = 15L * 24L * 60L * 60L; // 15일

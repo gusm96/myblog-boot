@@ -34,5 +34,6 @@ public interface BoardService {
 
     void deletePermanently(LocalDateTime thresholdDate);
 
+    boolean isDuplicateBoardViewCount(String key);
 }
 

@@ -3,6 +3,12 @@ package com.moya.myblogboot.controller;
 import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.service.BoardLikeService;
 import com.moya.myblogboot.service.BoardService;
+import com.moya.myblogboot.service.UserViewedBoardService;
+import com.moya.myblogboot.utils.CookieUtil;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +26,7 @@ public class BoardController {
 
     private final BoardService boardService;
     private final BoardLikeService boardLikeService;
+    private final UserViewedBoardService userViewedBoardService;
 
     // 모든 게시글 리스트
     @GetMapping("/api/v1/boards")
@@ -49,6 +56,89 @@ public class BoardController {
     @GetMapping("/api/v4/boards/{boardId}")
     public ResponseEntity<BoardDetailResDto> getBoardDetail(@PathVariable("boardId") Long boardId) {
         return ResponseEntity.ok().body(boardService.retrieveAndIncrementViewsDto(boardId));
+    }
+
+    // 게시글 상세 조회 V5
+    @GetMapping("/api/v5/boards/{boardId}")
+    public ResponseEntity<BoardDetailResDto> getBoardDetailV5(@PathVariable("boardId") Long boardId, HttpServletRequest req) {
+        // Client IP를 가져온다.
+        String clientIp = req.getRemoteAddr();
+        String key = "boardId:" + boardId + "clientIp:" + clientIp;
+        BoardDetailResDto boardDetailResDto;
+        // Redis에서 조회
+        if (boardService.isDuplicateBoardViewCount(key)) {
+            boardDetailResDto = boardService.retrieveDto(boardId);
+        } else {
+            boardDetailResDto = boardService.retrieveAndIncrementViewsDto(boardId);
+        }
+        return ResponseEntity.ok().body(boardDetailResDto);
+    }
+
+    // 게시글 상세 조회 V6
+    @GetMapping("/api/v6/boards/{boardId}")
+    public ResponseEntity<BoardDetailResDto> getBoardDetailV6(
+            @PathVariable("boardId") Long boardId, HttpServletRequest req, HttpServletResponse res) {
+        Cookie oldCookie = CookieUtil.findCookie(req, "view_count");
+        BoardDetailResDto result;
+
+        if (oldCookie != null) {
+            log.info("쿠키가 존재함");
+
+            // 쿠키가 존재하지만 해당 게시글 ID가 포함되지 않은 경우
+            if (!oldCookie.getValue().contains("[" + boardId + "]")) {
+                log.info("현재 쿠키 값: {}", oldCookie.getValue());
+
+                // 게시글 ID를 쿠키 값에 추가
+                oldCookie.setValue(oldCookie.getValue() + "[" + boardId + "]");
+                log.info("업데이트된 쿠키 값: {}", oldCookie.getValue());
+
+                oldCookie.setPath("/");
+                if (oldCookie.getMaxAge() <= 0) {
+                    oldCookie.setMaxAge(60 * 60 * 24); // 24시간으로 설정
+                }
+
+                // 조회수 증가 및 데이터 조회
+                result = boardService.retrieveAndIncrementViewsDto(boardId);
+            } else {
+                log.info("쿠키가 존재하고 해당 게시글도 존재함");
+                // 조회수 증가 없이 데이터만 조회
+                result = boardService.retrieveDto(boardId);
+            }
+
+            // 변경된 쿠키를 응답에 추가
+            res.addCookie(oldCookie);
+        } else {
+            log.info("쿠키가 존재하지 않음");
+
+            // 새로운 쿠키 생성
+            Cookie newCookie = new Cookie("view_count", "[" + boardId + "]");
+            newCookie.setPath("/");
+            newCookie.setMaxAge(60 * 60 * 24); // 24시간으로 설정
+            res.addCookie(newCookie);
+
+            // 조회수 증가 및 데이터 조회
+            result = boardService.retrieveAndIncrementViewsDto(boardId);
+        }
+
+        return ResponseEntity.ok().body(result);
+    }
+
+    @GetMapping("/api/v7/boards/{boardId}")
+    public ResponseEntity<BoardDetailResDto> getBoardDetailV7(@PathVariable("boardId") Long boardId, HttpServletRequest req) {
+        Cookie userNumCookie = CookieUtil.findCookie(req, "user_n");
+        Long userNum = Long.parseLong(userNumCookie.getValue());
+        BoardDetailResDto boardDetailResDto;
+        try {
+            if (!userViewedBoardService.isViewedBoard(userNum, boardId)) {
+                boardDetailResDto = boardService.retrieveAndIncrementViewsDto(boardId);
+                userViewedBoardService.addViewedBoard(userNum, boardId);
+            } else {
+                boardDetailResDto = boardService.retrieveDto(boardId);
+            }
+        } catch (Exception e) {
+            throw new EntityNotFoundException(e.getMessage());
+        }
+        return ResponseEntity.ok().body(boardDetailResDto);
     }
 
     // 게시글 상세 관리자용
@@ -126,7 +216,6 @@ public class BoardController {
         return ResponseEntity.ok().body(boardLikeService.cancelLikes(boardId, memberId));
     }
 
-    // Test Code
     // 조회수 갱신용
     @GetMapping("/api/v1/boards/{boardId}/views")
     public ResponseEntity<Long> getViews(@PathVariable("boardId") Long boardId) {

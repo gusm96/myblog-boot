@@ -1,4 +1,5 @@
-##Database
+server:
+  forward-headers-strategy: native
 spring:
   config:
     activate:

@@ -13,11 +13,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.*;
@@ -33,6 +40,9 @@ class AuthServiceImplTest {
     private MemberRepository memberRepository;
 
     @Autowired
+    private RedisTemplate<Long, Object> redisTemplate;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @BeforeEach
@@ -44,6 +54,7 @@ class AuthServiceImplTest {
                 .build();
         memberRepository.save(member);
     }
+
     @Test
     @DisplayName("회원 가입 테스트")
     void memberJoin() {
@@ -53,7 +64,7 @@ class AuthServiceImplTest {
                 .password("test1234")
                 .nickname("test1234")
                 .build();
-        
+
         // 중복된 회원
         MemberJoinReqDto reqMember2 = MemberJoinReqDto.builder()
                 .username("testMember")
@@ -119,4 +130,28 @@ class AuthServiceImplTest {
         assertTrue(result instanceof String);
     }
 
+    @Test
+    @DisplayName("임시번호 생성")
+    void createTemporaryNumber() {
+        // 1. 임시 번호 생성 - ThreadLocalRandom을 사용해서 난수를 생성
+        long temporaryNumber = ThreadLocalRandom.current().nextLong();
+
+        // 2. 유효성 체크 - RedisStore에서 해당 난수가 있는지 확인.
+        while (redisTemplate.opsForValue().get(temporaryNumber) != null) {
+            // 2-1 중복이면 다시 1번 실행.
+            temporaryNumber = ThreadLocalRandom.current().nextLong();
+        }
+        // 3. 저장
+
+        // 3-1 현재 시간
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy-MM-dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        String formattedNow = now.format(formatter);
+
+        // 3-2 TTL 24시간 - 현재시간
+        LocalDateTime midnight = now.plusDays(1).truncatedTo(ChronoUnit.DAYS);
+        long ttl = ChronoUnit.SECONDS.between(now, midnight);
+
+        redisTemplate.opsForValue().set(temporaryNumber, formattedNow, ttl, TimeUnit.SECONDS);
+    }
 }
