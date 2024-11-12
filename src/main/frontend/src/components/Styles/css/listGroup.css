@@ -1,0 +1,23 @@
+#category-list-group {
+  width: 100%;
+}
+.category-list-item {
+  background-color: #f8f9fa;
+  margin-bottom: 5px;
+  border: none; /* 테두리선 제거 */
+  border-radius: 5px;
+  font-weight: bolder;
+}
+
+.category-link {
+  display: block;
+  padding: 10px;
+  text-decoration: none;
+  color: #343a40;
+  transition: transform 0.3s ease;
+
+  &:hover {
+    color: black;
+    transform: scale(1.03);
+  }
+}

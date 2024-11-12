@@ -1,0 +1,23 @@
+.board-info {
+  display: flex;
+  justify-content: space-between;
+}
+.board-like-count {
+  margin-left: 10px;
+}
+.board-like-status {
+  color: red;
+  cursor: pointer;
+}
+.board-content {
+  margin-bottom: 20px;
+  color: black;
+}
+
+.fa-heart {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  &:hover {
+    transform: scale(1.2); /* 호버 시 1.1배 확대되도록 설정 */
+  }
+}
