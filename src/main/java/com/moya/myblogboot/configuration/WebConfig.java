@@ -10,9 +10,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
     private final UserNumCookieInterceptor userNumCookieInterceptor;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(userNumCookieInterceptor)
-                .addPathPatterns("/api/v2/visitor-count");
+                .addPathPatterns("/api/v2/visitor-count")
+                .addPathPatterns("/api/v7/boards/**");
     }
 }

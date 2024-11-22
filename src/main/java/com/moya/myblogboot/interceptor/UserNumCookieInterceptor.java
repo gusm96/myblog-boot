@@ -25,7 +25,7 @@ public class UserNumCookieInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // Finding user_n cookies
-        Cookie userNumCookie = CookieUtil.findCookie(request, USER_N);
+        Cookie userNumCookie = CookieUtil.findCookie(request, USER_NUM_COOKIE);
         String userNumValue = userNumCookie != null ? userNumCookie.getValue() : "";
 
         // user_n cookie validation
@@ -38,17 +38,14 @@ public class UserNumCookieInterceptor implements HandlerInterceptor {
             // Store in Redis and increment the visitor count.
             visitorCountService.incrementVisitorCount(DateUtil.getToday());
         }
-        request.setAttribute(USER_N, userNumValue);
 
-        return HandlerInterceptor.super.preHandle(request, response, handler);
+        request.setAttribute(USER_NUM_COOKIE, userNumValue);
+
+        return true;
     }
 
     private static Cookie createUserNumCookie(RandomUserNumberDto userNumberDto) {
-        Cookie newUserNumCookie = new Cookie(USER_N, String.valueOf(userNumberDto.getNumber()));
-        newUserNumCookie.setMaxAge((int) userNumberDto.getExpireTime());
-        newUserNumCookie.setHttpOnly(true);
-        newUserNumCookie.setPath("/");
-        return newUserNumCookie;
+        return CookieUtil.addCookie(USER_NUM_COOKIE, String.valueOf(userNumberDto.getNumber()));
     }
 
     private boolean validateUserNum(String userNumValue) {
