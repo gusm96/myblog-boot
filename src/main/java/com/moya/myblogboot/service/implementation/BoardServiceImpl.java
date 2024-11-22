@@ -6,7 +6,9 @@ import com.moya.myblogboot.domain.file.ImageFile;
 import com.moya.myblogboot.domain.file.ImageFileDto;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
-import com.moya.myblogboot.repository.*;
+import com.moya.myblogboot.repository.BoardRedisRepository;
+import com.moya.myblogboot.repository.BoardRepository;
+import com.moya.myblogboot.repository.ImageFileRepository;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardService;
 import com.moya.myblogboot.service.CategoryService;
@@ -74,6 +76,18 @@ public class BoardServiceImpl implements BoardService {
         return convertToBoardListResDto(boards);
     }
 
+    @Override
+    public boolean isDuplicateBoardViewCount(String key) {
+        // 검사 로직
+        if (boardRedisRepository.isDuplicateBoardViewCount(key)) {
+            return true;
+        } else {
+            // 중복되지 않은 경우 IP가 포함된 Key를 Redis store에 저장.
+            boardRedisRepository.saveClientIp(key);
+            return false;
+        }
+    }
+
     // 게시글 상세 조회
     @Override
     public BoardDetailResDto retrieveDto(Long boardId) {
@@ -103,8 +117,7 @@ public class BoardServiceImpl implements BoardService {
             category.addBoard(result);
             return result.getId();
         } catch (Exception e) {
-            log.error("게시글 등록 중 에러 발생");
-            e.printStackTrace();
+            log.error("게시글 등록 중 에러 발생 : {}", e.getMessage());
             throw new RuntimeException("게시글 등록을 실패했습니다");
         }
     }

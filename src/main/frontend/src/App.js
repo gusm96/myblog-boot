@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./screens/Home";
-import BoardDetail from "./components/Boards/BoardDetail";
 import { Management } from "./screens/Management";
 import { BoardForm } from "./components/Boards/BoardForm";
 import { BoardEditForm } from "./components/Boards/BoardEditForm";
@@ -18,10 +17,14 @@ import { NavigateBack } from "./screens/error/NavigateBack";
 import { CategoryList } from "./components/Category/CategoryList";
 import { TemporaryStorage } from "./screens/TemporaryStorage";
 import { SearchPage } from "./screens/SearchPage";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BoardDetailV2 } from "./components/Boards/BoardDetailV2";
+import { PageByCategory } from "./screens/PageByCategory";
 
 export default App;
 
 function App() {
+  const queryClient = new QueryClient();
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const access_token = useSelector(selectAccessToken);
   const dispatch = useDispatch();
@@ -42,37 +45,39 @@ function App() {
   }, [isLoggedIn, access_token, dispatch]);
 
   return (
-    <Router>
-      <Routes>
-        {/* 일반 사용자 전용 페이지 */}
-        <Route path="/" element={<UserLayout />}>
-          <Route index element={<Home />} />
-          <Route path="boards" element={<Home />} />
-          <Route path=":categoryName" element={<Home />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="boards/:boardId" element={<BoardDetail />} />
-          <Route
-            path="login"
-            element={isLoggedIn ? <NavigateBack /> : <LoginForm />}
-          />
-          <Route
-            path="join"
-            element={isLoggedIn ? <NavigateBack /> : <JoinForm />}
-          />
-          <Route path="*" element={<NotFound />} />
-        </Route>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Routes>
+          {/* 일반 사용자 전용 페이지 */}
+          <Route path="/" element={<UserLayout />}>
+            <Route index element={<Home />} />
+            {/* <Route path="boards" element={<Home />} /> */}
+            <Route path=":categoryName" element={<PageByCategory />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="boards/:boardId" element={<BoardDetailV2 />} />
+            <Route
+              path="login"
+              element={isLoggedIn ? <NavigateBack /> : <LoginForm />}
+            />
+            <Route
+              path="join"
+              element={isLoggedIn ? <NavigateBack /> : <JoinForm />}
+            />
+            <Route path="*" element={<NotFound />} />
+          </Route>
 
-        {/* 관리자 전용 페이지 */}
-        <Route path="/management" element={<ProtectedRoute />}>
-          <Route index element={<Management />} />
-          <Route path="new-post" element={<BoardForm />} />
-          <Route path="boards" element={<Management />} />
-          <Route path="boards/:boardId" element={<BoardEditForm />} />
-          <Route path="categories" element={<CategoryList />} />
-          <Route path="temporary-storage" element={<TemporaryStorage />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-    </Router>
+          {/* 관리자 전용 페이지 */}
+          <Route path="/management" element={<ProtectedRoute />}>
+            <Route index element={<Management />} />
+            <Route path="new-post" element={<BoardForm />} />
+            <Route path="boards" element={<Management />} />
+            <Route path="boards/:boardId" element={<BoardEditForm />} />
+            <Route path="categories" element={<CategoryList />} />
+            <Route path="temporary-storage" element={<TemporaryStorage />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </Router>
+    </QueryClientProvider>
   );
 }

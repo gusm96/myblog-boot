@@ -21,18 +21,18 @@ import { getCategories } from "../../services/categoryApi";
 
 export const BoardEditForm = () => {
   const accessToken = useSelector(selectAccessToken);
+  console.log(accessToken);
   const { boardId } = useParams();
   const [board, setBoard] = useState({
     title: "",
     category: "",
     deleteDate: "",
   });
-
   const [categories, setCategories] = useState([]);
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const [htmlString, setHtmlString] = useState("");
   useEffect(() => {
-    getBoardForAdmin(boardId).then((data) => {
+    getBoardForAdmin(boardId, accessToken).then((data) => {
       const blocksFromHTML = htmlToDraft(data.content);
       const { contentBlocks, entityMap } = blocksFromHTML;
       const contentState = ContentState.createFromBlockArray(
@@ -48,7 +48,7 @@ export const BoardEditForm = () => {
       setEditorState(newEditorState);
     });
     getCategories().then((data) => setCategories(data));
-  }, [boardId]);
+  }, [boardId, accessToken]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

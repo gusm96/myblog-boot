@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { addComment, getChildComments } from "../../services/boardApi";
 import { useSelector } from "react-redux";
-import { selectAccessToken } from "../../redux/userSlice";
+import { selectAccessToken, selectIsLoggedIn } from "../../redux/userSlice";
 import { formatTimeAgo } from "../dateFormat";
 
 export const Comment = ({ boardId, comment }) => {
+  const isLoggedIn = useSelector(selectIsLoggedIn);
   const accessToken = useSelector(selectAccessToken);
   const [reply, setReply] = useState({
     comment: "",
@@ -58,9 +59,11 @@ export const Comment = ({ boardId, comment }) => {
             답글보기({comment.childCount})
           </span>
         ) : null}
-        <span className="reply-btn" onClick={() => setShowReplyForm(true)}>
-          답글
-        </span>
+        {isLoggedIn ? (
+          <span className="reply-btn" onClick={() => setShowReplyForm(true)}>
+            답글
+          </span>
+        ) : null}
       </div>
       {showReply ? (
         <div className="comment-list-container">

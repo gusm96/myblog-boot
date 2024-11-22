@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static com.moya.myblogboot.domain.keys.RedisKey.*;
 
@@ -34,6 +35,11 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
             keys.add(Long.parseLong(key.split(":")[1]));
         }
         return keys;
+    }
+
+    @Override
+    public void saveClientIp(String key) {
+        redisTemplate.opsForValue().set(key, "", 24, TimeUnit.HOURS);
     }
 
     @Override
@@ -102,6 +108,11 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
         redisTemplate.delete(key);
         redisTemplate.delete(viewsKey);
         redisTemplate.delete(likesKey);
+    }
+
+    @Override
+    public boolean isDuplicateBoardViewCount(String key) {
+        return redisTemplate.hasKey(key);
     }
 
     private BoardForRedis getBoardForRedis(String key) {

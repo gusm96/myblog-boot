@@ -2,6 +2,7 @@ package com.moya.myblogboot.repository.implementation;
 
 import com.moya.myblogboot.repository.RandomUserNumberRedisRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -12,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import static com.moya.myblogboot.domain.keys.RedisKey.RANDOM_USER_NUM_KEY;
 
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class RandomUserNumberRedisRepositoryImpl implements RandomUserNumberRedisRepository {
@@ -20,20 +22,21 @@ public class RandomUserNumberRedisRepositoryImpl implements RandomUserNumberRedi
 
     @Override
     public void save(long number, long expireTime) {
-        String key = RANDOM_USER_NUM_KEY + number;
-        String formattedNow = getCurrentFormattedTime();
-        redisTemplate.opsForValue().set(key, formattedNow, expireTime, TimeUnit.SECONDS);
+        redisTemplate.opsForSet().add(RANDOM_USER_NUM_KEY, number);
+        redisTemplate.expire(RANDOM_USER_NUM_KEY, expireTime, TimeUnit.SECONDS);
     }
 
     @Override
     public boolean isExists(long number) {
-        return redisTemplate.opsForValue().get(String.valueOf(number)) != null;
+        boolean result = redisTemplate.opsForSet().isMember(RANDOM_USER_NUM_KEY, number);
+        log.info("Redis Store result = {}",result);
+        return result;
     }
 
-    private String getCurrentFormattedTime() {
+    /*private String getCurrentFormattedTime() {
         LocalDateTime now = LocalDateTime.now();
         return now.format(FORMATTER);
-    }
+    }*/
 
 
 }

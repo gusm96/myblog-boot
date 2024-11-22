@@ -45,7 +45,8 @@ public class RandomUserNumberServiceImpl implements RandomUserNumberService {
         return ChronoUnit.SECONDS.between(now, midnight);
     }
 
-    private boolean isRandomUserNumberInRedis(long randomUserNumber) {
+    @Override
+    public boolean isRandomUserNumberInRedis(long randomUserNumber) {
         return randomUserNumberRedisRepository.isExists(randomUserNumber);
     }
 

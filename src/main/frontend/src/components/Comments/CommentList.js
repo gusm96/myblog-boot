@@ -1,21 +1,15 @@
-import { useEffect, useState } from "react";
 import "../Styles/Board/commentList.css";
 import { Comment } from "./Comment";
-import { getComments } from "../../services/boardApi";
+import { useCommentsQuery } from "../Queries/quries";
 
 export const CommentList = ({ boardId }) => {
-  const [comments, setComments] = useState([]);
-  useEffect(() => {
-    const fetchData = async () => {
-      const commentsData = await getComments(boardId);
-      setComments(commentsData);
-    };
-    fetchData();
-  }, [boardId]);
+  const comments = useCommentsQuery(boardId);
+  if (comments.isLoading) return <div>Loading...</div>;
+  if (comments.error) return <div>Error : {comments.error.message} </div>;
   return (
     <div className="comment-list-container">
       <ul className="comment-list">
-        {comments.map((comment) => (
+        {comments.data.map((comment) => (
           <li key={comment.id} className="comment-item">
             <Comment boardId={boardId} comment={comment} />
           </li>

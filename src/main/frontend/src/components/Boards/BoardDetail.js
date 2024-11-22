@@ -25,28 +25,35 @@ const BoardDetail = () => {
     likes: "",
   });
   const [isBoardLiked, setIsBoardLiked] = useState(false);
+
+  const fetchBoardData = async (boardId) => {
+    const boardData = await getBoard(boardId);
+    setBoard({
+      title: boardData.title,
+      content: boardData.content,
+      uploadDate: boardData.uploadDate,
+      views: boardData.views,
+      likes: boardData.likes,
+    });
+  };
+
+  const fetchBoardLikeStatus = async (boardId, accessToken, isLoggedIn) => {
+    if (isLoggedIn) {
+      const likeStatusData = await getBoardLikeStatus(boardId, accessToken);
+      setIsBoardLiked(likeStatusData);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const boardData = await getBoard(boardId);
-        setBoard({
-          title: boardData.title,
-          content: boardData.content,
-          uploadDate: boardData.uploadDate,
-          views: boardData.views,
-          likes: boardData.likes,
-        });
-        if (isLoggedIn) {
-          const likeStatusData = await getBoardLikeStatus(boardId, accessToken);
-          setIsBoardLiked(likeStatusData);
-        }
-      } catch (error) {
-        console.error(error);
-      }
+      await fetchBoardData(boardId);
+      await fetchBoardLikeStatus(boardId, accessToken, isLoggedIn);
     };
     fetchData();
-  }, [isLoggedIn, boardId, accessToken]);
+  }, [boardId, isLoggedIn, accessToken]);
+
   const uploadDateFormat = moment(board.uploadDate).format("YYYY-MM-DD");
+
   const handleBoardLike = (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
@@ -60,6 +67,7 @@ const BoardDetail = () => {
       })
       .catch((error) => console.log(error));
   };
+
   const handleBoardLikeCancel = (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
