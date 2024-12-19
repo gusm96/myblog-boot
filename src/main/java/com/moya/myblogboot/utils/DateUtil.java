@@ -17,4 +17,8 @@ public class DateUtil {
         LocalDateTime previousDay = inputDate.minusDays(1);
         return previousDay.format(DateTimeFormatter.ofPattern(DATE_PATTERN));
     }
+
+    public static String getTodayAndTime(){
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
 }
