@@ -1,5 +1,6 @@
 package com.moya.myblogboot.configuration;
 
+import com.moya.myblogboot.constants.ShouldNotFilterPath;
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.service.AuthService;
@@ -32,19 +33,20 @@ public class JwtFilter extends OncePerRequestFilter {
         this.authService = authService;
         this.secret = secret;
     }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-            log.info("HTTP Method : {}", request.getMethod());
+        log.info("HTTP Method : {}", request.getMethod());
 
         // Token이 없을 시 Block
         if (authorization == null || !authorization.startsWith("bearer ")) {
-            filterChain.doFilter(request,response);
+            filterChain.doFilter(request, response);
             return;
         }
         // Token 꺼내기
         String token = authorization.split(" ")[1];
-        if(token.isEmpty()){
+        if (token.isEmpty()) {
             log.error("Token is null");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 존재하지 않습니다.");
         }
@@ -64,7 +66,7 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         // Token에 저장된 정보
-        TokenInfo tokenInfo = JwtUtil.getTokenInfo(token,secret);
+        TokenInfo tokenInfo = JwtUtil.getTokenInfo(token, secret);
         Long memberPrimaryKey = tokenInfo.getMemberPrimaryKey();
         // 권한 지정
         log.info("Member_Primary_Key : {}", memberPrimaryKey);
@@ -77,24 +79,13 @@ public class JwtFilter extends OncePerRequestFilter {
         // Detail을 넣어준다.
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-        filterChain.doFilter(request,response);
+        filterChain.doFilter(request, response);
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        // 필터에서 제외시킬 url
-        String[] excludePath = {
-                "/api/v1/join",
-                "/api/v1/login",
-                "/api/v1/logout",
-                "/api/v2/boards",
-                "/api/v1/boards/search",
-                "/api/v1/reissuing-token",
-                "/api/v1/password-strength-check",
-        };
-
         String path = request.getRequestURI();
         log.info("Path : {}", path);
-        return (Arrays.stream(excludePath).anyMatch(path::startsWith));
+        return (ShouldNotFilterPath.EXCLUDE_PATHS.stream().anyMatch(path::startsWith));
     }
 }
