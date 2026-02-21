@@ -1,6 +1,5 @@
 import axios from "axios";
 import { CATEGORIES, CATEGORIES_FOR_ADMIN, CATEGORY_CRUD } from "../apiConfig";
-
 const getToken = (accessToken) => {
   return `bearer ${accessToken}`;
 };
@@ -10,7 +9,7 @@ export const getCategories = () => {
 export const getCategoriesV2 = () => {
   return axios.get(`${CATEGORIES}`).then((res) => res.data);
 };
-export const getCategoiresForAdmin = (accessToken) => {
+export const getCategoriesForAdmin = (accessToken) => {
   return axios
     .get(`${CATEGORIES_FOR_ADMIN}`, {
       headers: {
@@ -25,13 +24,10 @@ export const addNewCategory = (categoryName, accessToken) => {
     {
       categoryName: categoryName,
     },
-
     {
       headers: {
         Authorization: getToken(accessToken),
       },
-    },
-    {
       withCredentials: true,
     }
   );

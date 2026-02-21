@@ -21,7 +21,6 @@ import { getCategories } from "../../services/categoryApi";
 
 export const BoardEditForm = () => {
   const accessToken = useSelector(selectAccessToken);
-  console.log(accessToken);
   const { boardId } = useParams();
   const [board, setBoard] = useState({
     title: "",
@@ -72,7 +71,7 @@ export const BoardEditForm = () => {
 
   const updateTextDescription = (newState) => {
     setEditorState(newState);
-    const html = draftToHtml(convertToRaw(editorState.getCurrentContent()));
+    const html = draftToHtml(convertToRaw(newState.getCurrentContent()));
     setHtmlString(html);
   };
 

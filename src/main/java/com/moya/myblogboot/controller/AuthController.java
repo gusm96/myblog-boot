@@ -4,11 +4,9 @@ import com.moya.myblogboot.domain.member.MemberLoginReqDto;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.member.PwStrengthCheckReqDto;
 import com.moya.myblogboot.domain.token.Token;
-import com.moya.myblogboot.dto.member.RandomUserNumberDto;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.PasswordStrengthCheck;
-import com.moya.myblogboot.service.RandomUserNumberService;
 import com.moya.myblogboot.utils.CookieUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +17,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import static com.moya.myblogboot.constants.CookieName.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -38,7 +38,7 @@ public class AuthController {
     public ResponseEntity<String> login(@RequestBody @Valid MemberLoginReqDto memberLoginReqDto, HttpServletResponse response) {
         Token newToken = authService.memberLogin(memberLoginReqDto);
         // Http Only Cookie에 Refersh Token 저장.
-        Cookie refreshTokenCookie = CookieUtil.addCookie("refresh_token", newToken.getRefresh_token());
+        Cookie refreshTokenCookie = CookieUtil.addCookie(REFRESH_TOKEN_COOKIE, newToken.getRefresh_token());
         // Cookie Response
         response.addCookie(refreshTokenCookie);
         return ResponseEntity.ok().body(newToken.getAccess_token());
@@ -48,7 +48,7 @@ public class AuthController {
     @GetMapping("/api/v1/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         // Cookie 에서 Refresh Token 찾는다.
-        Cookie refreshTokenCookie = CookieUtil.findCookie(request, "refresh_token");
+        Cookie refreshTokenCookie = CookieUtil.findCookie(request, REFRESH_TOKEN_COOKIE);
         if (refreshTokenCookie != null && refreshTokenCookie.getValue() != null && !refreshTokenCookie.getValue().equals(""))
             CookieUtil.deleteCookie(response, refreshTokenCookie); // Refresh Token 삭제 -> Refresh Token의 정보 소멸
         return new ResponseEntity<>(HttpStatus.OK);
@@ -64,7 +64,7 @@ public class AuthController {
     // Access Token 재발급
     @GetMapping("/api/v1/reissuing-token")
     public ResponseEntity<String> reissuingAccessToken(HttpServletRequest request) {
-        Cookie refreshTokenCookie = CookieUtil.findCookie(request, "refresh_token");
+        Cookie refreshTokenCookie = CookieUtil.findCookie(request, REFRESH_TOKEN_COOKIE);
         if (refreshTokenCookie == null || refreshTokenCookie.getValue().equals(""))
             throw new InvalidateTokenException("토큰이 존재하지 않습니다.");
         return ResponseEntity.ok().body(authService.reissuingAccessToken(refreshTokenCookie.getValue()));

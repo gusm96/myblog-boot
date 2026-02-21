@@ -35,6 +35,7 @@ export const BoardForm = () => {
       .then((data) => setCategories(data))
       .catch((error) => console.log(error));
   }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -42,9 +43,10 @@ export const BoardForm = () => {
       [name]: value,
     }));
   };
+
   const updateTextDescription = (state) => {
     setEditorState(state);
-    const html = draftjsToHtml(convertToRaw(editorState.getCurrentContent()));
+    const html = draftjsToHtml(convertToRaw(state.getCurrentContent()));
     setHtmlString(html);
   };
   const handleSubmit = async (e) => {
@@ -81,7 +83,8 @@ export const BoardForm = () => {
     });
   };
 
-  const handleNewCategory = () => {
+  const handleNewCategory = (event) => {
+    event.preventDefault();
     addNewCategory(newCategory, accessToken)
       .then((res) => {
         if (res.status === 200) {
@@ -147,12 +150,12 @@ export const BoardForm = () => {
           onEditorStateChange={updateTextDescription}
           toolbar={{
             image: {
-              uploadenabled: true,
+              uploadEnabled: true,
               uploadCallback: uploadImageCallBack,
-              previewimage: true,
-              inputaccept: "image/gif,image/jpeg,image/jpg,image/png,image/svg",
+              previewImage: true,
+              inputAccept: "image/gif,image/jpeg,image/jpg,image/png,image/svg",
               alt: { present: false, mandatory: false },
-              defaultsize: {
+              defaultSize: {
                 height: "auto",
                 width: "auto",
               },
@@ -187,7 +190,7 @@ export const BoardForm = () => {
           <Form>
             <InputGroup>
               <InputGroup.Text id="inputGroup-sizing-default">
-                카테고리 이름 :{" "}
+                카테고리 이름{" "}
               </InputGroup.Text>
               <Form.Control
                 type="text"
