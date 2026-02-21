@@ -1,6 +1,7 @@
-package com.moya.myblogboot.domain.board;
+package com.moya.myblogboot.dto.board;
 
 
+import com.moya.myblogboot.domain.board.BoardStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -15,7 +16,7 @@ public class BoardDetailResDto {
     private String content;
     private Long views;
     private Long likes;
-    private LocalDateTime creatDate;
+    private LocalDateTime createDate;
     private LocalDateTime updateDate;
     private LocalDateTime deleteDate;
     private BoardStatus boardStatus;
@@ -28,7 +29,7 @@ public class BoardDetailResDto {
         this.content = boardForRedis.getContent();
         this.views = boardForRedis.totalViews();
         this.likes = boardForRedis.totalLikes();
-        this.creatDate = boardForRedis.getCreateDate();
+        this.createDate = boardForRedis.getCreateDate();
         this.updateDate = boardForRedis.getUpdateDate();
         this.deleteDate = boardForRedis.getDeleteDate();
         this.boardStatus = boardForRedis.getBoardStatus();

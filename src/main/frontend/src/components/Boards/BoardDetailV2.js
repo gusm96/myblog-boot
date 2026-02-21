@@ -3,7 +3,9 @@ import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { selectAccessToken, selectIsLoggedIn } from "../../redux/userSlice";
 import Parser from "html-react-parser";
-import { useBoardQuery, useLikeStatusQuery } from "../Queries/quries";
+import DOMPurify from "dompurify";
+import { useBoardQuery, useLikeStatusQuery } from "../../hooks/useQueries";
+import { ErrorMessage } from "../ErrorMessage";
 import { CommentForm } from "../Comments/CommentForm";
 import { CommentList } from "../Comments/CommentList";
 import moment from "moment";
@@ -18,11 +20,12 @@ export const BoardDetailV2 = () => {
   const likeStatus = useLikeStatusQuery(boardId, accessToken, isLoggedIn);
 
   if (board.isLoading || likeStatus.isLoading) return <div>Loading...</div>;
+  if (board.error) return <ErrorMessage message={board.error.message} />;
   return (
     <div>
       <h1>{board.data.title}</h1>
       <hr></hr>
-      <div>{Parser(board.data.content)}</div>
+      <div>{Parser(DOMPurify.sanitize(board.data.content))}</div>
       <div className="board-info">
         <div className="board-like">
           <span>조회수 {board.data.views}</span>
