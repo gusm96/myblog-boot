@@ -1,7 +1,7 @@
 package com.moya.myblogboot.scheduler;
 
 import com.moya.myblogboot.domain.board.Board;
-import com.moya.myblogboot.domain.board.BoardForRedis;
+import com.moya.myblogboot.dto.board.BoardForRedis;
 import com.moya.myblogboot.repository.BoardRedisRepository;
 import com.moya.myblogboot.service.BoardService;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class BoardScheduledTask {
         try{
             for (Long key : keys) {
                 // 메모리에서 데이터 조회
-                BoardForRedis boardForRedis = boardService.retrieveBoardInRedisStore(key);
+                BoardForRedis boardForRedis = boardService.getBoardFromCache(key);
                 if (boardForRedis != null) {
                     // 수정할 대상 게시글 엔터티 조회
                     updateBoards(boardForRedis);
@@ -57,7 +57,7 @@ public class BoardScheduledTask {
 
     // 게시글 업데이트
     private void updateBoards(BoardForRedis boardForRedis) {
-        Board findBoard = boardService.retrieve(boardForRedis.getId());
+        Board findBoard = boardService.findById(boardForRedis.getId());
         // 조회수 업데이트
         findBoard.updateViews(boardForRedis.totalViews());
         // 좋아요수 업데이트

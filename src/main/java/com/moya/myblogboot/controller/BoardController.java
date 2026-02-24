@@ -1,6 +1,9 @@
 package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.board.*;
+import com.moya.myblogboot.dto.board.BoardDetailResDto;
+import com.moya.myblogboot.dto.board.BoardListResDto;
+import com.moya.myblogboot.dto.board.BoardReqDto;
 import com.moya.myblogboot.service.BoardLikeService;
 import com.moya.myblogboot.service.BoardService;
 import com.moya.myblogboot.service.UserViewedBoardService;
@@ -18,6 +21,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+
+import static com.moya.myblogboot.constants.CookieName.*;
 
 @Slf4j
 @RestController
@@ -53,12 +58,14 @@ public class BoardController {
     }
 
     // 게시글 상세 V4
+    @Deprecated
     @GetMapping("/api/v4/boards/{boardId}")
     public ResponseEntity<BoardDetailResDto> getBoardDetail(@PathVariable("boardId") Long boardId) {
-        return ResponseEntity.ok().body(boardService.retrieveAndIncrementViewsDto(boardId));
+        return ResponseEntity.ok().body(boardService.getBoardDetailAndIncrementViews(boardId));
     }
 
     // 게시글 상세 조회 V5
+    @Deprecated
     @GetMapping("/api/v5/boards/{boardId}")
     public ResponseEntity<BoardDetailResDto> getBoardDetailV5(@PathVariable("boardId") Long boardId, HttpServletRequest req) {
         // Client IP를 가져온다.
@@ -67,49 +74,38 @@ public class BoardController {
         BoardDetailResDto boardDetailResDto;
         // Redis에서 조회
         if (boardService.isDuplicateBoardViewCount(key)) {
-            boardDetailResDto = boardService.retrieveDto(boardId);
+            boardDetailResDto = boardService.getBoardDetail(boardId);
         } else {
-            boardDetailResDto = boardService.retrieveAndIncrementViewsDto(boardId);
+            boardDetailResDto = boardService.getBoardDetailAndIncrementViews(boardId);
         }
         return ResponseEntity.ok().body(boardDetailResDto);
     }
 
     // 게시글 상세 조회 V6
+    @Deprecated
     @GetMapping("/api/v6/boards/{boardId}")
     public ResponseEntity<BoardDetailResDto> getBoardDetailV6(
             @PathVariable("boardId") Long boardId, HttpServletRequest req, HttpServletResponse res) {
         Cookie oldCookie = CookieUtil.findCookie(req, "view_count");
         BoardDetailResDto result;
-
         if (oldCookie != null) {
-            log.info("쿠키가 존재함");
-
             // 쿠키가 존재하지만 해당 게시글 ID가 포함되지 않은 경우
             if (!oldCookie.getValue().contains("[" + boardId + "]")) {
-                log.info("현재 쿠키 값: {}", oldCookie.getValue());
-
                 // 게시글 ID를 쿠키 값에 추가
                 oldCookie.setValue(oldCookie.getValue() + "[" + boardId + "]");
-                log.info("업데이트된 쿠키 값: {}", oldCookie.getValue());
-
                 oldCookie.setPath("/");
                 if (oldCookie.getMaxAge() <= 0) {
                     oldCookie.setMaxAge(60 * 60 * 24); // 24시간으로 설정
                 }
-
                 // 조회수 증가 및 데이터 조회
-                result = boardService.retrieveAndIncrementViewsDto(boardId);
+                result = boardService.getBoardDetailAndIncrementViews(boardId);
             } else {
-                log.info("쿠키가 존재하고 해당 게시글도 존재함");
                 // 조회수 증가 없이 데이터만 조회
-                result = boardService.retrieveDto(boardId);
+                result = boardService.getBoardDetail(boardId);
             }
-
             // 변경된 쿠키를 응답에 추가
             res.addCookie(oldCookie);
         } else {
-            log.info("쿠키가 존재하지 않음");
-
             // 새로운 쿠키 생성
             Cookie newCookie = new Cookie("view_count", "[" + boardId + "]");
             newCookie.setPath("/");
@@ -117,23 +113,22 @@ public class BoardController {
             res.addCookie(newCookie);
 
             // 조회수 증가 및 데이터 조회
-            result = boardService.retrieveAndIncrementViewsDto(boardId);
+            result = boardService.getBoardDetailAndIncrementViews(boardId);
         }
-
         return ResponseEntity.ok().body(result);
     }
 
     @GetMapping("/api/v7/boards/{boardId}")
-    public ResponseEntity<BoardDetailResDto> getBoardDetailV7(@PathVariable("boardId") Long boardId, HttpServletRequest req) {
-        Cookie userNumCookie = CookieUtil.findCookie(req, "user_n");
-        Long userNum = Long.parseLong(userNumCookie.getValue());
+    public ResponseEntity<BoardDetailResDto> getBoardDetailV7(@RequestAttribute(USER_NUM_COOKIE) String userNum,
+                                                              @PathVariable("boardId") Long boardId) {
+        Long userN = Long.valueOf(userNum);
         BoardDetailResDto boardDetailResDto;
         try {
-            if (!userViewedBoardService.isViewedBoard(userNum, boardId)) {
-                boardDetailResDto = boardService.retrieveAndIncrementViewsDto(boardId);
-                userViewedBoardService.addViewedBoard(userNum, boardId);
+            if (!userViewedBoardService.isViewedBoard(userN, boardId)) {
+                boardDetailResDto = boardService.getBoardDetailAndIncrementViews(boardId);
+                userViewedBoardService.addViewedBoard(userN, boardId);
             } else {
-                boardDetailResDto = boardService.retrieveDto(boardId);
+                boardDetailResDto = boardService.getBoardDetail(boardId);
             }
         } catch (Exception e) {
             throw new EntityNotFoundException(e.getMessage());
@@ -143,15 +138,17 @@ public class BoardController {
 
     // 게시글 상세 관리자용
     @GetMapping("/api/v1/management/boards/{boardId}")
-    public ResponseEntity<BoardDetailResDto> getBoardDetailForAdmin(@PathVariable("boardId") Long boardId, Principal principal) {
+    public ResponseEntity<BoardDetailResDto> getBoardDetailForAdmin(@PathVariable("boardId") Long boardId,
+                                                                    Principal principal) {
         Long memberId = getMemberId(principal);
         log.info("MemberId = {}", memberId);
-        return ResponseEntity.ok().body(boardService.retrieveDto(boardId));
+        return ResponseEntity.ok().body(boardService.getBoardDetail(boardId));
     }
 
     // 게시글 작성 Post
     @PostMapping("/api/v1/boards")
-    public ResponseEntity<Long> writeBoard(@RequestBody @Valid BoardReqDto boardReqDto, Principal principal) {
+    public ResponseEntity<Long> writeBoard(@RequestBody @Valid BoardReqDto boardReqDto,
+                                           Principal principal) {
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardService.write(boardReqDto, memberId));
 
@@ -168,7 +165,8 @@ public class BoardController {
 
     // 게시글 삭제 DELETE
     @DeleteMapping("/api/v1/boards/{boardId}")
-    public ResponseEntity<Boolean> deleteBoard(@PathVariable("boardId") Long boardId, Principal principal) {
+    public ResponseEntity<Boolean> deleteBoard(@PathVariable("boardId") Long boardId,
+                                               Principal principal) {
         Long memberId = getMemberId(principal);
         boardService.delete(boardId, memberId);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -182,7 +180,8 @@ public class BoardController {
 
     // 게시글 삭제 취소 PUT
     @PutMapping("/api/v1/deleted-boards/{boardId}")
-    public ResponseEntity<?> cancelDeletedBoard(@PathVariable("boardId") Long boardId, Principal principal) {
+    public ResponseEntity<?> cancelDeletedBoard(@PathVariable("boardId") Long boardId,
+                                                Principal principal) {
         Long memberId = getMemberId(principal);
         boardService.undelete(boardId, memberId);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -197,21 +196,24 @@ public class BoardController {
 
     // 게시글 좋아요 여부 확인 GET
     @GetMapping("/api/v2/likes/{boardId}")
-    public ResponseEntity<?> checkBoardLike(@PathVariable("boardId") Long boardId, Principal principal) {
+    public ResponseEntity<?> checkBoardLike(@PathVariable("boardId") Long boardId,
+                                            Principal principal) {
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.isLiked(boardId, memberId));
     }
 
     // 게시글 좋아요 POST
     @PostMapping("/api/v2/likes/{boardId}")
-    public ResponseEntity<Long> addBoardLike(@PathVariable("boardId") Long boardId, Principal principal) {
+    public ResponseEntity<Long> addBoardLike(@PathVariable("boardId") Long boardId,
+                                             Principal principal) {
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.addLikes(boardId, memberId));
     }
 
     // 게시글 좋아요 취소 DELETE
     @DeleteMapping("/api/v2/likes/{boardId}")
-    public ResponseEntity<?> cancelBoardLike(@PathVariable("boardId") Long boardId, Principal principal) {
+    public ResponseEntity<?> cancelBoardLike(@PathVariable("boardId") Long boardId,
+                                             Principal principal) {
         Long memberId = getMemberId(principal);
         return ResponseEntity.ok().body(boardLikeService.cancelLikes(boardId, memberId));
     }
@@ -219,15 +221,18 @@ public class BoardController {
     // 조회수 갱신용
     @GetMapping("/api/v1/boards/{boardId}/views")
     public ResponseEntity<Long> getViews(@PathVariable("boardId") Long boardId) {
-        return ResponseEntity.ok().body(boardService.retrieveDto(boardId).getViews());
+        return ResponseEntity.ok().body(boardService.getBoardDetail(boardId).getViews());
     }
 
     // 좋아요수 갱신용
     @GetMapping("/api/v1/boards/{boardId}/likes")
     public ResponseEntity<Long> getLikes(@PathVariable("boardId") Long boardId) {
-        return ResponseEntity.ok().body(boardService.retrieveDto(boardId).getLikes());
+        return ResponseEntity.ok().body(boardService.getBoardDetail(boardId).getLikes());
     }
 
+    private int getPage(int page) {
+        return page - 1;
+    }
 
     private Long getMemberId(Principal principal) {
         Long memberId = -1L;
@@ -236,10 +241,5 @@ public class BoardController {
         }
         return memberId;
     }
-
-    private int getPage(int page) {
-        return page - 1;
-    }
-
 
 }

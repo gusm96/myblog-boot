@@ -5,6 +5,7 @@ import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.file.ImageFile;
 import com.moya.myblogboot.domain.file.ImageFileDto;
 import com.moya.myblogboot.domain.member.Member;
+import com.moya.myblogboot.dto.board.*;
 import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.BoardRedisRepository;
 import com.moya.myblogboot.repository.BoardRepository;
@@ -90,15 +91,15 @@ public class BoardServiceImpl implements BoardService {
 
     // 게시글 상세 조회
     @Override
-    public BoardDetailResDto retrieveDto(Long boardId) {
-        BoardForRedis boardForRedis = retrieveBoardInRedisStore(boardId);
+    public BoardDetailResDto getBoardDetail(Long boardId) {
+        BoardForRedis boardForRedis = getBoardFromCache(boardId);
         return BoardDetailResDto.builder().boardForRedis(boardForRedis).build();
     }
 
     // 게시글 조회 및 조회수 증가
     @Override
-    public BoardDetailResDto retrieveAndIncrementViewsDto(Long boardId) {
-        BoardForRedis boardForRedis = retrieveBoardInRedisStore(boardId);
+    public BoardDetailResDto getBoardDetailAndIncrementViews(Long boardId) {
+        BoardForRedis boardForRedis = getBoardFromCache(boardId);
         return BoardDetailResDto.builder().boardForRedis(incrementViews(boardForRedis)).build();
     }
 
@@ -127,7 +128,7 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     public Long edit(Long memberId, Long boardId, BoardReqDto modifiedDto) {
         // Entity 조회
-        Board board = retrieve(boardId);
+        Board board = findById(boardId);
         // 게시글 수정/삭제 권한 검사.
         verifyBoardAccessAuthorization(board.getMember().getId(), memberId);
         Category modifiedCategory = categoryService.retrieve(modifiedDto.getCategory());
@@ -142,7 +143,7 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     public void delete(Long boardId, Long memberId) {
         // Entity 조회
-        Board board = retrieve(boardId);
+        Board board = findById(boardId);
         // 게시글 수정/삭제 권한 검사.
         verifyBoardAccessAuthorization(board.getMember().getId(), memberId);
         // 삭제 요청일 갱신
@@ -156,7 +157,7 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     public void undelete(Long boardId, Long memberId) {
         // DB에서 게시글 조회
-        Board board = retrieve(boardId);
+        Board board = findById(boardId);
         // 게시글 수정/삭제 권한 검사.
         verifyBoardAccessAuthorization(board.getMember().getId(), memberId);
         // DeleteDate, BoardStatus 업데이트
@@ -177,13 +178,13 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public void deletePermanently(Long boardId) {
-        Board board = retrieve(boardId);
+        Board board = findById(boardId);
         deleteBoards(board);
     }
 
     // 게시글 Entity 조회
     @Override
-    public Board retrieve(Long boardId) {
+    public Board findById(Long boardId) {
         try {
             return boardRepository.findById(boardId).orElseThrow(
                     () -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다.")
@@ -228,7 +229,7 @@ public class BoardServiceImpl implements BoardService {
 
     // Board Entity 조회 후 Redis Store에 저장.
     private BoardForRedis retrieveBoardAndSetRedisStore(Long boardId) {
-        Board board = retrieve(boardId);
+        Board board = findById(boardId);
         return boardRedisRepository.save(board);
     }
 
@@ -239,7 +240,7 @@ public class BoardServiceImpl implements BoardService {
 
     // Redis Store에서 데이터 조회
     @Override
-    public synchronized BoardForRedis retrieveBoardInRedisStore(Long boardId) {
+    public synchronized BoardForRedis getBoardFromCache(Long boardId) {
         Optional<BoardForRedis> boardForRedis = boardRedisRepository.findOne(boardId);
         if (boardForRedis.isEmpty()) {
             // DB에서 Board 조회 후 Redis store에 저장.
@@ -257,7 +258,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Async
     protected void updateBoardForRedis(Board board) {
-        BoardForRedis boardForRedis = retrieveBoardInRedisStore(board.getId());
+        BoardForRedis boardForRedis = getBoardFromCache(board.getId());
         boardForRedis.update(board);
         try {
             boardRedisRepository.update(boardForRedis);
@@ -268,7 +269,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Async
     protected void deleteBoardForRedis(Long boardId) {
-        BoardForRedis boardForRedis = retrieveBoardInRedisStore(boardId);
+        BoardForRedis boardForRedis = getBoardFromCache(boardId);
         try {
             boardRedisRepository.delete(boardForRedis);
         } catch (Exception e) {

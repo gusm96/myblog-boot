@@ -1,6 +1,6 @@
 package com.moya.myblogboot.service.implementation;
 
-import com.moya.myblogboot.domain.board.BoardForRedis;
+import com.moya.myblogboot.dto.board.BoardForRedis;
 import com.moya.myblogboot.domain.board.BoardLike;
 import com.moya.myblogboot.repository.BoardLikeRepository;
 import com.moya.myblogboot.repository.BoardRedisRepository;
@@ -30,7 +30,7 @@ public class BoardLikeServiceImpl implements BoardLikeService {
         if (isLiked(boardId, memberId)) {
             throw new DuplicateKeyException("이미 \"좋아요\"한 게시글 입니다.");
         }
-        BoardForRedis board = boardService.retrieveBoardInRedisStore(boardId);
+        BoardForRedis board = boardService.getBoardFromCache(boardId);
         try {
             addBoardLike(boardId, memberId);
             return boardRedisRepository.incrementLikes(board).totalLikes();
@@ -45,7 +45,7 @@ public class BoardLikeServiceImpl implements BoardLikeService {
         if (!isLiked(boardId, memberId)) {
             throw new NoSuchElementException("잘못된 요청입니다.");
         }
-        BoardForRedis board = boardService.retrieveBoardInRedisStore(boardId);
+        BoardForRedis board = boardService.getBoardFromCache(boardId);
         try {
             deleteBoardLike(boardId, memberId);
             return boardRedisRepository.decrementLikes(board).totalLikes();
@@ -63,7 +63,7 @@ public class BoardLikeServiceImpl implements BoardLikeService {
     @Async
     void addBoardLike(Long boardId, Long memberId) {
         BoardLike boardLike = BoardLike.builder()
-                .board(boardService.retrieve(boardId))
+                .board(boardService.findById(boardId))
                 .member(authService.retrieve(memberId))
                 .build();
         boardLikeRepository.save(boardLike);
