@@ -1,6 +1,10 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.board.*;
+import com.moya.myblogboot.dto.board.BoardDetailResDto;
+import com.moya.myblogboot.dto.board.BoardForRedis;
+import com.moya.myblogboot.dto.board.BoardListResDto;
+import com.moya.myblogboot.dto.board.BoardReqDto;
 
 import java.time.LocalDateTime;
 
@@ -12,13 +16,13 @@ public interface BoardService {
 
     BoardListResDto retrieveAllBySearched(SearchType searchType, String searchContents, int page);
 
-    Board retrieve(Long boardId);
+    Board findById(Long boardId);
 
-    BoardDetailResDto retrieveDto(Long boardId);
+    BoardDetailResDto getBoardDetail(Long boardId);
 
-    BoardDetailResDto retrieveAndIncrementViewsDto(Long boardId);
+    BoardDetailResDto getBoardDetailAndIncrementViews(Long boardId);
 
-    BoardForRedis retrieveBoardInRedisStore(Long boardId);
+    BoardForRedis getBoardFromCache(Long boardId);
 
     BoardListResDto retrieveAllDeleted(int page);
 

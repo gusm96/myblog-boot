@@ -1,5 +1,5 @@
 package com.moya.myblogboot.configuration;
-import com.moya.myblogboot.domain.board.BoardReqDto;
+import com.moya.myblogboot.dto.board.BoardReqDto;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.repository.*;
@@ -8,10 +8,13 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+@Component
+@Profile("dev")
 @RequiredArgsConstructor
 public class InitDb {
     private final InitService initService;

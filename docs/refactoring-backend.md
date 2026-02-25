@@ -209,12 +209,12 @@ public class InitDb implements ApplicationRunner {
 
 ## 작업 진행 체크리스트
 
-- [ ] RFC-BE-001: BoardDetailResDto 필드명 오타 수정 (프론트 함께)
-- [ ] RFC-BE-002: API 버전 정리 (레거시 엔드포인트 제거)
-- [ ] RFC-BE-003: 서비스 레이어 메서드명 개선
-- [ ] RFC-BE-004: 글로벌 예외 핸들러 정비
+- [x] RFC-BE-001: BoardDetailResDto 필드명 오타 수정 (BUG-005에서 수정 완료)
+- [x] RFC-BE-002: API 버전 정리 (v4~v6 엔드포인트에 @Deprecated 추가)
+- [x] RFC-BE-003: 서비스 레이어 메서드명 개선
+- [x] RFC-BE-004: 글로벌 예외 핸들러 정비 (GlobalExceptionHandler.java 이미 구현됨)
 - [ ] RFC-BE-005: 스케줄러 안정성 개선
 - [ ] RFC-BE-006: N+1 쿼리 점검 및 최적화
 - [ ] RFC-BE-007: 환경별 설정 분리 확인
 - [ ] RFC-BE-008: 테스트 커버리지 확대
-- [ ] RFC-BE-009: InitDb 운영 환경 안전 처리
+- [x] RFC-BE-009: InitDb 운영 환경 안전 처리 (@Component + @Profile("dev") 추가)

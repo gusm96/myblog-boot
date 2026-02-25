@@ -42,7 +42,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public String write(CommentReqDto commentReqDto, Long memberId, Long boardId) {
         Member member = authService.retrieve(memberId);
-        Board board = boardService.retrieve(boardId);
+        Board board = boardService.findById(boardId);
         Comment comment = commentReqDto.toEntity(member, board);
         // 대댓글.
         if (commentReqDto.getParentId() != null) {
