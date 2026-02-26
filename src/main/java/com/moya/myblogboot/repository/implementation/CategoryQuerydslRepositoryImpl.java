@@ -6,7 +6,6 @@ import com.moya.myblogboot.domain.category.CategoriesResDto;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.repository.CategoryQuerydslRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -19,13 +18,11 @@ import static com.moya.myblogboot.domain.category.QCategory.*;
 @Repository
 @RequiredArgsConstructor
 public class CategoryQuerydslRepositoryImpl implements CategoryQuerydslRepository {
-    private final EntityManager em;
-    private JPAQueryFactory jpaQueryFactory;
+    private final JPAQueryFactory queryFactory;
 
     @Override
     public List<CategoriesResDto> findCategoriesWithViewBoards() {
-        jpaQueryFactory = new JPAQueryFactory(em);
-        List<Category> categories = jpaQueryFactory
+        List<Category> categories = queryFactory
                 .selectFrom(category)
                 .leftJoin(category.boards, board).fetchJoin()
                 .where(category.boards.size().gt(0).and(board.boardStatus.eq(BoardStatus.VIEW)))
@@ -35,8 +32,7 @@ public class CategoryQuerydslRepositoryImpl implements CategoryQuerydslRepositor
 
     @Override
     public List<CategoriesResDto> findAllDto () {
-        jpaQueryFactory = new JPAQueryFactory(em);
-        List<Category> categories = jpaQueryFactory
+        List<Category> categories = queryFactory
                 .selectFrom(category)
                 .leftJoin(category.boards, board).fetchJoin()
                 .fetch();

@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.moya.myblogboot.domain.keys.RedisKey.*;
 
@@ -23,53 +25,74 @@ import static com.moya.myblogboot.domain.keys.RedisKey.*;
 public class BoardScheduledTask {
     private final BoardRedisRepository boardRedisRepository;
     private final BoardService boardService;
-    private static final Long SECONDS_INT_15DAYS = 15L * 24L * 60L * 60L; // 15일
+    private final Lock lock = new ReentrantLock();
+    private static final Long SECONDS_IN_15DAYS = 15L * 24L * 60L * 60L; // 15일
 
-    @Scheduled(cron = "0 0 0 * * ?")// 매일 자정에 실행되도록 스케줄링
+    @Scheduled(cron = "0 0 0 * * ?") // 매일 자정에 실행되도록 스케줄링
     @Transactional
     public void deleteExpiredBoards() {
-        LocalDateTime thresholdDate = LocalDateTime.now().minusSeconds(SECONDS_INT_15DAYS);
+        LocalDateTime thresholdDate = LocalDateTime.now().minusSeconds(SECONDS_IN_15DAYS);
         boardService.deletePermanently(thresholdDate);
         log.info("삭제 후 15일이 지난 게시글 영구삭제");
     }
 
-    @Scheduled(fixedRate = 600000) // 10분마다 DB 데이터 동기화 및 캐시 정리
+    /**
+     * 10분마다 Redis 캐시에 저장된 게시글 조회수/좋아요수를 DB에 동기화하고 캐시를 정리한다.
+     * - ReentrantLock으로 자정 작업과의 동시 실행을 방지한다.
+     * - 개별 게시글 단위로 에러를 처리해 하나의 실패가 전체 동기화를 중단하지 않는다.
+     */
+    @Scheduled(fixedRate = 600000)
     @Transactional
     public void updateFromRedisStoreToDB() {
-        String keyPattern = BOARD_KEY + "*";
-        Set<Long> keys = boardRedisRepository.getKeys(keyPattern);
-        try{
-            for (Long key : keys) {
-                // 메모리에서 데이터 조회
-                BoardForRedis boardForRedis = boardService.getBoardFromCache(key);
-                if (boardForRedis != null) {
-                    // 수정할 대상 게시글 엔터티 조회
-                    updateBoards(boardForRedis);
-                    deleteFromCache(boardForRedis);
+        if (!lock.tryLock()) {
+            log.debug("게시글 캐시 동기화 스킵: 이전 작업 진행 중");
+            return;
+        }
+        try {
+            String keyPattern = BOARD_KEY + "*";
+            Set<Long> keys = boardRedisRepository.getKeys(keyPattern);
+            if (keys.isEmpty()) {
+                return;
+            }
+
+            int successCount = 0;
+            int failCount = 0;
+
+            for (Long boardId : keys) {
+                try {
+                    BoardForRedis boardForRedis = boardService.getBoardFromCache(boardId);
+                    if (boardForRedis != null) {
+                        updateBoard(boardForRedis);
+                        deleteFromCache(boardId, boardForRedis);
+                        successCount++;
+                    }
+                } catch (Exception e) {
+                    failCount++;
+                    log.error("게시글 캐시 동기화 실패 [boardId={}]: {}", boardId, e.getMessage());
                 }
             }
-            log.info("Updated from Cache to DB");
-        }catch (Exception e){
-            log.error(e.getMessage());
-            throw new RuntimeException("Failed To Update from Cache to DB");
+
+            if (failCount == 0) {
+                log.info("게시글 캐시 → DB 동기화 완료: {}건 처리", successCount);
+            } else {
+                log.warn("게시글 캐시 → DB 동기화 완료: 성공 {}건, 실패 {}건", successCount, failCount);
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
-    // 게시글 업데이트
-    private void updateBoards(BoardForRedis boardForRedis) {
-        Board findBoard = boardService.findById(boardForRedis.getId());
-        // 조회수 업데이트
-        findBoard.updateViews(boardForRedis.totalViews());
-        // 좋아요수 업데이트
-        findBoard.updateLikes(boardForRedis.totalLikes());
+    private void updateBoard(BoardForRedis boardForRedis) {
+        Board board = boardService.findById(boardForRedis.getId());
+        board.updateViews(boardForRedis.totalViews());
+        board.updateLikes(boardForRedis.totalLikes());
     }
 
-    // 캐시 데이터 삭제
-    private void deleteFromCache (BoardForRedis boardForRedis){
+    private void deleteFromCache(Long boardId, BoardForRedis boardForRedis) {
         try {
-         boardRedisRepository.delete(boardForRedis);
-        }catch (Exception e){
-            throw new RuntimeException("Failed To delete from Cache");
+            boardRedisRepository.delete(boardForRedis);
+        } catch (Exception e) {
+            log.error("캐시 삭제 실패 [boardId={}]: {}", boardId, e.getMessage());
         }
     }
 }
