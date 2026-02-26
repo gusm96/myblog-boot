@@ -7,7 +7,6 @@ import com.moya.myblogboot.domain.file.ImageFile;
 import com.moya.myblogboot.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -27,10 +26,8 @@ public class Board extends BaseTimeEntity {
     private String title; // 제목
     @Column(nullable = false, columnDefinition = "longtext")
     private String content; // 내용
-    @ColumnDefault("0")
-    private Long views; // 조회수
-    @ColumnDefault("0")
-    private Long likes; // 좋아요 수
+    private Long views = 0L; // 조회수
+    private Long likes = 0L; // 좋아요 수
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<BoardLike> boardLikes = new HashSet<>();
 
@@ -38,8 +35,7 @@ public class Board extends BaseTimeEntity {
     private List<ImageFile> imageFiles = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    @ColumnDefault("VIEW")
-    private BoardStatus boardStatus; // VIEW, HIDE
+    private BoardStatus boardStatus = BoardStatus.VIEW;// VIEW, HIDE
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)

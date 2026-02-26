@@ -3,7 +3,7 @@ package com.moya.myblogboot.controller;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.board.Board;
-import com.moya.myblogboot.domain.board.BoardReqDto;
+import com.moya.myblogboot.dto.board.BoardReqDto;
 import com.moya.myblogboot.domain.board.SearchType;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
@@ -159,7 +159,7 @@ class BoardControllerTest extends AbstractContainerBaseTest {
 
     @Test
     @DisplayName("게시글 조회 V4")
-    void getBoardDetail() throws Exception {
+    void getBoardDetailV4() throws Exception {
         // given
         String path = "/api/v4/boards/" + boardId;
 
@@ -171,6 +171,18 @@ class BoardControllerTest extends AbstractContainerBaseTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(boardId));
     }
 
+    @Test
+    @DisplayName("게시글 조회 V7")
+    void getBoardDetailV7() throws Exception {
+        // given
+        String path = "/api/v7/boards/" +boardId;
+        // when
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path));
+
+        // then
+        resultActions.andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(boardId));
+    }
     @Test
     @DisplayName("게시글 상세 관리자용")
     void getBoardDetailForAdmin() throws Exception {

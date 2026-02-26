@@ -1,7 +1,7 @@
 package com.moya.myblogboot.repository.implementation;
 
 import com.moya.myblogboot.domain.board.Board;
-import com.moya.myblogboot.domain.board.BoardForRedis;
+import com.moya.myblogboot.dto.board.BoardForRedis;
 import com.moya.myblogboot.repository.BoardRedisRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

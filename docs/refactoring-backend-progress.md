@@ -122,14 +122,22 @@
 
 ---
 
-## 미완료 항목
-
 ### RFC-BE-006 (P3) — N+1 쿼리 점검 및 최적화
 
-게시글 목록 조회 시 `Member`, `Category` 등을 개별 조회하는 N+1 문제 여부를 리포지토리 레이어에서 확인 필요.
-Fetch Join 쿼리 적용 여부 검토 필요.
+**상태**: 완료
+
+**점검 결과**: 게시글 목록 쿼리에서 N+1 문제 없음 (`BoardResDto`가 스칼라 필드만 접근)
+
+**수정 내용**:
+- 검색 카운트 쿼리 최적화: `fetch().size()` → `select(board.count())` (전체 엔티티 메모리 로드 제거)
+- `JPAQueryFactory` 스레드 안전성 개선: 인스턴스 변수 → Spring 빈 주입 (`QuerydslConfig.java` 추가)
+- 대상: `BoardQuerydslRepositoryImpl`, `CommentQuerydslRepositoryImpl`, `CategoryQuerydslRepositoryImpl`
+
+상세 내용: [rfc-be-006-n-plus-one-query.md](./rfc-be-006-n-plus-one-query.md)
 
 ---
+
+## 미완료 항목
 
 ### RFC-BE-007 (P4) — 환경별 설정 분리 확인
 
@@ -156,7 +164,7 @@ Fetch Join 쿼리 적용 여부 검토 필요.
 | RFC-BE-003 | P3 | 서비스 레이어 메서드명 개선 | ✅ 완료 |
 | RFC-BE-004 | P3 | 글로벌 예외 핸들러 정비 | ✅ 완료 (기존 구현됨) |
 | RFC-BE-005 | P3 | 스케줄러 안정성 개선 | ✅ 완료 (1단계) |
-| RFC-BE-006 | P3 | N+1 쿼리 점검 및 최적화 | ⏳ 미완료 |
+| RFC-BE-006 | P3 | N+1 쿼리 점검 및 최적화 | ✅ 완료 |
 | RFC-BE-007 | P4 | 환경별 설정 분리 확인 | ⏳ 미완료 |
 | RFC-BE-008 | P4 | 테스트 커버리지 확대 | ⏳ 미완료 |
 | RFC-BE-009 | P2 | InitDb 운영 환경 안전 처리 | ✅ 완료 |

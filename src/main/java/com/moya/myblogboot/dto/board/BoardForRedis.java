@@ -1,5 +1,7 @@
-package com.moya.myblogboot.domain.board;
+package com.moya.myblogboot.dto.board;
 
+import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.board.BoardStatus;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;

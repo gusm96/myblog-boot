@@ -4,6 +4,7 @@ import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
+import com.moya.myblogboot.dto.board.BoardForRedis;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,11 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional

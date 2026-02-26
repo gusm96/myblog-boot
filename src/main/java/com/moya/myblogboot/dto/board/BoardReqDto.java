@@ -1,5 +1,6 @@
-package com.moya.myblogboot.domain.board;
+package com.moya.myblogboot.dto.board;
 
+import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.file.ImageFileDto;
 import com.moya.myblogboot.domain.member.Member;

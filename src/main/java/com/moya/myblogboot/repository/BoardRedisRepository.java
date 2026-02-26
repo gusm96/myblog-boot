@@ -1,7 +1,7 @@
 package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.board.Board;
-import com.moya.myblogboot.domain.board.BoardForRedis;
+import com.moya.myblogboot.dto.board.BoardForRedis;
 
 import java.util.Optional;
 import java.util.Set;
