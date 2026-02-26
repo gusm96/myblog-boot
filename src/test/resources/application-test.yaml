@@ -42,16 +42,16 @@ logging:
 
 ## JWT
 jwt:
-  secret: ${JWT_SECRET_KEY}
+  secret: ${JWT_SECRET_KEY:test-jwt-secret-key-for-testing-environment-only}
   access-token-expiration: 600000
   refresh-token-expiration: 1209600000
 
-# S3
+# S3 (테스트 환경: 실제 S3 호출 없음, 더미 값 사용)
 cloud:
   aws:
     credentials:
-      access-key: ${AWS_CREDENTIALS_ACCESS_KEY}
-      secret-key: ${AWS_CREDENTIALS_SECRET_KEY}
+      access-key: ${AWS_CREDENTIALS_ACCESS_KEY:test-access-key}
+      secret-key: ${AWS_CREDENTIALS_SECRET_KEY:test-secret-key}
     s3:
       bucketName: myblog-boot-bucket
     region:
