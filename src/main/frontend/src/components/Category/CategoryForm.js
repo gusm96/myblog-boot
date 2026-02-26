@@ -1,16 +1,6 @@
-import React from "react";
-import {
-  Button,
-  Form,
-  InputGroup,
-  Modal,
-  ModalBody,
-  ModalHeader,
-  ModalTitle,
-} from "react-bootstrap";
-import { addNewCategory, getCategoriesV2 } from "../../services/categoryApi";
-import { useState } from "react";
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Button, Form, InputGroup, Modal } from "react-bootstrap";
+import { addNewCategory, getCategories } from "../../services/categoryApi";
 
 export const CategoryForm = ({ formData, onChange, accessToken }) => {
   const [newCategory, setNewCategory] = useState("");
@@ -18,7 +8,7 @@ export const CategoryForm = ({ formData, onChange, accessToken }) => {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    getCategoriesV2()
+    getCategories()
       .then((data) => setCategories(data))
       .catch((error) => console.log(error));
   }, []);
@@ -34,7 +24,6 @@ export const CategoryForm = ({ formData, onChange, accessToken }) => {
             name: newCategory,
           };
           setCategories([...categories, newCategoryObject]);
-
           setShowModal(false);
           setNewCategory("");
         }
@@ -43,20 +32,21 @@ export const CategoryForm = ({ formData, onChange, accessToken }) => {
         console.log(error);
       });
   };
+
   const handleSelectChange = (event) => {
-    onChange(event); // 선택한 카테고리를 Editor로 전달
+    onChange(event);
   };
 
-  // 모달 클로즈 핸들러
   const handleCloseModal = () => {
     setShowModal(false);
   };
+
   return (
     <div>
       <Form.Select
         aria-label="Default select example"
         name="category"
-        value={formData.cateory}
+        value={formData.category} // 'cateory'를 'category'로 수정
         onChange={handleSelectChange}
       >
         <option>카테고리</option>
@@ -74,22 +64,11 @@ export const CategoryForm = ({ formData, onChange, accessToken }) => {
       >
         새로운 카테고리
       </button>
-      <Modal
-        show={showModal}
-        onHide={handleCloseModal}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          position: "absolute",
-          top: "0",
-          left: "0",
-        }}
-      >
-        <ModalHeader closeButton>
-          <ModalTitle>새로운 카테고리</ModalTitle>
-        </ModalHeader>
-        <ModalBody>
+      <Modal show={showModal} onHide={handleCloseModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>새로운 카테고리</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
           <Form>
             <InputGroup>
               <InputGroup.Text id="inputGroup-sizing-default">
@@ -101,13 +80,15 @@ export const CategoryForm = ({ formData, onChange, accessToken }) => {
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
                 required
-              ></Form.Control>
-              <Button type="submit" onClick={handleNewCategory}>
-                추가
-              </Button>
+              />
+              <Button type="button" onClick={handleNewCategory}>
+                {" "}
+                추가{" "}
+              </Button>{" "}
+              {/* type="button"으로 수정 */}
             </InputGroup>
           </Form>
-        </ModalBody>
+        </Modal.Body>
       </Modal>
     </div>
   );

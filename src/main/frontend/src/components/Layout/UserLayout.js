@@ -11,7 +11,10 @@ export const UserLayout = () => {
 
   return (
     <div>
-      <Header headerTitle={"MyBlog"} isLoggedIn={isLoggedIn} />
+      <Header
+        headerTitle={"Moya's Research Institute"}
+        isLoggedIn={isLoggedIn}
+      />
       <main
         className="inner"
         style={{

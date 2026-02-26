@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./screens/Home";
 import { Management } from "./screens/Management";
-import { BoardForm } from "./components/Boards/BoardForm";
 import { BoardEditForm } from "./components/Boards/BoardEditForm";
 import { UserLayout } from "./components/Layout/UserLayout";
 import { ProtectedRoute } from "./components/Layout/ProtectedRoute";
@@ -20,6 +19,8 @@ import { SearchPage } from "./screens/SearchPage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BoardDetailV2 } from "./components/Boards/BoardDetailV2";
 import { PageByCategory } from "./screens/PageByCategory";
+import BoardEditor from "./components/Boards/BoardEditor";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 export default App;
 
@@ -46,12 +47,13 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
+      <ErrorBoundary>
+        <Router>
+          <Routes>
           {/* 일반 사용자 전용 페이지 */}
           <Route path="/" element={<UserLayout />}>
             <Route index element={<Home />} />
-            {/* <Route path="boards" element={<Home />} /> */}
+            <Route path="boards" element={<Home />} />
             <Route path=":categoryName" element={<PageByCategory />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="boards/:boardId" element={<BoardDetailV2 />} />
@@ -69,15 +71,16 @@ function App() {
           {/* 관리자 전용 페이지 */}
           <Route path="/management" element={<ProtectedRoute />}>
             <Route index element={<Management />} />
-            <Route path="new-post" element={<BoardForm />} />
+            <Route path="new-post" element={<BoardEditor />} />
             <Route path="boards" element={<Management />} />
             <Route path="boards/:boardId" element={<BoardEditForm />} />
             <Route path="categories" element={<CategoryList />} />
             <Route path="temporary-storage" element={<TemporaryStorage />} />
             <Route path="*" element={<NotFound />} />
           </Route>
-        </Routes>
-      </Router>
+          </Routes>
+        </Router>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }

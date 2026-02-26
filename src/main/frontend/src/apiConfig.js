@@ -9,7 +9,7 @@ export const CATEGORIES = `${BASE_URL}/api/v2/categories`;
 export const CATEGORIES_FOR_ADMIN = `${BASE_URL}/api/v1/categories-management`;
 // 게시글 상세
 export const BOARD_GET = (boardId) => {
-  return `${BASE_URL}/api/v6/boards/${boardId}`;
+  return `${BASE_URL}/api/v7/boards/${boardId}`;
 };
 
 // 게시글 등록/수정/삭제  HTTP Method GET POST DELETE

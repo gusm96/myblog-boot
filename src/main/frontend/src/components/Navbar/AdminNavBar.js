@@ -20,7 +20,7 @@ export const AdminNavBar = () => {
         </Link>
       </ListGroupItem>
       <ListGroupItem className="category-list-item">
-        <Link className="category-link" to="/mangagement/temporary-storage">
+        <Link className="category-link" to="/management/temporary-storage">
           휴지통
         </Link>
       </ListGroupItem>

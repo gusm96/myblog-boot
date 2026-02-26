@@ -20,6 +20,7 @@ export const PageByCategory = () => {
       })
       .catch((error) => console.log(error));
   }, [categoryName, page]);
+
   return (
     <Container>
       <SearchBar />

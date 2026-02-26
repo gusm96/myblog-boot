@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Container, Row, Col, Card, Spinner } from "react-bootstrap";
+import { Container, Card, Spinner } from "react-bootstrap";
 
 const VisitorCount = () => {
   const [visitor, setVisitor] = useState({
@@ -10,7 +10,8 @@ const VisitorCount = () => {
   });
 
   const [loading, setLoading] = useState(true);
-
+  // Axios 기본 설정
+  axios.defaults.withCredentials = true;
   useEffect(() => {
     const fetchVisitorData = async () => {
       try {

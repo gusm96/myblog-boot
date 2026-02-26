@@ -66,7 +66,7 @@ export const CommentForm = ({ boardId, accessToken }) => {
         onChange={handleChange}
         style={{
           width: "70%",
-          margin: "0 10px 0 0", // 수정된 부분
+          margin: "0 10px 0 0",
           padding: "10px",
           borderRadius: "5px",
           border: "1px solid #ced4da",

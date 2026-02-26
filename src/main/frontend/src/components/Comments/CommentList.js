@@ -1,6 +1,6 @@
 import "../Styles/Board/commentList.css";
 import { Comment } from "./Comment";
-import { useCommentsQuery } from "../Queries/quries";
+import { useCommentsQuery } from "../../hooks/useQueries";
 
 export const CommentList = ({ boardId }) => {
   const comments = useCommentsQuery(boardId);
