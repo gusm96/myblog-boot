@@ -33,8 +33,8 @@ public class VisitorCountScheduledTask {
      * 이때, 10분마다 동기화 하는 메서드는 중복 실행되지 않도록 하기 위해 Lock 클래스를 사용해 제어한다.
      */
     // 자정에 Redis Store에 저장된 VisitorCount를 DB에 동기화.
-    @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
+    @Scheduled(cron = "0 0 0 * * ?")
     public void updateVisitorCountAtMidnight() {
         lock.lock();
         try {
@@ -58,7 +58,7 @@ public class VisitorCountScheduledTask {
 
     // 10분마다 Redis Store에 저장된 VisitorCount를 DB에 동기화
     @Transactional
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 600000)
     public void updateVisitorCountEveryTenMinutes() {
         if (lock.tryLock()) {
             try {
@@ -70,12 +70,19 @@ public class VisitorCountScheduledTask {
                         .date(LocalDate.parse(today))
                         .build();
                 visitorCountRepository.save(visitorCount);
-                log.info("방문자 수 DB 업데이트 완료 : {}", today);
+                log.info("방문자 수 DB 업데이트 완료 : {}", getTodayAndTime());
             } catch (Exception e) {
                 log.error("방문자 수 업데이트 중 오류발생 : {}", e.getMessage());
             } finally {
                 lock.unlock();
             }
         }
+    }
+
+
+    // 자정마다 오늘 날짜를 기준으로 엔티티 생성
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void createTodayVisitorCountAtMidnight(){
+        visitorCountService.createTodayVisitorCount();
     }
 }

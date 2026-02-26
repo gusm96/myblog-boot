@@ -5,6 +5,7 @@ import com.moya.myblogboot.domain.visitor.VisitorCount;
 import com.moya.myblogboot.dto.visitor.VisitorCountDto;
 import com.moya.myblogboot.repository.VisitorCountRedisRepository;
 import com.moya.myblogboot.repository.VisitorCountRepository;
+import com.moya.myblogboot.utils.DateUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,7 +32,7 @@ public class VisitorCountServiceImplTest {
 
     private final static String DATE_PATTERN = "yyyy-MM-dd";
 
-    @BeforeEach
+    /*@BeforeEach
     void before() {
         VisitorCount yesterday = VisitorCount.builder()
                 .todayVisitors(5L)
@@ -48,7 +49,7 @@ public class VisitorCountServiceImplTest {
         visitorCountRepository.save(yesterday);
         visitorCountRepository.save(today);
     }
-
+*/
 
     @Test
     @DisplayName("방문자 수 증기 및 조회")
@@ -60,6 +61,60 @@ public class VisitorCountServiceImplTest {
         VisitorCountDto result = increment(keyDate);
         // result
         Assertions.assertThat(result.getTotal() > before.getTotal());
+    }
+
+    @Test
+    @DisplayName("오늘 날짜 방문자 수 생성")
+    void createTodayVisitorCount() {
+        // given
+        String today = getToday(); // 오늘 날짜.
+        VisitorCount oldVisitorCount = visitorCountRepository.save(VisitorCount.builder()
+                .totalVisitors(1000L)
+                .todayVisitors(30L)
+                .date(LocalDate.parse("2024-12-01"))
+                .build());
+
+        // when
+        VisitorCount recentVisitorCount = retrieveRecentVisitorCount();
+        VisitorCount todayVisitorCount = VisitorCount.builder()
+                .totalVisitors(recentVisitorCount.getTotalVisitors())
+                .todayVisitors(0L)
+                .date(LocalDate.parse(getToday()))
+                .build();
+        VisitorCount visitorCount = visitorCountRepository.save(todayVisitorCount);
+        // then
+        Assertions.assertThat(visitorCount.getTotalVisitors()).isEqualTo(recentVisitorCount.getTotalVisitors());
+        Assertions.assertThat(visitorCount.getTotalVisitors()).isEqualTo(oldVisitorCount.getTotalVisitors());
+    }
+
+    private VisitorCount retrieveRecentVisitorCount() {
+        return visitorCountRepository.findRecentVisitorCount().orElseGet(
+                () -> VisitorCount.builder()
+                        .totalVisitors(0L)
+                        .todayVisitors(0L)
+                        .date(LocalDate.parse(DateUtil.getPreviousDay(getToday())))
+                        .build());
+    }
+
+    @Test
+    @DisplayName("가장 최근의 날짜 값 가져오기")
+    void retrieveRecentVisitorCountTest() {
+        // given
+        VisitorCount oldVisitorCount = visitorCountRepository.save(VisitorCount.builder()
+                .totalVisitors(1000L)
+                .todayVisitors(30L)
+                .date(LocalDate.parse("2024-12-01"))
+                .build());
+        // when
+        VisitorCount recentVisitorCount = visitorCountRepository.findRecentVisitorCount().orElseGet(
+                () -> VisitorCount.builder()
+                        .totalVisitors(0L)
+                        .todayVisitors(0L)
+                        .date(LocalDate.parse(DateUtil.getPreviousDay(getToday())))
+                        .build()
+        );
+        // then
+        Assertions.assertThat(recentVisitorCount.getTotalVisitors()).isEqualTo(oldVisitorCount.getTotalVisitors());
     }
 
     private VisitorCountDto getVisitorCountDto(String formattedDate) {
@@ -117,5 +172,4 @@ public class VisitorCountServiceImplTest {
         return visitorCountRepository.findByDate(LocalDate.parse(formattedDate)).orElseGet(
                 () -> VisitorCount.of(LocalDate.parse(formattedDate), 0L, 0L));
     }
-
 }

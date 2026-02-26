@@ -23,7 +23,6 @@ public class VisitorCountRedisRepositoryImpl implements VisitorCountRedisReposit
     @Override
     public void save(String keyDate, VisitorCountDto visitorCountDto) {
         String key = getKey(keyDate);
-        log.info("save key = {}", key);
         redisTemplate.opsForHash().putAll(key, visitorCountDto.toMap());
         redisTemplate.expire(key, 7, TimeUnit.DAYS);
     }
@@ -31,7 +30,6 @@ public class VisitorCountRedisRepositoryImpl implements VisitorCountRedisReposit
     @Override
     public VisitorCountDto increment(String keyDate) {
         String key = getKey(keyDate);
-        log.info("increment key = {}", key);
         redisTemplate.opsForHash().increment(key, TOTAL_COUNT_KEY, 1L);
         redisTemplate.opsForHash().increment(key, TODAY_COUNT_KEY, 1L);
         return findByDate(keyDate).orElseGet(

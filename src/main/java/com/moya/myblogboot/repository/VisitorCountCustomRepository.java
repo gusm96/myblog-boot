@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface VisitorCountCustomRepository {
     Optional<VisitorCount> findByDate(LocalDate date);
+
+    Optional<VisitorCount> findRecentVisitorCount();
 }

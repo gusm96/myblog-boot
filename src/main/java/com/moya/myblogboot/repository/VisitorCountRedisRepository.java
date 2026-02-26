@@ -12,4 +12,5 @@ public interface VisitorCountRedisRepository {
     Optional<VisitorCountDto> findByDate(String keyDate);
 
     VisitorCountDto increment(String keyDate);
+
 }

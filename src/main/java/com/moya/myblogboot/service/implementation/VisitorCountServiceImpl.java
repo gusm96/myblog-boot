@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
+import static com.moya.myblogboot.utils.DateUtil.getToday;
+
 
 @Slf4j
 @Service
@@ -25,12 +27,9 @@ public class VisitorCountServiceImpl implements VisitorCountService {
 
     @Override
     public VisitorCountDto getVisitorCount(String date) {
+        // 매개변수로 주어지는 날짜로 Redis Store에서 값을 찾는다.
         return visitorCountRedisRepository.findByDate(date).orElseGet(
-                () -> VisitorCountDto.builder()
-                        .total(0L)
-                        .today(0L)
-                        .yesterday(0L)
-                        .build()
+                () -> retrieveAndSaveRecentVisitorCount() // 값이 없는 경우 DB에서 해당 날짜의 값을 찾고 Redis Store에 저장한다.
         );
     }
 
@@ -77,5 +76,61 @@ public class VisitorCountServiceImpl implements VisitorCountService {
         }
         return visitorCountRepository.findByDate(date).orElseGet(
                 () -> visitorCountRepository.save(VisitorCount.of(LocalDate.parse(formattedDate), 0L, 0L)));
+    }
+
+    @Transactional
+    @Override
+    public void createTodayVisitorCount() {
+        VisitorCount recentVC = retrieveRecentVisitorCount();
+
+        // 최근의 값이 오늘의 VisitorCount라면 생성하지 않는다.
+        if (isTodayVisitorCount(recentVC)) {
+            return;
+        }
+        createNewVisitorCount(recentVC);
+    }
+
+    private boolean isTodayVisitorCount(VisitorCount visitorCount) {
+        return visitorCount.getDate() != null &&
+                visitorCount.getDate().isEqual(LocalDate.parse(getToday()));
+    }
+
+    private VisitorCount createNewVisitorCount(VisitorCount recentVC) {
+        VisitorCount todayVC = VisitorCount.builder()
+                .totalVisitors(recentVC.getTotalVisitors())
+                .todayVisitors(0L)
+                .date(LocalDate.parse(getToday()))
+                .build();
+
+        try {
+            return visitorCountRepository.save(todayVC);
+        } catch (Exception e) {
+            log.error("방문자 수 생성 중 에러발생 = {}", e.getMessage());
+            return VisitorCount.builder().build(); // 에러 발생 시 빈 객체 반환
+        }
+    }
+
+    private VisitorCountDto retrieveAndSaveRecentVisitorCount() {
+        VisitorCount visitorCount = retrieveRecentVisitorCount();
+
+        VisitorCountDto visitorCountDto = VisitorCountDto.builder()
+                .total(visitorCount.getTotalVisitors())
+                .today(0L)
+                .yesterday(visitorCount.getTodayVisitors())
+                .build();
+
+        visitorCountRedisRepository.save(getToday(), visitorCountDto);
+
+        return visitorCountDto;
+    }
+
+    private VisitorCount retrieveRecentVisitorCount() {
+        return visitorCountRepository.findRecentVisitorCount().orElseGet(
+                () -> VisitorCount.builder()
+                        .totalVisitors(0L)
+                        .todayVisitors(0L)
+                        .date(null)
+                        .build()
+        );
     }
 }
