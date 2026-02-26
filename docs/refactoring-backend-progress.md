@@ -139,9 +139,25 @@
 
 ## 미완료 항목
 
-### RFC-BE-007 (P4) — 환경별 설정 분리 확인
+### RFC-BE-007 (P4) — 환경별 설정 분리
 
-`application.yml` / `application-prod.yml` / `application-dev.yml` 분리 여부 및 민감 정보 환경 변수 처리 확인 필요.
+**상태**: 완료
+
+**변경 내용**:
+- `application.yaml` → 공통 설정만 유지 (서버, JPA 공통, Redis, JWT, S3)
+- `application-dev.yaml` (신규) → 로컬 개발용: show-sql=true, ddl-auto=update, verbose logging
+- `application-prod.yaml` (신규) → 운영용: show-sql=false, ddl-auto=validate, sql.init.mode=never
+- `docker-compose.yaml` → `SPRING_PROFILES_ACTIVE: prod` 추가, Redis 환경변수명 정합성 수정
+
+**민감 정보 환경변수 처리 현황**: 모두 완료
+| 항목 | 환경변수 |
+|------|---------|
+| DB 접속 정보 | `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` |
+| Redis 접속 | `REDIS_HOST`, `REDIS_PORT` (기본값: localhost, 6379) |
+| JWT 시크릿 | `JWT_SECRET_KEY` |
+| AWS S3 | `AWS_CREDENTIALS_ACCESS_KEY`, `AWS_CREDENTIALS_SECRET_KEY` |
+
+**로컬 실행 시**: `-Dspring.profiles.active=dev` 또는 `SPRING_PROFILES_ACTIVE=dev` 설정 필요
 
 ---
 
@@ -165,6 +181,6 @@
 | RFC-BE-004 | P3 | 글로벌 예외 핸들러 정비 | ✅ 완료 (기존 구현됨) |
 | RFC-BE-005 | P3 | 스케줄러 안정성 개선 | ✅ 완료 (1단계) |
 | RFC-BE-006 | P3 | N+1 쿼리 점검 및 최적화 | ✅ 완료 |
-| RFC-BE-007 | P4 | 환경별 설정 분리 확인 | ⏳ 미완료 |
+| RFC-BE-007 | P4 | 환경별 설정 분리 확인 | ✅ 완료 |
 | RFC-BE-008 | P4 | 테스트 커버리지 확대 | ⏳ 미완료 |
 | RFC-BE-009 | P2 | InitDb 운영 환경 안전 처리 | ✅ 완료 |

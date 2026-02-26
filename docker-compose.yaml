@@ -41,11 +41,12 @@ services:
       - db
       - redis
     environment:
+      SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/myblog
       SPRING_DATASOURCE_USERNAME: moyada
       SPRING_DATASOURCE_PASSWORD: moyada1343
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     networks:
       - spring-net
 
