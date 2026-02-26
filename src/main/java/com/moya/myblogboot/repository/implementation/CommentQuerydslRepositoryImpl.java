@@ -4,7 +4,6 @@ import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.domain.comment.CommentResDto;
 import com.moya.myblogboot.repository.CommentQuerydslRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -17,13 +16,10 @@ import static com.moya.myblogboot.domain.comment.QComment.*;
 @RequiredArgsConstructor
 public class CommentQuerydslRepositoryImpl implements CommentQuerydslRepository {
 
-    private final EntityManager em;
-    private JPAQueryFactory queryFactory;
+    private final JPAQueryFactory queryFactory;
 
     @Override
     public List<CommentResDto> findAllByBoardId(Long boardId) {
-        queryFactory = new JPAQueryFactory(em);
-
         List<Comment> comments = queryFactory.selectDistinct(comment1)
                 .from(comment1)
                 .leftJoin(comment1.child).fetchJoin()
@@ -37,7 +33,6 @@ public class CommentQuerydslRepositoryImpl implements CommentQuerydslRepository 
 
     @Override
     public List<CommentResDto> findChildByParentId(Long parentId) {
-        queryFactory = new JPAQueryFactory(em);
         List<Comment> comments = queryFactory.selectDistinct(comment1)
                 .from(comment1)
                 .leftJoin(comment1.parent).fetchJoin()
