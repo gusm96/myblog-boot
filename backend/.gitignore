@@ -1,0 +1,25 @@
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### VS Code ###
+.vscode/
+
+# 환경변수 (실제 값 포함, 절대 커밋 금지)
+.env.dev
+.env.prod
+
+# Java heap dumps
+*.hprof

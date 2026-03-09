@@ -3,7 +3,7 @@ version: '3'
 # 운영 환경용
 #
 # 실행 방법:
-#   docker compose --env-file .env.prod up -d
+#   docker compose --env-file backend/.env.prod up -d
 
 services:
   db:
@@ -17,32 +17,45 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
     networks:
-      - spring-net
+      - myblog-net
 
   redis:
     image: redis
     restart: always
     container_name: rediscache
     ports:
-      - 6379:6379
+      - "6379:6379"
     networks:
-      - spring-net
+      - myblog-net
 
-  app:
-    build: .
+  backend:
+    build: ./backend
     ports:
       - "8080:8080"
     depends_on:
       - db
       - redis
     env_file:
-      - .env.prod
+      - backend/.env.prod
     environment:
       SPRING_PROFILES_ACTIVE: prod
     networks:
-      - spring-net
+      - myblog-net
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:8080}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - myblog-net
 
 networks:
-  spring-net:
+  myblog-net:
+
 volumes:
   dbdata:
