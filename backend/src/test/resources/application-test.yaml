@@ -41,6 +41,10 @@ logging:
         web: debug
 
 
+# CORS
+cors:
+  allowed-origins: http://localhost:3000
+
 ## JWT
 jwt:
   secret: ${JWT_SECRET_KEY:test-jwt-secret-key-for-testing-environment-only}

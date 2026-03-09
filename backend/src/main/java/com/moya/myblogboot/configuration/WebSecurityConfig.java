@@ -25,7 +25,7 @@ public class WebSecurityConfig  {
     @Value("${jwt.secret}")
     private String secret;
     @Value("${cors.allowed-origins}")
-    private List<String> allowedOrigins;
+    private String allowedOrigins;
     private AuthService authService;
     public void setAuthService(AuthService authService) {
         this.authService = authService;
@@ -66,7 +66,7 @@ public class WebSecurityConfig  {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
-        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedOrigins(List.of(allowedOrigins.split(",")));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE")); // 요청 HTTP Method
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("*"));
