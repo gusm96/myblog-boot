@@ -1,5 +1,7 @@
 package com.moya.myblogboot.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.category.Category;
@@ -33,10 +35,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.restdocs.headers.HeaderDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 @Transactional
@@ -45,38 +49,31 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @ExtendWith(RestDocumentationExtension.class)
 @Import(RestDocsConfiguration.class)
 @ActiveProfiles("test")
-class CommentControllerTest {
+class CommentControllerTest extends AbstractContainerBaseTest {
+
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
-
     @Autowired
     private MemberRepository memberRepository;
-
     @Autowired
     private AuthService authService;
-
     @Autowired
     private CommentRepository commentRepository;
-
     @Autowired
     private CategoryRepository categoryRepository;
-
     @Autowired
     private BoardRepository boardRepository;
-
     @Autowired
     private RestDocumentationResultHandler restDocs;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    private static String accessToken;
+    private String accessToken;
+    private Long parentId;
+    private Long boardId;
 
-    private static Long parentId;
-
-    private static Long boardId;
-
-    // REST docs setUp
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext, RestDocumentationContextProvider restDocumentationContextProvider) {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
@@ -101,14 +98,11 @@ class CommentControllerTest {
                 .password("testPassword")
                 .build();
 
-        // Login 후 Token 발급
         accessToken = "bearer " + authService.memberLogin(loginReqDto).getAccess_token();
 
-        // 카테고리 생성
         Category category = Category.builder().name("category").build();
         Category saveCategory = categoryRepository.save(category);
 
-        // 게시글 생성
         Board board = Board.builder()
                 .member(saveMember)
                 .category(saveCategory)
@@ -125,10 +119,8 @@ class CommentControllerTest {
                     .comment("test")
                     .build();
             Comment saveComment = commentRepository.save(newComment);
-            // 부모 댓글 아이디로 사용할 예정
             parentId = saveComment.getId();
-            // 자식 댓글
-            for(int j = 0; j < 5; j++){
+            for (int j = 0; j < 5; j++) {
                 Comment childComment = Comment.builder()
                         .board(saveBoard)
                         .member(saveMember)
@@ -144,69 +136,139 @@ class CommentControllerTest {
     @Test
     @DisplayName("댓글 리스트 조회")
     void getComments() throws Exception {
-        // given
-        String path = "/api/v1/comments/" + boardId;
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path));
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+        ResultActions resultActions = mockMvc.perform(get("/api/v1/comments/{boardId}", boardId));
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("boardId").description("게시글 ID")
+                        ),
+                        responseFields(
+                                fieldWithPath("[].id").description("댓글 ID"),
+                                fieldWithPath("[].writer").description("작성자 닉네임"),
+                                fieldWithPath("[].comment").description("댓글 내용"),
+                                fieldWithPath("[].write_date").description("작성일"),
+                                fieldWithPath("[].modificationStatus").description("수정 여부 (ORIGINAL / MODIFIED)"),
+                                fieldWithPath("[].childCount").description("대댓글 수")
+                        )
+                ));
     }
 
     @Test
     @DisplayName("자식 댓글 리스트 조회")
-    void getChildComments()throws Exception {
-        // given
-        String path = "/api/v1/comments/child/" + parentId;
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path));
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+    void getChildComments() throws Exception {
+        ResultActions resultActions = mockMvc.perform(get("/api/v1/comments/child/{parentId}", parentId));
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("parentId").description("부모 댓글 ID")
+                        ),
+                        responseFields(
+                                fieldWithPath("[].id").description("댓글 ID"),
+                                fieldWithPath("[].writer").description("작성자 닉네임"),
+                                fieldWithPath("[].comment").description("댓글 내용"),
+                                fieldWithPath("[].write_date").description("작성일"),
+                                fieldWithPath("[].modificationStatus").description("수정 여부 (ORIGINAL / MODIFIED)"),
+                                fieldWithPath("[].childCount").description("대댓글 수")
+                        )
+                ));
     }
 
     @Test
     @DisplayName("댓글 작성")
     void writeComment() throws Exception {
-        // given
-        String path = "/api/v1/comments/" + boardId;
         CommentReqDto comment = new CommentReqDto();
         comment.setComment("Comments");
 
-        // when
-        // 댓글 작성
-        ResultActions resultActions1 = mockMvc.perform(MockMvcRequestBuilders.post(path)
+        ResultActions resultActions = mockMvc.perform(post("/api/v1/comments/{boardId}", boardId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .contentType("application/json").content(new ObjectMapper().writeValueAsString(comment)));
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(comment)));
 
-        // then
-        // 댓글 결과
-        resultActions1.andExpect(MockMvcResultMatchers.status().isOk());
-
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("boardId").description("게시글 ID")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token")
+                        ),
+                        requestFields(
+                                fieldWithPath("comment").description("댓글 내용 (2~500자)"),
+                                fieldWithPath("parentId").description("부모 댓글 ID (대댓글인 경우)").optional()
+                        ),
+                        responseBody()
+                ));
     }
 
     @Test
     @DisplayName("댓글 수정")
     void editComment() throws Exception {
-        // given
-        String path = "/api/v1/comments/" + parentId;
         CommentReqDto commentReqDto = new CommentReqDto();
         commentReqDto.setComment("Modified Comment");
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.put(path)
+
+        ResultActions resultActions = mockMvc.perform(put("/api/v1/comments/{commentId}", parentId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .contentType("application/json").content(new ObjectMapper().writeValueAsString(commentReqDto)));
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(commentReqDto)));
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("commentId").description("수정할 댓글 ID")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token")
+                        ),
+                        requestFields(
+                                fieldWithPath("comment").description("수정할 댓글 내용 (2~500자)"),
+                                fieldWithPath("parentId").description("부모 댓글 ID").optional()
+                        ),
+                        responseBody()
+                ));
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 - 존재하지 않는 댓글")
+    void deleteCommentNotFound() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/comments/" + Long.MAX_VALUE)
+                        .header(HttpHeaders.AUTHORIZATION, accessToken))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("댓글 작성 실패 - 존재하지 않는 게시글")
+    void writeCommentWithNonExistentBoard() throws Exception {
+        CommentReqDto comment = new CommentReqDto();
+        comment.setComment("test comment");
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/comments/" + Long.MAX_VALUE)
+                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(comment)))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
     @DisplayName("댓글 삭제")
     void deleteComment() throws Exception {
-        // given
-        String path = "/api/v1/comments/" + parentId;
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.delete(path)
+        ResultActions resultActions = mockMvc.perform(delete("/api/v1/comments/{commentId}", parentId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("commentId").description("삭제할 댓글 ID")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token")
+                        )
+                ));
     }
 }

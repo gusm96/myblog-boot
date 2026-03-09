@@ -2,6 +2,6 @@
 
 == AWS S3 이미지 업로드/삭제
 === S3 이미지 업로드
-operation::file-upload-controller-test/upload-image-file[snippets="http-request,http-response"]
+operation::file-upload-controller-test/upload-image-file[snippets='request-headers,request-parts,http-request,http-response,response-fields']
 === S3 이미지 삭제
-operation::file-upload-controller-test/delete-image-file[snippets="http-request,http-response"]
+operation::file-upload-controller-test/delete-image-file[snippets='request-headers,request-fields,request-body,http-request,http-response']

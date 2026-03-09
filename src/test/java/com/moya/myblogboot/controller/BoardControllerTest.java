@@ -1,5 +1,6 @@
 package com.moya.myblogboot.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.board.Board;
@@ -33,9 +34,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import static org.springframework.restdocs.headers.HeaderDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 @Transactional
@@ -45,6 +49,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @Import(RestDocsConfiguration.class)
 @ActiveProfiles("test")
 class BoardControllerTest extends AbstractContainerBaseTest {
+
     @Autowired
     private MockMvc mockMvc;
     @Autowired
@@ -59,11 +64,13 @@ class BoardControllerTest extends AbstractContainerBaseTest {
     private CategoryRepository categoryRepository;
     @Autowired
     private RestDocumentationResultHandler restDocs;
-    private static Long boardId;
-    private static Long categoryId;
-    private static String accessToken;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    // REST docs setUp
+    private Long boardId;
+    private Long categoryId;
+    private String accessToken;
+
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext, RestDocumentationContextProvider restDocumentationContextProvider) {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
@@ -91,264 +98,417 @@ class BoardControllerTest extends AbstractContainerBaseTest {
                     .member(saveMember)
                     .category(saveCategory)
                     .title("title")
-                    .content("content") 
+                    .content("content")
                     .build();
             Board result = boardRepository.save(newBoard);
             boardId = result.getId();
         }
 
-        // Login DTO
         MemberLoginReqDto loginReqDto = MemberLoginReqDto.builder()
                 .username("testMember")
                 .password("testPassword")
                 .build();
 
-        // Login 후 Token 발급
         accessToken = "bearer " + authService.memberLogin(loginReqDto).getAccess_token();
     }
 
     @Test
     @DisplayName("모든 게시글 조회")
     void getAllBoards() throws Exception {
-        //given
         int page = 1;
         String path = "/api/v1/boards";
-        // when
+
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
                 .param("p", String.valueOf(page)));
 
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        queryParameters(
+                                parameterWithName("p").description("페이지 번호 (기본값: 1)")
+                        ),
+                        responseFields(
+                                fieldWithPath("list").description("게시글 목록"),
+                                fieldWithPath("list[].id").description("게시글 ID"),
+                                fieldWithPath("list[].title").description("게시글 제목"),
+                                fieldWithPath("list[].content").description("게시글 내용"),
+                                fieldWithPath("list[].createDate").description("작성일"),
+                                fieldWithPath("list[].updateDate").description("수정일").optional(),
+                                fieldWithPath("list[].deleteDate").description("삭제 예정일").optional(),
+                                fieldWithPath("list[].boardStatus").description("게시글 상태 (ACTIVE / DELETED)"),
+                                fieldWithPath("totalPage").description("전체 페이지 수")
+                        )
+                ));
     }
 
     @Test
     @DisplayName("카테고리별 게시글 조회")
     void getCategoryBoards() throws Exception {
-        // given
         int page = 1;
         String category = "Test";
         String path = "/api/v1/boards/category";
 
-        // when
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
                 .param("c", category)
                 .param("p", String.valueOf(page)));
-        //then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        queryParameters(
+                                parameterWithName("c").description("카테고리명"),
+                                parameterWithName("p").description("페이지 번호 (기본값: 1)")
+                        ),
+                        responseFields(
+                                fieldWithPath("list").description("게시글 목록"),
+                                fieldWithPath("list[].id").description("게시글 ID"),
+                                fieldWithPath("list[].title").description("게시글 제목"),
+                                fieldWithPath("list[].content").description("게시글 내용"),
+                                fieldWithPath("list[].createDate").description("작성일"),
+                                fieldWithPath("list[].updateDate").description("수정일").optional(),
+                                fieldWithPath("list[].deleteDate").description("삭제 예정일").optional(),
+                                fieldWithPath("list[].boardStatus").description("게시글 상태"),
+                                fieldWithPath("totalPage").description("전체 페이지 수")
+                        )
+                ));
     }
 
     @Test
     @DisplayName("검색 결과별 게시글 조회")
     void getSearchedBoards() throws Exception {
-        // given
         SearchType searchType = SearchType.TITLE;
         String contents = "title";
         int page = 1;
         String path = "/api/v1/boards/search";
 
-        // when
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
                 .param("p", String.valueOf(page))
                 .param("type", String.valueOf(searchType))
-                .param("contents", contents)
-        );
+                .param("contents", contents));
 
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        queryParameters(
+                                parameterWithName("type").description("검색 타입 (TITLE / CONTENT)"),
+                                parameterWithName("contents").description("검색어"),
+                                parameterWithName("p").description("페이지 번호 (기본값: 1)")
+                        ),
+                        responseFields(
+                                fieldWithPath("list").description("검색된 게시글 목록"),
+                                fieldWithPath("list[].id").description("게시글 ID"),
+                                fieldWithPath("list[].title").description("게시글 제목"),
+                                fieldWithPath("list[].content").description("게시글 내용"),
+                                fieldWithPath("list[].createDate").description("작성일"),
+                                fieldWithPath("list[].updateDate").description("수정일").optional(),
+                                fieldWithPath("list[].deleteDate").description("삭제 예정일").optional(),
+                                fieldWithPath("list[].boardStatus").description("게시글 상태"),
+                                fieldWithPath("totalPage").description("전체 페이지 수")
+                        )
+                ));
     }
 
     @Test
-    @DisplayName("게시글 조회 V4")
-    void getBoardDetailV4() throws Exception {
-        // given
-        String path = "/api/v4/boards/" + boardId;
-
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path));
-
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(boardId));
-    }
-
-    @Test
-    @DisplayName("게시글 조회 V7")
+    @DisplayName("게시글 상세 조회 V7")
     void getBoardDetailV7() throws Exception {
-        // given
-        String path = "/api/v7/boards/" +boardId;
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path));
+        ResultActions resultActions = mockMvc.perform(get("/api/v7/boards/{boardId}", boardId));
 
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(boardId));
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(boardId))
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("boardId").description("게시글 ID")
+                        ),
+                        responseFields(
+                                fieldWithPath("id").description("게시글 ID"),
+                                fieldWithPath("title").description("게시글 제목"),
+                                fieldWithPath("content").description("게시글 내용"),
+                                fieldWithPath("views").description("조회수"),
+                                fieldWithPath("likes").description("좋아요 수"),
+                                fieldWithPath("createDate").description("작성일"),
+                                fieldWithPath("updateDate").description("수정일").optional(),
+                                fieldWithPath("deleteDate").description("삭제 예정일").optional(),
+                                fieldWithPath("boardStatus").description("게시글 상태")
+                        )
+                ));
     }
+
     @Test
     @DisplayName("게시글 상세 관리자용")
     void getBoardDetailForAdmin() throws Exception {
-        // given
-        String path = "/api/v1/management/boards/" + boardId;
-
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
+        ResultActions resultActions = mockMvc.perform(get("/api/v1/management/boards/{boardId}", boardId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
 
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("boardId").description("게시글 ID")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
+                        ),
+                        responseFields(
+                                fieldWithPath("id").description("게시글 ID"),
+                                fieldWithPath("title").description("게시글 제목"),
+                                fieldWithPath("content").description("게시글 내용"),
+                                fieldWithPath("views").description("조회수"),
+                                fieldWithPath("likes").description("좋아요 수"),
+                                fieldWithPath("createDate").description("작성일"),
+                                fieldWithPath("updateDate").description("수정일").optional(),
+                                fieldWithPath("deleteDate").description("삭제 예정일").optional(),
+                                fieldWithPath("boardStatus").description("게시글 상태")
+                        )
+                ));
     }
 
     @Test
     @DisplayName("게시글 등록")
     void writeBoard() throws Exception {
-        // given
         String path = "/api/v1/boards";
         BoardReqDto boardReqDto = BoardReqDto.builder()
                 .category(categoryId)
                 .title("title")
                 .content("content")
                 .build();
-        // when
+
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(path)
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
                 .contentType("application/json")
-                .content(new ObjectMapper().writeValueAsString(boardReqDto)));
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+                .content(objectMapper.writeValueAsString(boardReqDto)));
 
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
+                        ),
+                        requestFields(
+                                fieldWithPath("title").description("게시글 제목 (2~45자)"),
+                                fieldWithPath("content").description("게시글 내용"),
+                                fieldWithPath("category").description("카테고리 ID"),
+                                fieldWithPath("images").description("첨부 이미지 목록").optional()
+                        ),
+                        responseBody()
+                ));
     }
 
     @Test
     @DisplayName("게시글 수정")
     void editBoard() throws Exception {
-        // given
-        String path = "/api/v1/boards/" + boardId;
         BoardReqDto modifiedBoardDto = BoardReqDto.builder()
                 .title("modifiedTitle")
                 .content("modifiedContent")
-                .category(categoryId).build();
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.put(path)
+                .category(categoryId)
+                .build();
+
+        ResultActions resultActions = mockMvc.perform(put("/api/v1/boards/{boardId}", boardId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
                 .contentType("application/json")
-                .content(new ObjectMapper().writeValueAsString(modifiedBoardDto)));
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+                .content(objectMapper.writeValueAsString(modifiedBoardDto)));
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("boardId").description("수정할 게시글 ID")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
+                        ),
+                        requestFields(
+                                fieldWithPath("title").description("수정할 제목 (2~45자)"),
+                                fieldWithPath("content").description("수정할 내용"),
+                                fieldWithPath("category").description("카테고리 ID"),
+                                fieldWithPath("images").description("첨부 이미지 목록").optional()
+                        ),
+                        responseBody()
+                ));
     }
 
     @Test
     @DisplayName("게시글 삭제")
     void deleteBoard() throws Exception {
-        // given
-        String path = "/api/v1/boards/" + boardId;
-
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.delete(path)
+        ResultActions resultActions = mockMvc.perform(delete("/api/v1/boards/{boardId}", boardId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
 
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("boardId").description("삭제할 게시글 ID")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
+                        )
+                ));
     }
 
     @Test
     @DisplayName("삭제 예정 게시글 리스트")
-    void getDeletedBoards() throws  Exception {
-        // given
-        // 게시글 삭제
+    void getDeletedBoards() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/boards/" + boardId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
         String path = "/api/v1/deleted-boards";
-        // when
+
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
+                .param("p", "1")
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        queryParameters(
+                                parameterWithName("p").description("페이지 번호 (기본값: 1)")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
+                        )
+                ));
     }
 
     @Test
     @DisplayName("게시글 삭제 취소")
-    void cancelDeletedBoard()throws Exception {
-        // given
+    void cancelDeletedBoard() throws Exception {
         // 먼저 삭제 요청
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/boards" + boardId)
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/boards/" + boardId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
-        String path = "/api/v1/deleted-boards/" + boardId;
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.put(path)
+
+        ResultActions resultActions = mockMvc.perform(put("/api/v1/deleted-boards/{boardId}", boardId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("boardId").description("복원할 게시글 ID")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
+                        )
+                ));
     }
 
     @Test
     @DisplayName("게시글 영구 삭제")
     void deleteBoardPermanently() throws Exception {
-        // given
-        String path = "/api/v1/deleted-boards/" + boardId;
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.delete(path)
+        // 먼저 삭제(soft-delete) 처리 후 영구 삭제
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/boards/" + boardId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+
+        ResultActions resultActions = mockMvc.perform(delete("/api/v1/deleted-boards/{boardId}", boardId)
+                .header(HttpHeaders.AUTHORIZATION, accessToken));
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("boardId").description("영구 삭제할 게시글 ID")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
+                        )
+                ));
     }
 
     @Test
-    @DisplayName("게시글 좋아요 V2")
+    @DisplayName("게시글 좋아요")
     void addBoardLike() throws Exception {
-        // given
-        String path = "/api/v2/likes/" + boardId;
-
-        // when
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(path)
+        ResultActions resultActions = mockMvc.perform(post("/api/v2/likes/{boardId}", boardId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
-    }
 
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("boardId").description("좋아요할 게시글 ID")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token")
+                        ),
+                        responseBody()
+                ));
+    }
 
     @Test
     @DisplayName("게시글 좋아요 여부 체크")
     void checkBoardLike() throws Exception {
-        // given
-        String path = "/api/v2/likes/" + boardId;
-
-        // 먼저 게시글 좋아요 요청
-        mockMvc.perform(MockMvcRequestBuilders.post(path)
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v2/likes/" + boardId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
 
-        // when
-        // 좋아요 여부 확인
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
+        ResultActions resultActions = mockMvc.perform(get("/api/v2/likes/{boardId}", boardId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
 
-        // then
-        resultActions.andExpect(MockMvcResultMatchers.status().isOk());
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("boardId").description("게시글 ID")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token")
+                        ),
+                        responseBody()
+                ));
+    }
+
+    @Test
+    @DisplayName("게시글 상세 조회 실패 - 존재하지 않는 게시글")
+    void getBoardDetailV7NotFound() throws Exception {
+        mockMvc.perform(get("/api/v7/boards/{boardId}", Long.MAX_VALUE))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("게시글 등록 실패 - 인증 없음")
+    void writeBoardWithoutAuth() throws Exception {
+        BoardReqDto boardReqDto = BoardReqDto.builder()
+                .category(categoryId)
+                .title("title")
+                .content("content")
+                .build();
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/boards")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(boardReqDto)))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("게시글 등록 실패 - 유효성 검사 오류 (제목 누락)")
+    void writeBoardWithInvalidInput() throws Exception {
+        BoardReqDto boardReqDto = BoardReqDto.builder()
+                .category(categoryId)
+                .title("")
+                .content("content")
+                .build();
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/boards")
+                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(boardReqDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     @DisplayName("게시글 좋아요 취소")
     void cancelBoardLike() throws Exception {
-        // given
-        String path = "/api/v2/likes/" + boardId;
-
-        // 먼저 게시글 좋아요 요청
-        mockMvc.perform(MockMvcRequestBuilders.post(path)
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v2/likes/" + boardId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken));
 
-        // when
-        // 좋아요 취소
-        try {
-            ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.delete(path)
-                    .header(HttpHeaders.AUTHORIZATION, accessToken));
+        ResultActions resultActions = mockMvc.perform(delete("/api/v2/likes/{boardId}", boardId)
+                .header(HttpHeaders.AUTHORIZATION, accessToken));
 
-            // then
-            resultActions.andExpect(MockMvcResultMatchers.status().isOk());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("boardId").description("좋아요 취소할 게시글 ID")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token")
+                        )
+                ));
     }
-
-
 }
-
-
