@@ -31,6 +31,7 @@ yarn-error.log*
 
 ### 빌드 산출물 (루트 레벨 잔여 빌드 방지) ###
 /build/
+.gradle/
 
 ### Claude Code 로컬 설정 ###
 .claude/
