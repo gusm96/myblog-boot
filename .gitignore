@@ -84,3 +84,10 @@ sketch
 
 # Java heap dumps
 *.hprof
+
+# 환경변수 파일 (실제 값 포함, 절대 커밋 금지)
+.env.dev
+.env.prod
+
+# Claude Code 로컬 설정
+.claude/

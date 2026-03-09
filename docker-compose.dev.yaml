@@ -1,0 +1,31 @@
+version: '3'
+
+# 로컬 개발용: DB와 Redis 컨테이너만 실행
+# 앱은 IDE에서 dev 프로파일로 실행
+#
+# 실행 방법:
+#   docker compose -f docker-compose.dev.yaml --env-file .env.dev up -d
+
+services:
+  db:
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: myblog
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - 3307:3306
+    volumes:
+      - dbdata-dev:/var/lib/mysql
+
+  redis:
+    image: redis
+    restart: always
+    container_name: rediscache-dev
+    ports:
+      - 6379:6379
+
+volumes:
+  dbdata-dev:
