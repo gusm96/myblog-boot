@@ -4,6 +4,8 @@ import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.exception.custom.ImageDeleteFailException;
 import com.moya.myblogboot.exception.custom.ImageUploadFailException;
+import com.moya.myblogboot.exception.custom.InvalidateTokenException;
+import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.utils.CookieUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.persistence.EntityNotFoundException;
@@ -51,7 +53,8 @@ public class GlobalExceptionHandler {
     }
 
     // Token 예외 처리
-    @ExceptionHandler({AccessDeniedException.class, SignatureException.class, ExpiredTokenException.class, ExpiredJwtException.class})
+    @ExceptionHandler({AccessDeniedException.class, SignatureException.class, ExpiredTokenException.class, ExpiredJwtException.class,
+            InvalidateTokenException.class, UnauthorizedAccessException.class})
     public ResponseEntity<?> handleUnauthorizedAccessException(Exception e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
