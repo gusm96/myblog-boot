@@ -1,5 +1,6 @@
 package com.moya.myblogboot.service.implementation;
 
+import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.member.MemberLoginReqDto;
@@ -33,14 +34,14 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class AuthServiceImplTest {
+class AuthServiceImplTest extends AbstractContainerBaseTest {
     @Autowired
     private AuthService authService;
     @Autowired
     private MemberRepository memberRepository;
 
     @Autowired
-    private RedisTemplate<Long, Object> redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -134,12 +135,12 @@ class AuthServiceImplTest {
     @DisplayName("임시번호 생성")
     void createTemporaryNumber() {
         // 1. 임시 번호 생성 - ThreadLocalRandom을 사용해서 난수를 생성
-        long temporaryNumber = ThreadLocalRandom.current().nextLong();
+        String temporaryNumber = String.valueOf(ThreadLocalRandom.current().nextLong());
 
         // 2. 유효성 체크 - RedisStore에서 해당 난수가 있는지 확인.
         while (redisTemplate.opsForValue().get(temporaryNumber) != null) {
             // 2-1 중복이면 다시 1번 실행.
-            temporaryNumber = ThreadLocalRandom.current().nextLong();
+            temporaryNumber = String.valueOf(ThreadLocalRandom.current().nextLong());
         }
         // 3. 저장
 

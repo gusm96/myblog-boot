@@ -1,6 +1,7 @@
 package com.moya.myblogboot.service;
 
 
+import com.moya.myblogboot.AbstractContainerBaseTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 @Transactional
 @SpringBootTest
 @ActiveProfiles("test")
-public class TemporaryNumberServiceTest {
+public class TemporaryNumberServiceTest extends AbstractContainerBaseTest {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;

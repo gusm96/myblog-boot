@@ -1,6 +1,7 @@
 package com.moya.myblogboot.service.implementation;
 
 
+import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.visitor.VisitorCount;
 import com.moya.myblogboot.dto.visitor.VisitorCountDto;
 import com.moya.myblogboot.repository.VisitorCountRedisRepository;
@@ -22,7 +23,7 @@ import java.time.format.DateTimeFormatter;
 @SpringBootTest
 @Transactional
 @ActiveProfiles("test")
-public class VisitorCountServiceImplTest {
+public class VisitorCountServiceImplTest extends AbstractContainerBaseTest {
 
     @Autowired
     private VisitorCountRepository visitorCountRepository;

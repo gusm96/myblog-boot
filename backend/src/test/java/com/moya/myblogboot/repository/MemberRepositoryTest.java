@@ -1,5 +1,6 @@
 package com.moya.myblogboot.repository;
 
+import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.member.Member;
@@ -20,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @Transactional
 @ActiveProfiles("test")
-class MemberRepositoryTest {
+class MemberRepositoryTest extends AbstractContainerBaseTest {
     @Autowired
     EntityManager em;
     @BeforeEach

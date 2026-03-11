@@ -1,5 +1,6 @@
 package com.moya.myblogboot.service.implementation;
 
+import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.category.CategoryResDto;
@@ -27,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Transactional
 @SpringBootTest
 @ActiveProfiles("test")
-class CategoryServiceImplTest {
+class CategoryServiceImplTest extends AbstractContainerBaseTest {
 
     @Autowired private CategoryService categoryService;
     @Autowired private CategoryRepository categoryRepository;

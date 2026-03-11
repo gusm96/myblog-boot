@@ -1,6 +1,7 @@
 package com.moya.myblogboot.repository;
 
 
+import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.category.CategoriesResDto;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -20,7 +21,7 @@ import static com.moya.myblogboot.domain.category.QCategory.*;
 @SpringBootTest
 @Transactional
 @ActiveProfiles("test")
-public class CategoryQueryRepositoryTest {
+public class CategoryQueryRepositoryTest extends AbstractContainerBaseTest {
 
     @Autowired
     EntityManager em;

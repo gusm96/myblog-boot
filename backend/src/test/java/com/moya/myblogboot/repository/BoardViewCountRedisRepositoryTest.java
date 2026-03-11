@@ -1,6 +1,7 @@
 package com.moya.myblogboot.repository;
 
 
+import com.moya.myblogboot.AbstractContainerBaseTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,7 @@ import java.util.Set;
 @Transactional
 @ActiveProfiles("test")
 @SpringBootTest
-public class BoardViewCountRedisRepositoryTest {
+public class BoardViewCountRedisRepositoryTest extends AbstractContainerBaseTest {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
