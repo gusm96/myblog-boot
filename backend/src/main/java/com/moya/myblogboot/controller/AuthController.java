@@ -83,6 +83,10 @@ public class AuthController {
     }
 
     private static String getToken(HttpServletRequest request) {
-        return request.getHeader(HttpHeaders.AUTHORIZATION).split(" ")[1];
+        String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authorization == null || !authorization.toLowerCase().startsWith("bearer ")) {
+            throw new InvalidateTokenException("유효하지 않은 인증 정보입니다.");
+        }
+        return authorization.substring(7);
     }
 }

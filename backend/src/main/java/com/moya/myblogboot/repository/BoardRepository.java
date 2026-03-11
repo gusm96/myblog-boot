@@ -3,7 +3,7 @@ package com.moya.myblogboot.repository;
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.board.BoardStatus;
 import com.moya.myblogboot.domain.category.Category;
-import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.repository.query.Param;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

@@ -4,10 +4,9 @@ import com.moya.myblogboot.constants.ShouldNotFilterPath;
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.service.AuthService;
-import com.moya.myblogboot.service.implementation.AuthServiceImpl;
 import com.moya.myblogboot.utils.JwtUtil;
 import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.security.SecurityException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +20,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -40,21 +38,21 @@ public class JwtFilter extends OncePerRequestFilter {
         log.info("HTTP Method : {}", request.getMethod());
 
         // Token이 없을 시 Block
-        if (authorization == null || !authorization.startsWith("bearer ")) {
+        if (authorization == null || !authorization.toLowerCase().startsWith("bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
         // Token 꺼내기
-        String token = authorization.split(" ")[1];
+        String token = authorization.substring(7);
         if (token.isEmpty()) {
-            log.error("Token is null");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 존재하지 않습니다.");
+            return;
         }
 
         // Token Expired되었는지 여부
         try {
             JwtUtil.validateToken(token, secret);
-        } catch (SignatureException e) {
+        } catch (SecurityException e) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
             return;
         } catch (ExpiredTokenException e) {

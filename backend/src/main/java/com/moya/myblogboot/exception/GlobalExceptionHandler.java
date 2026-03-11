@@ -22,10 +22,14 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.nio.file.AccessDeniedException;
-import java.security.SignatureException;
+import lombok.extern.slf4j.Slf4j;
+
+import io.jsonwebtoken.security.SecurityException;
+import org.springframework.security.access.AccessDeniedException;
+
 import java.util.NoSuchElementException;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -52,8 +56,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getBindingResult().getAllErrors().get(0).getDefaultMessage());
     }
 
-    // Token 예외 처리
-    @ExceptionHandler({AccessDeniedException.class, SignatureException.class, ExpiredTokenException.class, ExpiredJwtException.class,
+    // 인가 실패 (403)
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+
+    // Token 예외 처리 (401)
+    @ExceptionHandler({SecurityException.class, ExpiredTokenException.class, ExpiredJwtException.class,
             InvalidateTokenException.class, UnauthorizedAccessException.class})
     public ResponseEntity<?> handleUnauthorizedAccessException(Exception e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
@@ -62,14 +72,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ExpiredRefreshTokenException.class)
     public ResponseEntity<?> handleExpiredRefreshTokenException(HttpServletRequest request, HttpServletResponse response, ExpiredRefreshTokenException e) {
         Cookie refreshTokenCookie = CookieUtil.findCookie(request, "refresh_token_key");
-        CookieUtil.deleteCookie(response, refreshTokenCookie);
+        if (refreshTokenCookie != null) {
+            CookieUtil.deleteCookie(response, refreshTokenCookie);
+        }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
     }
 
     // Internal Sever Error
     @ExceptionHandler({RuntimeException.class, PersistenceException.class})
     public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        log.error("Internal Server Error: ", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류가 발생했습니다.");
     }
 
     // ImageFile 업로드/삭제 실패

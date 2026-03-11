@@ -9,6 +9,8 @@ public class CookieUtil {
         Cookie cookie = new Cookie(cookieName, cookieValue);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setAttribute("SameSite", "Lax");
         return cookie;
     }
 
@@ -27,6 +29,9 @@ public class CookieUtil {
     public static void deleteCookie(HttpServletResponse response, Cookie cookie) {
         cookie.setValue(null);
         cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setAttribute("SameSite", "Lax");
         cookie.setMaxAge(0);
         response.addCookie(cookie);
     }
