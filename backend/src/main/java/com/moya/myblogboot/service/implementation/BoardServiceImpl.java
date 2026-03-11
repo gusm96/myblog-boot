@@ -11,6 +11,7 @@ import com.moya.myblogboot.repository.BoardRedisRepository;
 import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.repository.ImageFileRepository;
 import com.moya.myblogboot.service.AuthService;
+import com.moya.myblogboot.service.BoardCacheService;
 import com.moya.myblogboot.service.BoardService;
 import com.moya.myblogboot.service.CategoryService;
 import com.moya.myblogboot.service.FileUploadService;
@@ -21,7 +22,6 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +41,7 @@ public class BoardServiceImpl implements BoardService {
     private final ImageFileRepository imageFileRepository;
     private final BoardRedisRepository boardRedisRepository;
     private final FileUploadService fileUploadService;
+    private final BoardCacheService boardCacheService;
     // 페이지별 최대 게시글 수
     private static final int LIMIT = 4;
 
@@ -134,7 +135,7 @@ public class BoardServiceImpl implements BoardService {
         Category modifiedCategory = categoryService.retrieve(modifiedDto.getCategory());
         board.updateBoard(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent()); // 변경감지
         // 변경 된 내용 Redis Store에 업데이트
-        updateBoardForRedis(board);
+        boardCacheService.updateBoard(getBoardFromCache(board.getId()), board);
         return boardId;
     }
 
@@ -149,7 +150,7 @@ public class BoardServiceImpl implements BoardService {
         // 삭제 요청일 갱신
         board.deleteBoard();
         // 현재 게시글 상태 Redis Store에 Update
-        updateBoardForRedis(board);
+        boardCacheService.updateBoard(getBoardFromCache(board.getId()), board);
     }
 
     // 게시글 삭제 취소
@@ -163,7 +164,7 @@ public class BoardServiceImpl implements BoardService {
         // DeleteDate, BoardStatus 업데이트
         board.undeleteBoard();
         // Redis Store에 저장된 Data 업데이트
-        updateBoardForRedis(board);
+        boardCacheService.updateBoard(getBoardFromCache(board.getId()), board);
     }
 
     // 보관 기간이 만료된 게시글 영구 삭제
@@ -171,7 +172,7 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     public void deletePermanently(LocalDateTime thresholdDate) {
         List<Board> boards = boardRepository.findByDeleteDate(thresholdDate);
-        boards.stream().forEach(Board::deleteBoard);
+        boards.forEach(this::deleteBoards);
     }
 
     // 지정 게시글 영구 삭제
@@ -215,10 +216,11 @@ public class BoardServiceImpl implements BoardService {
 
     // 게시글 영구 삭제
     private void deleteBoards(Board board) {
+        BoardForRedis boardForRedis = getBoardFromCache(board.getId());
         // 이미지 파일 찾아서 S3에서 삭제
         fileUploadService.deleteFiles(board.getImageFiles());
         // Redis Store에 저장된 Data Delete
-        deleteBoardForRedis(board.getId());
+        boardCacheService.deleteBoard(boardForRedis);
         try {
             // DB에 저장된 Data Delete
             boardRepository.delete(board);
@@ -256,28 +258,4 @@ public class BoardServiceImpl implements BoardService {
         imageFiles.forEach(board::addImageFile);
     }
 
-    @Async
-    protected void updateBoardForRedis(Board board) {
-        BoardForRedis boardForRedis = getBoardFromCache(board.getId());
-        boardForRedis.update(board);
-        try {
-            boardRedisRepository.update(boardForRedis);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to update board from Redis store");
-        }
-    }
-
-    @Async
-    protected void deleteBoardForRedis(Long boardId) {
-        BoardForRedis boardForRedis = getBoardFromCache(boardId);
-        try {
-            boardRedisRepository.delete(boardForRedis);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to delete board from Redis store");
-        }
-    }
-
-
 }
-

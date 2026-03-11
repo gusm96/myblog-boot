@@ -5,7 +5,6 @@ import com.moya.myblogboot.dto.board.BoardForRedis;
 import com.moya.myblogboot.repository.BoardRedisRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.connection.RedisKeyCommands;
 import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Repository;
 
@@ -25,16 +24,17 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
 
     @Override
     public Set<Long> getKeys(String pattern) {
-        //
-        RedisKeyCommands keyCommands = redisTemplate.getRequiredConnectionFactory().getConnection().keyCommands();
-        ScanOptions options = ScanOptions.scanOptions().match(pattern).build();
-        Cursor<byte[]> cursor = keyCommands.scan(options);
-        Set<Long> keys = new HashSet<>();
-        while (cursor.hasNext()) {
-            String key = new String(cursor.next());
-            keys.add(Long.parseLong(key.split(":")[1]));
-        }
-        return keys;
+        return redisTemplate.execute((RedisCallback<Set<Long>>) connection -> {
+            Set<Long> keys = new HashSet<>();
+            ScanOptions options = ScanOptions.scanOptions().match(pattern).build();
+            try (Cursor<byte[]> cursor = connection.keyCommands().scan(options)) {
+                while (cursor.hasNext()) {
+                    String key = new String(cursor.next());
+                    keys.add(Long.parseLong(key.split(":")[1]));
+                }
+            }
+            return keys;
+        });
     }
 
     @Override

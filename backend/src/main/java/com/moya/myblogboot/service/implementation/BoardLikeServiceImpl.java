@@ -10,7 +10,6 @@ import com.moya.myblogboot.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.NoSuchElementException;
@@ -60,7 +59,6 @@ public class BoardLikeServiceImpl implements BoardLikeService {
         return boardLikeRepository.existsByBoardIdAndMemberId(boardId, memberId);
     }
 
-    @Async
     void addBoardLike(Long boardId, Long memberId) {
         BoardLike boardLike = BoardLike.builder()
                 .board(boardService.findById(boardId))
@@ -70,7 +68,6 @@ public class BoardLikeServiceImpl implements BoardLikeService {
     }
 
     // 게시글 좋아요 취소시 BoardLke Entity delete();
-    @Async
     public void deleteBoardLike(Long boardId, Long memberId) {
         Optional<BoardLike> boardLike = boardLikeRepository.findByBoardIdAndMemberId(boardId, memberId);
         if (boardLike.isPresent()) {
