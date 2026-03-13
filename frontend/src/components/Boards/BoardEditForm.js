@@ -1,8 +1,8 @@
-import React from "react";
-import { useEffect } from "react";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
 import {
   deleteBoard,
   deletePermanently,
@@ -13,11 +13,50 @@ import {
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { selectAccessToken } from "../../redux/userSlice";
-import { ContentState, EditorState, convertToRaw } from "draft-js";
-import { Editor } from "react-draft-wysiwyg";
-import draftToHtml from "draftjs-to-html";
-import htmlToDraft from "html-to-draftjs";
 import { getCategories } from "../../services/categoryApi";
+import "../Styles/Board/editor.css";
+
+const EditorToolbar = ({ editor }) => {
+  if (!editor) return null;
+
+  const btn = (label, action, isActive = false) => (
+    <Button
+      key={label}
+      size="sm"
+      variant={isActive ? "secondary" : "outline-secondary"}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        action();
+      }}
+    >
+      {label}
+    </Button>
+  );
+
+  return (
+    <div className="tiptap-toolbar">
+      {btn("B", () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"))}
+      {btn("I", () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"))}
+      {btn("U", () => editor.chain().focus().toggleUnderline().run(), editor.isActive("underline"))}
+      {btn("S", () => editor.chain().focus().toggleStrike().run(), editor.isActive("strike"))}
+      <span className="border-start mx-1" />
+      {[1, 2, 3].map((level) =>
+        btn(
+          `H${level}`,
+          () => editor.chain().focus().toggleHeading({ level }).run(),
+          editor.isActive("heading", { level })
+        )
+      )}
+      <span className="border-start mx-1" />
+      {btn("• 목록", () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"))}
+      {btn("1. 목록", () => editor.chain().focus().toggleOrderedList().run(), editor.isActive("orderedList"))}
+      <span className="border-start mx-1" />
+      {btn("코드블록", () => editor.chain().focus().toggleCodeBlock().run(), editor.isActive("codeBlock"))}
+      {btn("인용", () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"))}
+      {btn("구분선", () => editor.chain().focus().setHorizontalRule().run())}
+    </div>
+  );
+};
 
 export const BoardEditForm = () => {
   const accessToken = useSelector(selectAccessToken);
@@ -28,29 +67,39 @@ export const BoardEditForm = () => {
     deleteDate: "",
   });
   const [categories, setCategories] = useState([]);
-  const [editorState, setEditorState] = useState(EditorState.createEmpty());
-  const [htmlString, setHtmlString] = useState("");
+  const [htmlContent, setHtmlContent] = useState("");
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Image.configure({ inline: false }),
+    ],
+  });
+
+  // 데이터 패치 (API 1회 호출)
   useEffect(() => {
     getBoardForAdmin(boardId, accessToken).then((data) => {
-      const blocksFromHTML = htmlToDraft(data.content);
-      const { contentBlocks, entityMap } = blocksFromHTML;
-      const contentState = ContentState.createFromBlockArray(
-        contentBlocks,
-        entityMap
-      );
-      const newEditorState = EditorState.createWithContent(contentState);
       setBoard({
         title: data.title,
         category: data.category,
         deleteDate: data.deleteDate,
       });
-      setEditorState(newEditorState);
+      setHtmlContent(data.content);
     });
     getCategories().then((data) => setCategories(data));
   }, [boardId, accessToken]);
 
+  // editor와 htmlContent가 모두 준비됐을 때 내용 로드 (emitUpdate: false — undo 히스토리 오염 방지)
+  useEffect(() => {
+    if (editor && htmlContent) {
+      editor.commands.setContent(htmlContent, { emitUpdate: false });
+    }
+  }, [editor, htmlContent]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!editor) return;
+    const htmlString = editor.getHTML();
     editBoard(boardId, board, htmlString, accessToken)
       .then((data) => {
         alert("게시글이 수정 되었습니다");
@@ -63,31 +112,18 @@ export const BoardEditForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setBoard((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setBoard((prev) => ({ ...prev, [name]: value }));
   };
 
-  const updateTextDescription = (newState) => {
-    setEditorState(newState);
-    const html = draftToHtml(convertToRaw(newState.getCurrentContent()));
-    setHtmlString(html);
-  };
-
-  const uploadCallback = (e) => {
-    e.preventDefault();
-  };
   const handleDelete = (e) => {
     e.preventDefault();
     if (window.confirm("정말로 삭제하시겠습니까?")) {
       deleteBoard(boardId, accessToken)
         .then(window.history.go(-1))
         .catch((error) => console.log(error));
-    } else {
-      return;
     }
   };
+
   const handleUndelete = (e) => {
     e.preventDefault();
     if (window.confirm("삭제를 취소하시겠습니까?")) {
@@ -98,11 +134,11 @@ export const BoardEditForm = () => {
           }
         })
         .catch((error) => console.log(error));
-    } else {
-      return;
     }
   };
+
   const handleDeletePermanently = (e) => {
+    e.preventDefault();
     if (
       window.confirm(
         "영구 삭제시 게시글을 복구할 수 없습니다.\n정말로 삭제하시겠습니까?"
@@ -115,24 +151,20 @@ export const BoardEditForm = () => {
           }
         })
         .catch((error) => console.log(error));
-    } else {
-      return;
     }
   };
+
   return (
     <Form onSubmit={handleSubmit}>
-      <InputGroup>
-        <InputGroup.Text id="inputGroup-sizing-default">제목</InputGroup.Text>
+      <InputGroup className="mb-2">
+        <InputGroup.Text>제목</InputGroup.Text>
         <Form.Control
-          aria-label="Default"
-          aria-describedby="inputGroup-sizing-default"
           placeholder="제목을 입력하세요."
           name="title"
           value={board.title}
           onChange={handleChange}
         />
         <Form.Select
-          aria-label="Default select example"
           name="category"
           value={board.category}
           onChange={handleChange}
@@ -145,38 +177,33 @@ export const BoardEditForm = () => {
           ))}
         </Form.Select>
       </InputGroup>
-      <Editor
-        placeholder="게시글을 작성해주세요"
-        name="content"
-        value={board.content}
-        editorState={editorState}
-        onEditorStateChange={updateTextDescription}
-        toolbar={{
-          image: { uploadCallback: uploadCallback },
-        }}
-        localization={{ locale: "ko" }}
-        editorStyle={{
-          height: "500px",
-          width: "100%",
-          border: "3px solid lightgray",
-          padding: "20px",
-        }}
-      />
-      <Button type="submit">수정</Button>
-      {board.deleteDate === null || "" ? (
-        <Button type="button" onClick={handleDelete}>
-          삭제
-        </Button>
-      ) : (
-        <div>
-          <Button type="button" onClick={handleUndelete}>
-            삭제 취소
+
+      <div className="tiptap-wrapper mb-2">
+        <EditorToolbar editor={editor} />
+        <EditorContent editor={editor} />
+      </div>
+
+      <div className="d-flex gap-2">
+        <Button type="submit">수정</Button>
+        {board.deleteDate === null || board.deleteDate === "" ? (
+          <Button type="button" variant="danger" onClick={handleDelete}>
+            삭제
           </Button>
-          <Button type="button" onClick={handleDeletePermanently}>
-            영구삭제
-          </Button>
-        </div>
-      )}
+        ) : (
+          <>
+            <Button type="button" variant="warning" onClick={handleUndelete}>
+              삭제 취소
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={handleDeletePermanently}
+            >
+              영구삭제
+            </Button>
+          </>
+        )}
+      </div>
     </Form>
   );
 };
