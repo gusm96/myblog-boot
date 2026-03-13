@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Container, Card, Spinner } from "react-bootstrap";
+import { BASE_URL } from "../apiConfig";
 
 const VisitorCount = () => {
   const [visitor, setVisitor] = useState({
@@ -16,7 +17,7 @@ const VisitorCount = () => {
     const fetchVisitorData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8080/api/v2/visitor-count"
+          `${BASE_URL}/api/v2/visitor-count`
         );
         const { total, today, yesterday } = response.data;
         setVisitor({ total, today, yesterday });

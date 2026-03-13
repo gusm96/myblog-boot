@@ -49,7 +49,7 @@ const BoardList = ({ boards, path }) => {
   );
 };
 
-BoardList.prototype = {
+BoardList.propTypes = {
   boards: PropTypes.array,
   path: PropTypes.string,
 };
