@@ -1,0 +1,33 @@
+= BoardAPI
+
+== 게시글 작성/조회/수정/삭제
+=== 게시글 등록
+operation::board-controller-test/write-board[snippets='request-headers,request-fields,request-body,http-request,http-response']
+=== 전체 게시글 조회
+operation::board-controller-test/get-all-boards[snippets='query-parameters,http-request,http-response,response-fields']
+=== 카테고리별 게시글 조회
+operation::board-controller-test/get-category-boards[snippets='query-parameters,http-request,http-response,response-fields']
+=== 검색 결과별 게시글 조회
+operation::board-controller-test/get-searched-boards[snippets='query-parameters,http-request,http-response,response-fields']
+=== 삭제 예정 게시글 조회
+operation::board-controller-test/get-deleted-boards[snippets='query-parameters,request-headers,http-request,http-response']
+=== 게시글 상세 조회
+operation::board-controller-test/get-board-detail-v7[snippets='path-parameters,http-request,http-response,response-fields']
+=== 게시글 상세 조회 (관리자용)
+operation::board-controller-test/get-board-detail-for-admin[snippets='path-parameters,request-headers,http-request,http-response,response-fields']
+=== 게시글 수정
+operation::board-controller-test/edit-board[snippets='path-parameters,request-headers,request-fields,request-body,http-request,http-response']
+=== 게시글 삭제
+operation::board-controller-test/delete-board[snippets='path-parameters,request-headers,http-request,http-response']
+=== 게시글 삭제 취소
+operation::board-controller-test/cancel-deleted-board[snippets='path-parameters,request-headers,http-request,http-response']
+=== 게시글 영구 삭제
+operation::board-controller-test/delete-board-permanently[snippets='path-parameters,request-headers,http-request,http-response']
+
+== 게시글 좋아요/확인/취소
+=== 게시글 좋아요
+operation::board-controller-test/add-board-like[snippets='path-parameters,request-headers,http-request,http-response']
+=== 게시글 좋아요 확인
+operation::board-controller-test/check-board-like[snippets='path-parameters,request-headers,http-request,http-response']
+=== 게시글 좋아요 취소
+operation::board-controller-test/cancel-board-like[snippets='path-parameters,request-headers,http-request,http-response']

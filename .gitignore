@@ -1,83 +1,48 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+# 각 서브 프로젝트는 자체 .gitignore 보유 (backend/.gitignore, frontend/.gitignore)
+# 루트에서는 공통 항목만 관리
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
-.vscode/
-
-### Font end ###
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# production
-/build
-
-# misc
+### OS ###
 .DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.DS_*
+Thumbs.db
+desktop.ini
 
+### IDE ###
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+### 에디터 임시 파일 ###
+*.sw?
+*~
+*.orig
+
+### Logs ###
+*.log
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# Created by https://www.toptal.com/developers/gitignore/api/react
-# Edit at https://www.toptal.com/developers/gitignore?templates=react
+### Java heap dumps ###
+*.hprof
 
-### react ###
-.DS_*
-*.log
-logs
-**/*.backup.*
-**/*.back.*
+### 환경변수 (절대 커밋 금지) ###
+.env
+.env.local
+.env.dev
+.env.prod
 
-node_modules
-bower_components
+### Docker 로컬 오버라이드 ###
+docker-compose.override.yml
+docker-compose.override.yaml
 
-*.sublime*
+### 빌드 산출물 (루트 레벨 잔여 빌드 방지) ###
+/build/
+.gradle/
 
-psd
-thumb
-sketch
-
-# End of https://www.toptal.com/developers/gitignore/api/react
+### Claude Code 로컬 설정 ###
+.claude/

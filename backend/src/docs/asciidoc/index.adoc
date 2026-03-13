@@ -1,0 +1,70 @@
+= Myblog Application API Document
+:doctype: book
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
+:sectlinks:
+
+== 개요
+
+=== 서버 정보
+
+|===
+| 환경 | URL
+
+| 프로덕션
+| `https://api.myblog.com`
+
+| 로컬 개발
+| `http://localhost:8080`
+|===
+
+=== 공통 요청 헤더
+
+인증이 필요한 API는 `Authorization` 헤더에 Bearer 토큰을 포함해야 합니다.
+
+[source,http]
+----
+Authorization: Bearer {access_token}
+----
+
+=== 공통 에러 응답
+
+[source,json]
+----
+{
+  "status": 400,
+  "message": "에러 메시지"
+}
+----
+
+|===
+| HTTP 상태 코드 | 설명
+
+| 200 OK
+| 요청 성공
+
+| 400 Bad Request
+| 잘못된 요청 (입력값 검증 실패)
+
+| 401 Unauthorized
+| 인증 실패 (토큰 만료 또는 없음)
+
+| 403 Forbidden
+| 권한 없음
+
+| 404 Not Found
+| 리소스 없음
+
+| 409 Conflict
+| 중복 데이터
+
+| 500 Internal Server Error
+| 서버 오류
+|===
+
+include::auth.adoc[]
+include::board.adoc[]
+include::category.adoc[]
+include::comment.adoc[]
+include::fileupload.adoc[]

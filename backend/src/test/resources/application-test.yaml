@@ -1,0 +1,62 @@
+## DataBase
+spring:
+  config:
+    activate:
+      on-profile: test
+  h2:
+    console:
+      enabled: true
+  jpa:
+    database: h2
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create-drop
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=MySQL;
+    username: SA
+    password:
+  sql:
+    init:
+      mode: never
+  data:
+    redis:
+      timeout: 6000
+      database: 1
+  main:
+    allow-bean-definition-overriding: true
+  scheduler:
+    enabled: false
+
+## Logging
+logging:
+  level:
+    org:
+      hibernate:
+        sql: debug
+        type: trace
+      springframework:
+        web: debug
+
+
+# CORS
+cors:
+  allowed-origins: http://localhost:3000
+
+## JWT
+jwt:
+  secret: ${JWT_SECRET_KEY:test-jwt-secret-key-for-testing-environment-only}
+  access-token-expiration: 600000
+  refresh-token-expiration: 1209600000
+
+# S3 (테스트 환경: 실제 S3 호출 없음, 더미 값 사용)
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_CREDENTIALS_ACCESS_KEY:test-access-key}
+      secret-key: ${AWS_CREDENTIALS_SECRET_KEY:test-secret-key}
+    s3:
+      bucketName: myblog-boot-bucket
+    region:
+      static: ap-northeast-2
+      auto: false

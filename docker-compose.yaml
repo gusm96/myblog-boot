@@ -1,55 +1,61 @@
 version: '3'
+
+# 운영 환경용
+#
+# 실행 방법:
+#   docker compose --env-file backend/.env.prod up -d
+
 services:
   db:
-    image : mariadb
+    image: mariadb
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: myblog
-      MYSQL_USER : moyada
-      MYSQL_PASSWORD : moyada1343
-    ports:
-      - 3307:3307
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - dbdata:/var/lib/mysql
+    networks:
+      - myblog-net
+
   redis:
     image: redis
     restart: always
     container_name: rediscache
     ports:
-      - 6379:6379
+      - "6379:6379"
     networks:
-      - spring-net
-  spring-testcontainers-app:
-    build: .
-    image: spring-testcontainers-app
-    container_name: spring-testcontainers-app
-    environment:
-      REDIS_HOST: rediscache
-      REDIS_PORT: 6379
+      - myblog-net
+
+  backend:
+    build: ./backend
     ports:
-      - 8080:8080
-    depends_on:
-      - redis
-    networks:
-      - spring-net
-  app:
-    build: .
-    ports:
-      - "8081:8080"
+      - "8080:8080"
     depends_on:
       - db
       - redis
+    env_file:
+      - backend/.env.prod
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/myblog
-      SPRING_DATASOURCE_USERNAME: moyada
-      SPRING_DATASOURCE_PASSWORD: moyada1343
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
+      SPRING_PROFILES_ACTIVE: prod
     networks:
-      - spring-net
+      - myblog-net
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:8080}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - myblog-net
 
 networks:
-  spring-net:
+  myblog-net:
+
 volumes:
   dbdata:
