@@ -11,9 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Component
+//@Component
 @Profile("dev")
 @RequiredArgsConstructor
 public class InitDb {
@@ -33,6 +34,8 @@ public class InitDb {
             initService.initBoard(adminMember, category2, "파이썬", "파이썬 진짜 멋지네~~");
         }
     }
+
+    //@Service
     @RequiredArgsConstructor
     static class InitService {
         private final EntityManager em;

@@ -5,8 +5,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,32 +35,34 @@ public class WebSecurityConfig  {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http.httpBasic().disable()
-                .csrf().disable() // Cross Site Request Forgery (사이트간 위조요청) Non-browser clients service에선 disable 가능 (Spring security 에선 기본 설정이 protection)
-                .cors().and() // Cross Origin Resource Sharing (교차 출처 리소스 공유)
-                .authorizeHttpRequests()
-                .requestMatchers(HttpMethod.POST, "/api/v1/boards").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/boards/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/boards/**").hasRole("ADMIN")
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/deleted-boards/**")).hasRole("ADMIN")
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/management/**")).hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/v1/comments/**").hasAnyRole("NORMAL", "ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/comments/**").hasAnyRole("NORMAL", "ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/comments/**").hasAnyRole("NORMAL", "ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/v1/categories").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/categories/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/v1/categories-management/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/v2/likes/**").hasAnyRole("NORMAL", "ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/v2/likes/**").hasAnyRole("NORMAL", "ADMIN")
-                .requestMatchers(HttpMethod.DELETE,"/api/v2/likes/**").hasAnyRole("NORMAL", "ADMIN")
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/images/**")).hasRole("ADMIN")
-                .anyRequest().permitAll()
-                .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                // UsernamePasswordAuthenticationFilter 이전에 JwtFilter 적용
-                .and().addFilterBefore(new JwtFilter(authService, secret), UsernamePasswordAuthenticationFilter.class).build();
+        return http
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/api/v1/boards").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/boards/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/boards/**").hasRole("ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/api/v1/deleted-boards/**")).hasRole("ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/api/v1/management/**")).hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/comments/**").hasAnyRole("NORMAL", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/comments/**").hasAnyRole("NORMAL", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/comments/**").hasAnyRole("NORMAL", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/categories").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/categories-management/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v2/likes/**").hasAnyRole("NORMAL", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v2/likes/**").hasAnyRole("NORMAL", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v2/likes/**").hasAnyRole("NORMAL", "ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/api/v1/images/**")).hasRole("ADMIN")
+                        .anyRequest().permitAll()
+                )
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .addFilterBefore(new JwtFilter(authService, secret), UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     // cors 허용을 위한 설정

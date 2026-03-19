@@ -49,6 +49,11 @@ jwt:
   access-token-expiration: 600000
   refresh-token-expiration: 1209600000
 
+# Visitor HMAC
+visitor:
+  hmac:
+    secret: ${VISITOR_HMAC_SECRET:test-hmac-secret-key-for-testing-environment-only}
+
 # S3 (테스트 환경: 실제 S3 호출 없음, 더미 값 사용)
 cloud:
   aws:

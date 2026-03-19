@@ -242,7 +242,7 @@ public class BoardServiceImpl implements BoardService {
 
     // Redis Store에서 데이터 조회
     @Override
-    public synchronized BoardForRedis getBoardFromCache(Long boardId) {
+    public BoardForRedis getBoardFromCache(Long boardId) {
         Optional<BoardForRedis> boardForRedis = boardRedisRepository.findOne(boardId);
         if (boardForRedis.isEmpty()) {
             // DB에서 Board 조회 후 Redis store에 저장.

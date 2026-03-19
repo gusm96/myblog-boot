@@ -5,7 +5,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 
 
@@ -20,9 +21,11 @@ public class TTLCalculator {
        return ChronoUnit.SECONDS.between(now, future);
    }
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     public static long calculateSecondsUntilMidnight() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime midnight = now.toLocalDate().plusDays(1).atStartOfDay();
+        ZonedDateTime now = ZonedDateTime.now(KST);
+        ZonedDateTime midnight = now.toLocalDate().plusDays(1).atStartOfDay(KST);
         return Duration.between(now, midnight).getSeconds();
     }
 }

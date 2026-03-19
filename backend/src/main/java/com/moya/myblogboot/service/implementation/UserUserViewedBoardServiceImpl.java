@@ -15,19 +15,19 @@ public class UserUserViewedBoardServiceImpl implements UserViewedBoardService {
     private final UserViewedBoardRedisRepository userViewedBoardRedisRepository;
 
     @Override
-    public void addViewedBoard(Long userNum, Long boardId) {
+    public void addViewedBoard(String userToken, Long boardId) {
         try {
-            userViewedBoardRedisRepository.save(userNum, boardId);
+            userViewedBoardRedisRepository.save(userToken, boardId);
         } catch (Exception e) {
             log.error("Redis Store - 조회한 게시글 추가중 오류발생 : {}", e.getMessage());
         }
     }
 
     @Override
-    public boolean isViewedBoard(Long userNum, Long boardId) {
+    public boolean isViewedBoard(String userToken, Long boardId) {
         boolean result = false;
         try {
-            result = userViewedBoardRedisRepository.isExists(userNum, boardId);
+            result = userViewedBoardRedisRepository.isExists(userToken, boardId);
         } catch (Exception e) {
             log.error("Redis Store - 조회한 게시글 조회중 오류발생 : {}", e.getMessage());
         }

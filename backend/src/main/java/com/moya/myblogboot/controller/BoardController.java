@@ -119,14 +119,13 @@ public class BoardController {
     }
 
     @GetMapping("/api/v7/boards/{boardId}")
-    public ResponseEntity<BoardDetailResDto> getBoardDetailV7(@RequestAttribute(USER_NUM_COOKIE) String userNum,
+    public ResponseEntity<BoardDetailResDto> getBoardDetailV7(@RequestAttribute(USER_NUM_COOKIE) String userToken,
                                                               @PathVariable("boardId") Long boardId) {
-        Long userN = Long.valueOf(userNum);
         BoardDetailResDto boardDetailResDto;
         try {
-            if (!userViewedBoardService.isViewedBoard(userN, boardId)) {
+            if (!userViewedBoardService.isViewedBoard(userToken, boardId)) {
                 boardDetailResDto = boardService.getBoardDetailAndIncrementViews(boardId);
-                userViewedBoardService.addViewedBoard(userN, boardId);
+                userViewedBoardService.addViewedBoard(userToken, boardId);
             } else {
                 boardDetailResDto = boardService.getBoardDetail(boardId);
             }

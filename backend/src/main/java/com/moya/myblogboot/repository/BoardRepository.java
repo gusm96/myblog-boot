@@ -23,7 +23,8 @@ public interface BoardRepository extends JpaRepository<Board, Long>, BoardQueryd
             "join fetch b.category where b.id = :boardId ")
     Optional<Board> findById(@Param("boardId") Long boardId);
 
-    @Query("select b from Board b where b.boardStatus = :boardStatus")
+    @Query(value = "select b from Board b join fetch b.member join fetch b.category where b.boardStatus = :boardStatus",
+            countQuery = "select count(b) from Board b where b.boardStatus = :boardStatus")
     Page<Board> findAll(@Param("boardStatus") BoardStatus boardStatus, Pageable pageable);
 
     @Query("select b from Board b where b.category.name = :categoryName and b.boardStatus = 'VIEW'")

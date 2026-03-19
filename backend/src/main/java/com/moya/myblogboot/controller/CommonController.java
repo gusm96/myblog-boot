@@ -8,7 +8,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RestController;
+
+import static com.moya.myblogboot.interceptor.UserNumCookieInterceptor.IS_NEW_VISITOR;
 
 @Slf4j
 @RestController
@@ -16,10 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommonController {
     private final VisitorCountService visitorCountService;
 
-    // 유저번호 생성 및 방문자 수 조회
     @GetMapping("/api/v2/visitor-count")
-    public ResponseEntity<VisitorCountDto> getVisitorCountV2() {
-        VisitorCountDto visitorCountDto = visitorCountService.getVisitorCount(DateUtil.getToday());
-        return ResponseEntity.ok().body(visitorCountDto);
+    public ResponseEntity<VisitorCountDto> getVisitorCountV2(
+            @RequestAttribute(name = IS_NEW_VISITOR, required = false) Boolean isNewVisitor) {
+        String today = DateUtil.getToday();
+        if (Boolean.TRUE.equals(isNewVisitor)) {
+            return ResponseEntity.ok().body(visitorCountService.incrementVisitorCount(today));
+        }
+        return ResponseEntity.ok().body(visitorCountService.getVisitorCount(today));
     }
 }
