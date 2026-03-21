@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ListGroup, ListGroupItem } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import "../Styles/css/listGroup.css";
 import { getCategoriesV2 } from "../../services/categoryApi";
 export const CategoryNav = () => {

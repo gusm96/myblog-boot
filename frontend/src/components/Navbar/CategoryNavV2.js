@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { getCategoriesV2 } from "../../services/categoryApi";
 import { ListGroup, ListGroupItem } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export const CategoryNavV2 = () => {
   const { isPending, isError, data, error } = useQuery({

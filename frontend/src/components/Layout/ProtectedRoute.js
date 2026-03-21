@@ -4,7 +4,7 @@ import { getRoleFromToken } from "../../services/authApi";
 import { useState } from "react";
 import { Col, Container, Row } from "react-bootstrap";
 import { AdminNavBar } from "../Navbar/AdminNavBar";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router";
 import { useEffect } from "react";
 import { Header } from "./Header";
 

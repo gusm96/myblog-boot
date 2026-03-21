@@ -4,7 +4,7 @@ import { login } from "../../services/authApi";
 import { Button, Container, Form, InputGroup } from "react-bootstrap";
 import { userLogin } from "../../redux/authAction";
 import { useDispatch } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
 
 export const LoginForm = () => {
   const location = useLocation();

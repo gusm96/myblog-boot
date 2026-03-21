@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { selectAccessToken, selectIsLoggedIn } from "../../redux/userSlice";
 import Parser from "html-react-parser";
 import DOMPurify from "dompurify";
@@ -36,7 +36,7 @@ export const BoardDetailV2 = () => {
       </div>
       <hr></hr>
       {isLoggedIn ? (
-        <CommentForm boardId={board.data.id} />
+        <CommentForm boardId={board.data.id} accessToken={accessToken} />
       ) : (
         <p>로그인을 하면 댓글을 작성할 수 있습니다.</p>
       )}

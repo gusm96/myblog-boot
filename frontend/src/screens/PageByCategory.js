@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router";
 import { SearchBar } from "../components/SearchBar";
 import BoardList from "../components/Boards/BoardList";
 import { PageButton } from "../components/Boards/PageButton";

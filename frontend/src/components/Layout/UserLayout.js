@@ -1,5 +1,5 @@
 import React from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 import { Col, Container, Row } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { selectIsLoggedIn } from "../../redux/userSlice";

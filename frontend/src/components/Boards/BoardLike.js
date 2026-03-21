@@ -8,6 +8,7 @@ import {
 } from "../../services/boardApi";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { BASE_URL } from "../../apiConfig";
 
 export const BoardLike = ({ boardId }) => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
@@ -18,7 +19,7 @@ export const BoardLike = ({ boardId }) => {
     queryKey: ["boardLikes", boardId],
     queryFn: () =>
       axios
-        .get(`http://localhost:8080/api/v1/boards/${boardId}/likes`)
+        .get(`${BASE_URL}/api/v1/boards/${boardId}/likes`)
         .then((res) => res.data),
     staleTime: 3 * 1000,
   });

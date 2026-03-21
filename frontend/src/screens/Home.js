@@ -1,7 +1,7 @@
 import React from "react";
 import { Container } from "../components/Styles/Container/Container.style";
 import BoardList from "../components/Boards/BoardList";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { getBoardList } from "../services/boardApi";
 import { SearchBar } from "../components/SearchBar";
 import { PageButton } from "../components/Boards/PageButton";

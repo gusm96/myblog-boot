@@ -112,9 +112,6 @@ export const getBoardLikes = (page) => {
   return axios.get(`${BOARD_LIKE_CRUD}?${page}`).then((res) => res.data);
 };
 
-export const checkBoardLike = (page) => {
-  return axios.get();
-};
 export const getComments = (boardId) => {
   return axios.get(`${COMMENT_CRUD}/${boardId}`).then((res) => res.data);
 };

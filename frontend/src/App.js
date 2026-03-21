@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router";
 import Home from "./screens/Home";
 import { Management } from "./screens/Management";
 import { BoardEditForm } from "./components/Boards/BoardEditForm";
@@ -22,10 +22,13 @@ import { PageByCategory } from "./screens/PageByCategory";
 import BoardEditor from "./components/Boards/BoardEditor";
 import ErrorBoundary from "./components/ErrorBoundary";
 
+// context7 TanStack Query 공식 문서 기반:
+// CSR SPA에서 QueryClient는 모듈 최상위에서 1회 생성 (렌더마다 재생성 방지)
+const queryClient = new QueryClient();
+
 export default App;
 
 function App() {
-  const queryClient = new QueryClient();
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const access_token = useSelector(selectAccessToken);
   const dispatch = useDispatch();

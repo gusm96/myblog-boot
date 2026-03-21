@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { selectAccessToken } from "../redux/userSlice";
 import { getDeletedBoards } from "../services/boardApi";
 import BoardList from "../components/Boards/BoardList";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { PageButton } from "../components/Boards/PageButton";
 
 export const TemporaryStorage = () => {

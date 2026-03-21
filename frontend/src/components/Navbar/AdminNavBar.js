@@ -1,6 +1,6 @@
 import React from "react";
 import { ListGroup, ListGroupItem } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 export const AdminNavBar = () => {
   return (
     <ListGroup id="category-list-group">

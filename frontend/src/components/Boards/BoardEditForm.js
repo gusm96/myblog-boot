@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -119,7 +119,7 @@ export const BoardEditForm = () => {
     e.preventDefault();
     if (window.confirm("정말로 삭제하시겠습니까?")) {
       deleteBoard(boardId, accessToken)
-        .then(window.history.go(-1))
+        .then(() => window.history.go(-1))
         .catch((error) => console.log(error));
     }
   };
