@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { selectAccessToken, selectIsLoggedIn } from "../../redux/userSlice";
+import { selectIsLoggedIn } from "../../redux/userSlice";
 import { getRoleFromToken } from "../../services/authApi";
 import { useState } from "react";
 import { Col, Container, Row } from "react-bootstrap";
@@ -11,19 +11,18 @@ import { Header } from "./Header";
 export const ProtectedRoute = () => {
   const [role, setRole] = useState(null);
   const isLoggedIn = useSelector(selectIsLoggedIn);
-  const accessToken = useSelector(selectAccessToken);
   const headerTitle = "admin";
   const location = useLocation();
   useEffect(() => {
     if (isLoggedIn) {
-      getRoleFromToken(accessToken)
+      getRoleFromToken()
         .then((data) => setRole(data))
         .catch((error) => {
           if (error.response.data === "토큰이 만료되었습니다.") {
           }
         });
     }
-  }, [accessToken, isLoggedIn]);
+  }, [isLoggedIn]);
 
   if (!isLoggedIn) {
     return <Navigate to="/login" state={{ from: location }} />;

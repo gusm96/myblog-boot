@@ -1,4 +1,5 @@
 import axios from "axios";
+import apiClient from "./apiClient";
 import {
   MEMBER_JOIN,
   MEMBER_LOGIN,
@@ -26,43 +27,28 @@ export const login = (formData) => {
         username: formData.username,
         password: formData.password,
       },
-      {
-        withCredentials: true,
-      }
+      { withCredentials: true }
     )
     .then((res) => res.data);
 };
 
 export const logout = () => {
   return axios
-    .get(`${MEMBER_LOGOUT}`, {
-      withCredentials: true,
-    })
+    .get(`${MEMBER_LOGOUT}`, { withCredentials: true })
     .catch((error) => console.log(error));
 };
 
-export const validateAccessToken = (accessToken) => {
-  return axios
-    .get(`${TOKEN_VALIDATION}`, {
-      headers: {
-        Authorization: `bearer ${accessToken}`,
-      },
-    })
-    .then((res) => res.data);
-};
-
-export const getRoleFromToken = (accessToken) => {
-  return axios
-    .get(`${TOKEN_ROLE}`, {
-      headers: {
-        Authorization: `bearer ${accessToken}`,
-      },
-    })
-    .then((res) => res.data);
-};
-
+// 토큰 재발급은 인증 쿠키 기반 — 인터셉터 토큰 불필요
 export const reissuingAccessToken = () => {
   return axios
     .get(`${REISSUING_TOKEN}`, { withCredentials: true })
     .then((res) => res.data);
+};
+
+export const validateAccessToken = () => {
+  return apiClient.get(`${TOKEN_VALIDATION}`).then((res) => res.data);
+};
+
+export const getRoleFromToken = () => {
+  return apiClient.get(`${TOKEN_ROLE}`).then((res) => res.data);
 };

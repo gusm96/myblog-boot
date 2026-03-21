@@ -11,7 +11,7 @@ import { useSelector } from "react-redux";
 import { selectIsLoggedIn } from "../../redux/userSlice";
 import { addComment } from "../../services/boardApi";
 
-export const CommentForm = ({ boardId, accessToken }) => {
+export const CommentForm = ({ boardId }) => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const [isLoggedInModal, setIsLoggedInModal] = useState(false);
   const [commentData, setCommentData] = useState({
@@ -40,7 +40,7 @@ export const CommentForm = ({ boardId, accessToken }) => {
     if (commentData.comment.trim() === "") {
       alert("댓글의 내용을 입력하세요.");
     } else {
-      addComment(boardId, commentData, accessToken)
+      addComment(boardId, commentData)
         .then((data) => {
           window.location.reload();
         })

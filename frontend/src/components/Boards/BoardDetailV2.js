@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router";
-import { selectAccessToken, selectIsLoggedIn } from "../../redux/userSlice";
+import { selectIsLoggedIn } from "../../redux/userSlice";
 import Parser from "html-react-parser";
 import DOMPurify from "dompurify";
 import { useBoardQuery, useLikeStatusQuery } from "../../hooks/useQueries";
@@ -14,10 +14,9 @@ import { BoardLike } from "./BoardLike";
 export const BoardDetailV2 = () => {
   const { boardId } = useParams();
   const isLoggedIn = useSelector(selectIsLoggedIn);
-  const accessToken = useSelector(selectAccessToken);
 
   const board = useBoardQuery(boardId);
-  const likeStatus = useLikeStatusQuery(boardId, accessToken, isLoggedIn);
+  const likeStatus = useLikeStatusQuery(boardId, isLoggedIn);
 
   if (board.isLoading || likeStatus.isLoading) return <div>Loading...</div>;
   if (board.error) return <ErrorMessage message={board.error.message} />;
@@ -36,7 +35,7 @@ export const BoardDetailV2 = () => {
       </div>
       <hr></hr>
       {isLoggedIn ? (
-        <CommentForm boardId={board.data.id} accessToken={accessToken} />
+        <CommentForm boardId={board.data.id} />
       ) : (
         <p>로그인을 하면 댓글을 작성할 수 있습니다.</p>
       )}

@@ -1,43 +1,29 @@
+import apiClient from "./apiClient";
 import axios from "axios";
 import { CATEGORIES, CATEGORIES_FOR_ADMIN, CATEGORY_CRUD } from "../apiConfig";
-const getToken = (accessToken) => {
-  return `bearer ${accessToken}`;
-};
+
 export const getCategories = () => {
   return axios.get(`${CATEGORY_CRUD}`).then((res) => res.data);
 };
+
 export const getCategoriesV2 = () => {
   return axios.get(`${CATEGORIES}`).then((res) => res.data);
 };
-export const getCategoriesForAdmin = (accessToken) => {
-  return axios
-    .get(`${CATEGORIES_FOR_ADMIN}`, {
-      headers: {
-        Authorization: getToken(accessToken),
-      },
-    })
-    .then((res) => res.data);
+
+export const getCategoriesForAdmin = () => {
+  return apiClient.get(`${CATEGORIES_FOR_ADMIN}`).then((res) => res.data);
 };
-export const addNewCategory = (categoryName, accessToken) => {
-  return axios.post(
+
+export const addNewCategory = (categoryName) => {
+  return apiClient.post(
     `${CATEGORY_CRUD}`,
-    {
-      categoryName: categoryName,
-    },
-    {
-      headers: {
-        Authorization: getToken(accessToken),
-      },
-      withCredentials: true,
-    }
+    { categoryName },
+    { withCredentials: true }
   );
 };
-export const deleteCategory = (categoryId, accessToken) => {
-  return axios
-    .delete(`${CATEGORY_CRUD}/${categoryId}`, {
-      headers: {
-        Authorization: getToken(accessToken),
-      },
-    })
+
+export const deleteCategory = (categoryId) => {
+  return apiClient
+    .delete(`${CATEGORY_CRUD}/${categoryId}`)
     .then((res) => res.data);
 };

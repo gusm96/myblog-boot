@@ -13,23 +13,20 @@ import {
   ListGroup,
   ListGroupItem,
 } from "react-bootstrap";
-import { useSelector } from "react-redux";
-import { selectAccessToken } from "../../redux/userSlice";
 
 export const CategoryList = () => {
-  const accessToken = useSelector(selectAccessToken);
   const [category, setCategory] = useState("");
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    getCategoriesForAdmin(accessToken).then((data) => setCategories(data));
-  }, [accessToken]);
+    getCategoriesForAdmin().then((data) => setCategories(data));
+  }, []);
   const handleOnChange = (e) => {
     e.preventDefault();
     setCategory(e.target.value);
   };
   const handleNewCategory = (e) => {
-    addNewCategory(category, accessToken)
+    addNewCategory(category)
       .then((data) => {
         if (data !== null || data !== "") {
           alert("카테고리가 등록되었습니다.");
@@ -44,7 +41,7 @@ export const CategoryList = () => {
 
   const handleDeleteCategory = (e) => {
     if (window.confirm("정말로 삭제하시겠습니까?")) {
-      deleteCategory(e.target.value, accessToken)
+      deleteCategory(e.target.value)
         .then((data) => {
           alert(data);
           window.location.reload();

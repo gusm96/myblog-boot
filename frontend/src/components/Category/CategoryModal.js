@@ -11,14 +11,14 @@ import {
   ModalTitle,
 } from "react-bootstrap";
 
-export const CategoryModal = ({ accessToken }) => {
+export const CategoryModal = () => {
   const [newCategory, setNewCategory] = useState("");
   const [categories, setCategories] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
   const handleNewCategory = (event) => {
     event.preventDefault();
-    addNewCategory(newCategory, accessToken)
+    addNewCategory(newCategory)
       .then((res) => {
         if (res.status === 200) {
           alert("카테고리 추가 완료");

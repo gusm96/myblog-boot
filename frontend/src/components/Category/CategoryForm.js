@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Form, InputGroup, Modal } from "react-bootstrap";
 import { addNewCategory, getCategories } from "../../services/categoryApi";
 
-export const CategoryForm = ({ formData, onChange, accessToken }) => {
+export const CategoryForm = ({ formData, onChange }) => {
   const [newCategory, setNewCategory] = useState("");
   const [categories, setCategories] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -15,7 +15,7 @@ export const CategoryForm = ({ formData, onChange, accessToken }) => {
 
   const handleNewCategory = (event) => {
     event.preventDefault();
-    addNewCategory(newCategory, accessToken)
+    addNewCategory(newCategory)
       .then((res) => {
         if (res.status === 200) {
           alert("카테고리 추가 완료");

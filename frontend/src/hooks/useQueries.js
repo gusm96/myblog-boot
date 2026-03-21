@@ -25,11 +25,11 @@ export const useCommentsQuery = (boardId) =>
     refetchOnReconnect: true,
   });
 
-export const useLikeStatusQuery = (boardId, accessToken, isLoggedIn) =>
+export const useLikeStatusQuery = (boardId, isLoggedIn) =>
   useQuery({
     queryKey: ["likeStatus", boardId],
     queryFn: () =>
-      isLoggedIn ? getBoardLikeStatus(boardId, accessToken) : null,
+      isLoggedIn ? getBoardLikeStatus(boardId) : null,
     staleTime: 5 * 1000,
     gcTime: 5 * 1000,
     refetchOnMount: true,

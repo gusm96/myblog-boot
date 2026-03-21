@@ -11,8 +11,6 @@ import {
   undeleteBoard,
 } from "../../services/boardApi";
 import { Button, Form, InputGroup } from "react-bootstrap";
-import { useSelector } from "react-redux";
-import { selectAccessToken } from "../../redux/userSlice";
 import { getCategories } from "../../services/categoryApi";
 import "../Styles/Board/editor.css";
 
@@ -59,7 +57,6 @@ const EditorToolbar = ({ editor }) => {
 };
 
 export const BoardEditForm = () => {
-  const accessToken = useSelector(selectAccessToken);
   const { boardId } = useParams();
   const [board, setBoard] = useState({
     title: "",
@@ -78,7 +75,7 @@ export const BoardEditForm = () => {
 
   // 데이터 패치 (API 1회 호출)
   useEffect(() => {
-    getBoardForAdmin(boardId, accessToken).then((data) => {
+    getBoardForAdmin(boardId).then((data) => {
       setBoard({
         title: data.title,
         category: data.category,
@@ -87,7 +84,7 @@ export const BoardEditForm = () => {
       setHtmlContent(data.content);
     });
     getCategories().then((data) => setCategories(data));
-  }, [boardId, accessToken]);
+  }, [boardId]);
 
   // editor와 htmlContent가 모두 준비됐을 때 내용 로드 (emitUpdate: false — undo 히스토리 오염 방지)
   useEffect(() => {
@@ -100,7 +97,7 @@ export const BoardEditForm = () => {
     e.preventDefault();
     if (!editor) return;
     const htmlString = editor.getHTML();
-    editBoard(boardId, board, htmlString, accessToken)
+    editBoard(boardId, board, htmlString)
       .then((data) => {
         alert("게시글이 수정 되었습니다");
         window.location.href = `/management/boards/${data}`;
@@ -118,7 +115,7 @@ export const BoardEditForm = () => {
   const handleDelete = (e) => {
     e.preventDefault();
     if (window.confirm("정말로 삭제하시겠습니까?")) {
-      deleteBoard(boardId, accessToken)
+      deleteBoard(boardId)
         .then(() => window.history.go(-1))
         .catch((error) => console.log(error));
     }
@@ -127,7 +124,7 @@ export const BoardEditForm = () => {
   const handleUndelete = (e) => {
     e.preventDefault();
     if (window.confirm("삭제를 취소하시겠습니까?")) {
-      undeleteBoard(boardId, accessToken)
+      undeleteBoard(boardId)
         .then((res) => {
           if (res.status === 200) {
             window.location.href = "/management/temporary-storage";
@@ -144,7 +141,7 @@ export const BoardEditForm = () => {
         "영구 삭제시 게시글을 복구할 수 없습니다.\n정말로 삭제하시겠습니까?"
       )
     ) {
-      deletePermanently(boardId, accessToken)
+      deletePermanently(boardId)
         .then((res) => {
           if (res.status === 200) {
             window.location.href = "/management/temporary-storage";

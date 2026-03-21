@@ -3,8 +3,6 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { marked } from "marked";
-import { useSelector } from "react-redux";
-import { selectAccessToken } from "../../redux/userSlice";
 import { uploadBoard, uploadImageFile } from "../../services/boardApi";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { CategoryForm } from "../Category/CategoryForm";
@@ -58,7 +56,6 @@ export const BoardEditor = () => {
     category: "",
     images: [],
   });
-  const accessToken = useSelector(selectAccessToken);
 
   const editor = useEditor({
     extensions: [
@@ -83,7 +80,7 @@ export const BoardEditor = () => {
       if (!file || !editor) return;
       const fd = new FormData();
       fd.append("image", file);
-      uploadImageFile(fd, accessToken)
+      uploadImageFile(fd)
         .then((data) => {
           editor.chain().focus().setImage({ src: data.filePath }).run();
           setFormData((prev) => ({ ...prev, images: [...prev.images, data] }));
@@ -91,7 +88,7 @@ export const BoardEditor = () => {
         })
         .catch((error) => console.error("이미지 업로드 중 오류 발생:", error));
     },
-    [editor, accessToken]
+    [editor]
   );
 
   const handleMarkdownUpload = (e) => {
@@ -110,7 +107,7 @@ export const BoardEditor = () => {
     e.preventDefault();
     if (!editor) return;
     const htmlString = editor.getHTML();
-    uploadBoard(formData, htmlString, accessToken)
+    uploadBoard(formData, htmlString)
       .then((res) => {
         if (res.status === 200) {
           alert("게시글을 등록하였습니다.");
@@ -133,7 +130,6 @@ export const BoardEditor = () => {
         <CategoryForm
           formData={formData}
           onChange={handleChange}
-          accessToken={accessToken}
         />
       </InputGroup>
 

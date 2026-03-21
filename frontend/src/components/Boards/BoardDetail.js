@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import moment from "moment";
 import { useSelector } from "react-redux";
-import { selectAccessToken, selectIsLoggedIn } from "../../redux/userSlice";
+import { selectIsLoggedIn } from "../../redux/userSlice";
 import {
   addBoardLike,
   cancelBoardLike,
@@ -15,7 +15,6 @@ import "../Styles/Board/boardDetail.css";
 import { CommentForm } from "../Comments/CommentForm";
 const BoardDetail = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
-  const accessToken = useSelector(selectAccessToken);
   const { boardId } = useParams();
   const [board, setBoard] = useState({
     title: "",
@@ -37,9 +36,9 @@ const BoardDetail = () => {
     });
   };
 
-  const fetchBoardLikeStatus = async (boardId, accessToken, isLoggedIn) => {
+  const fetchBoardLikeStatus = async (boardId, isLoggedIn) => {
     if (isLoggedIn) {
-      const likeStatusData = await getBoardLikeStatus(boardId, accessToken);
+      const likeStatusData = await getBoardLikeStatus(boardId);
       setIsBoardLiked(likeStatusData);
     }
   };
@@ -47,10 +46,10 @@ const BoardDetail = () => {
   useEffect(() => {
     const fetchData = async () => {
       await fetchBoardData(boardId);
-      await fetchBoardLikeStatus(boardId, accessToken, isLoggedIn);
+      await fetchBoardLikeStatus(boardId, isLoggedIn);
     };
     fetchData();
-  }, [boardId, isLoggedIn, accessToken]);
+  }, [boardId, isLoggedIn]);
 
   const uploadDateFormat = moment(board.uploadDate).format("YYYY-MM-DD");
 
@@ -60,7 +59,7 @@ const BoardDetail = () => {
       alert("로그인이 필요한 서비스입니다."); // 로그인하지 않은 경우 경고 메시지 표시
       return; // 이벤트 핸들러 종료
     }
-    addBoardLike(boardId, accessToken)
+    addBoardLike(boardId)
       .then((data) => {
         setBoard((prevBoard) => ({ ...prevBoard, likes: data }));
         setIsBoardLiked(true);
@@ -74,7 +73,7 @@ const BoardDetail = () => {
       alert("로그인이 필요한 서비스입니다."); // 로그인하지 않은 경우 경고 메시지 표시
       return; // 이벤트 핸들러 종료
     }
-    cancelBoardLike(boardId, accessToken).then((data) => {
+    cancelBoardLike(boardId).then((data) => {
       setBoard((prevBoard) => ({ ...prevBoard, likes: data }));
       setIsBoardLiked(false);
     });
@@ -105,7 +104,7 @@ const BoardDetail = () => {
       </div>
       <hr></hr>
       {isLoggedIn ? (
-        <CommentForm boardId={boardId} accessToken={accessToken} />
+        <CommentForm boardId={boardId} />
       ) : (
         <p>로그인을 하면 댓글을 작성할 수 있습니다.</p>
       )}

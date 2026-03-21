@@ -10,6 +10,7 @@ import { selectAccessToken, selectIsLoggedIn } from "./redux/userSlice";
 import { useEffect } from "react";
 import { reissuingAccessToken } from "./services/authApi";
 import { updateUserAccessToken, userLogout } from "./redux/authAction";
+import { setAuthToken } from "./services/apiClient";
 import { JoinForm } from "./screens/Member/JoinForm";
 import { NotFound } from "./screens/error/NotFound";
 import { NavigateBack } from "./screens/error/NavigateBack";
@@ -32,6 +33,11 @@ function App() {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const access_token = useSelector(selectAccessToken);
   const dispatch = useDispatch();
+  // accessToken 변경 시 apiClient interceptor에 동기화
+  useEffect(() => {
+    setAuthToken(access_token);
+  }, [access_token]);
+
   useEffect(() => {
     // 로그인 상태면 access Token 주기적으로 검증.
     if (isLoggedIn && access_token !== null) {

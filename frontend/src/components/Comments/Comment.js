@@ -2,12 +2,11 @@ import React, { useState } from "react";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { addComment, getChildComments } from "../../services/boardApi";
 import { useSelector } from "react-redux";
-import { selectAccessToken, selectIsLoggedIn } from "../../redux/userSlice";
+import { selectIsLoggedIn } from "../../redux/userSlice";
 import { formatTimeAgo } from "../dateFormat";
 
 export const Comment = ({ boardId, comment }) => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
-  const accessToken = useSelector(selectAccessToken);
   const [reply, setReply] = useState({
     comment: "",
     parentId: comment.id,
@@ -36,7 +35,7 @@ export const Comment = ({ boardId, comment }) => {
   const handleOnSubmit = (e) => {
     e.preventDefault();
     // axios
-    addComment(boardId, reply, accessToken)
+    addComment(boardId, reply)
       .then((data) => {
         alert(data);
         window.location.reload();
