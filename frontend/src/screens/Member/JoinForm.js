@@ -1,9 +1,9 @@
 import React from "react";
-import { useState } from "react";
-import { Button, Col, Container, Form, Row } from "react-bootstrap";
+import { useState, useEffect } from "react";
+import { Button, Form } from "react-bootstrap";
 import { join } from "../../services/authApi";
-import { useEffect } from "react";
 import { useNavigate } from "react-router";
+import "../../components/Styles/css/form-container.css";
 
 export const JoinForm = () => {
   const navigate = useNavigate();
@@ -13,40 +13,29 @@ export const JoinForm = () => {
     password2: "",
     nickname: "",
   });
-  const [passwordMatch, setPasswordMatch] = useState(false);
+  const [passwordMatch, setPasswordMatch] = useState(true);
 
-  const isFormFilled = () => {
-    return Object.values(formData).every((field) => field !== "");
-  };
+  const isFormFilled = () => Object.values(formData).every((f) => f !== "");
 
-  // 비밀번호 일치 여부 상태 변수
   useEffect(() => {
     if (formData.password1 !== "" && formData.password2 !== "") {
-      setPasswordMatch(confirmPassword(formData.password1, formData.password2));
+      setPasswordMatch(formData.password1 === formData.password2);
     } else {
       setPasswordMatch(true);
     }
   }, [formData.password1, formData.password2]);
+
   const handleOnChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const confirmPassword = (password1, password2) => {
-    return password1 === password2;
-  };
   const handleSubmit = (e) => {
     e.preventDefault();
-    // 1. 비밀번호와 비밀번호 확인이 동일한지 확인.
-    if (!confirmPassword(formData.password1, formData.password2)) {
-      setPasswordMatch(false); // 비밀번호 불일치 상태로 설정
+    if (formData.password1 !== formData.password2) {
+      setPasswordMatch(false);
       return;
     }
-    setPasswordMatch(true); // 비밀번호 일치 상태로 설정
-
     join(formData)
       .then(() => {
         if (window.confirm("바로 로그인 하시겠습니까?")) {
@@ -56,90 +45,85 @@ export const JoinForm = () => {
         }
       })
       .catch((error) => {
-        alert(error.response.data);
+        alert(error.response?.data || "회원가입에 실패했습니다.");
       });
   };
+
   return (
-    <div>
-      <Container className="panel">
+    <div className="form-container">
+      <div className="auth-card">
+        <div className="auth-card-header">
+          <div className="auth-title">register</div>
+          <div className="auth-subtitle">새 계정을 만드세요</div>
+        </div>
+
         <Form onSubmit={handleSubmit}>
-          <Form.Group
-            as={Row}
-            className="mb-3"
-            controlId="formPlaintextUsername"
-          >
-            <Col sm>
-              <Form.Control
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleOnChange}
-                placeholder="아이디"
-              ></Form.Control>
-            </Col>
+          <Form.Group className="mb-3">
+            <Form.Control
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleOnChange}
+              placeholder="아이디"
+              autoComplete="username"
+              required
+            />
           </Form.Group>
-          <Form.Group
-            as={Row}
-            className="mb-3"
-            controlId="formPlaintextPassword1"
-          >
-            <Col sm>
-              <Form.Control
-                type="password"
-                name="password1"
-                placeholder="비밀번호"
-                value={formData.password1}
-                onChange={handleOnChange}
-                required
-              ></Form.Control>
-            </Col>
+
+          <Form.Group className="mb-3">
+            <Form.Control
+              type="password"
+              name="password1"
+              placeholder="비밀번호"
+              value={formData.password1}
+              onChange={handleOnChange}
+              autoComplete="new-password"
+              required
+            />
           </Form.Group>
-          <Form.Group
-            as={Row}
-            className="mb-3"
-            controlId="formPlaintextPassword2"
-          >
-            <Col sm>
-              <Form.Control
-                type="password"
-                name="password2"
-                placeholder="비밀번호 확인"
-                value={formData.password2}
-                onChange={handleOnChange}
-                required
-              ></Form.Control>
-              {!passwordMatch &&
-                formData.password1 !== "" &&
-                formData.password2 !== "" && (
-                  <p className="text-danger">비밀번호가 일치하지 않습니다.</p>
-                )}
-            </Col>
+
+          <Form.Group className="mb-3">
+            <Form.Control
+              type="password"
+              name="password2"
+              placeholder="비밀번호 확인"
+              value={formData.password2}
+              onChange={handleOnChange}
+              autoComplete="new-password"
+              required
+            />
+            {!passwordMatch && formData.password1 !== "" && formData.password2 !== "" && (
+              <Form.Text className="text-danger">
+                비밀번호가 일치하지 않습니다.
+              </Form.Text>
+            )}
           </Form.Group>
-          <Form.Group
-            as={Row}
-            className="mb-3"
-            controlId="formPlaintextNickname"
-          >
-            <Col sm>
-              <Form.Control
-                type="text"
-                name="nickname"
-                placeholder="닉네임"
-                value={formData.nickname}
-                onChange={handleOnChange}
-                required
-              ></Form.Control>
-            </Col>
+
+          <Form.Group className="mb-4">
+            <Form.Control
+              type="text"
+              name="nickname"
+              placeholder="닉네임"
+              value={formData.nickname}
+              onChange={handleOnChange}
+              required
+            />
           </Form.Group>
-          <Button
-            variant="primary"
-            type="submit"
-            disabled={!passwordMatch || !isFormFilled()}
-          >
-            가입하기
-          </Button>
+
+          <div className="auth-actions">
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={!passwordMatch || !isFormFilled()}
+            >
+              가입하기
+            </Button>
+            <Button variant="secondary" onClick={() => navigate("/login")}>
+              로그인으로
+            </Button>
+          </div>
         </Form>
-      </Container>
+      </div>
     </div>
   );
 };

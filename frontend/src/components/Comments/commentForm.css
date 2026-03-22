@@ -1,0 +1,50 @@
+/* ============================================================
+   Comment Form — Dark Dev Theme
+   ============================================================ */
+.comment-form {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.comment-form__textarea {
+  flex: 1;
+  min-height: 80px;
+  resize: vertical;
+  background-color: var(--bg-input) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary) !important;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  padding: 10px 14px;
+  font-family: var(--font-sans);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.comment-form__textarea:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+}
+.comment-form__textarea::placeholder {
+  color: var(--text-faint);
+}
+
+.comment-form__submit {
+  flex-shrink: 0;
+  align-self: flex-end;
+  min-width: 72px;
+  height: 40px;
+}
+
+/* Mobile: stack vertically */
+@media (max-width: 575px) {
+  .comment-form {
+    flex-direction: column;
+  }
+  .comment-form__submit {
+    width: 100%;
+    align-self: stretch;
+  }
+}

@@ -1,12 +1,41 @@
 /* ============================================================
-   Typography — Dark Dev Theme
+   Typography Utilities — Dark Dev Theme
    ============================================================ */
+
+/* ── Section / Page headers ──────────────────────────────── */
 .category-header {
   font-family: var(--font-mono);
-  color: var(--text-primary);
-  margin-bottom: 24px;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.category-header::before {
+  content: "//";
+  color: var(--accent-green);
+  font-weight: 700;
+}
+
+/* ── Page title ──────────────────────────────────────────── */
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
+}
+.page-title::before {
+  content: "# ";
+  color: var(--accent-orange);
+}
+
+/* ── Mono label ──────────────────────────────────────────── */
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
   color: var(--text-muted);
 }

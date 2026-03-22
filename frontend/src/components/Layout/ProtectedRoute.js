@@ -1,19 +1,18 @@
 import { useSelector, useDispatch } from "react-redux";
 import { selectIsLoggedIn, logout } from "../../redux/userSlice";
 import { getRoleFromToken } from "../../services/authApi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Col, Container, Row, Spinner } from "react-bootstrap";
 import { AdminNavBar } from "../Navbar/AdminNavBar";
 import { Navigate, Outlet, useLocation } from "react-router";
-import { useEffect } from "react";
 import { Header } from "./Header";
 
 export const ProtectedRoute = () => {
   const [role, setRole] = useState(null);
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useDispatch();
-  const headerTitle = "admin";
   const location = useLocation();
+
   useEffect(() => {
     if (isLoggedIn) {
       getRoleFromToken()
@@ -28,33 +27,38 @@ export const ProtectedRoute = () => {
 
   if (!isLoggedIn) {
     return <Navigate to="/login" state={{ from: location }} />;
-  } else if (role === null) {
+  }
+
+  if (role === null) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+      <div className="loading-center" style={{ height: "100vh" }}>
         <Spinner animation="border" role="status">
           <span className="visually-hidden">Loading...</span>
         </Spinner>
       </div>
     );
-  } else if (role === "ROLE_NORMAL") {
+  }
+
+  if (role === "ROLE_NORMAL") {
     alert("접근 권한이 없습니다.");
     return <Navigate to="/" />;
-  } else if (role === "ROLE_ADMIN") {
+  }
+
+  if (role === "ROLE_ADMIN") {
     return (
       <div>
-        <Header headerTitle={headerTitle} isLoggedIn={isLoggedIn} />
-        <main
-          className="inner"
-          style={{
-            marginTop: "30px",
-          }}
-        >
+        <Header headerTitle="admin" isLoggedIn={isLoggedIn} />
+        <main className="layout-main">
           <Container>
             <Row>
-              <Col xs="3">
-                <AdminNavBar />
+              {/* 사이드 내비게이션 — 모바일에서 아래로 이동 */}
+              <Col xs={12} md={3} className="order-2 order-md-1">
+                <div className="sidebar-sticky">
+                  <AdminNavBar />
+                </div>
               </Col>
-              <Col xs="9">
+              {/* 메인 컨텐츠 */}
+              <Col xs={12} md={9} className="order-1 order-md-2">
                 <Outlet />
               </Col>
             </Row>
@@ -63,5 +67,6 @@ export const ProtectedRoute = () => {
       </div>
     );
   }
+
   return null;
 };

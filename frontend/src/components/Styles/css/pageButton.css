@@ -4,24 +4,48 @@
 .page-buttons-container {
   display: flex;
   justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 4px;
-  margin: 28px 0 12px;
+  margin: 32px 0 16px;
 }
 
-.page-buttons-container button {
+.page-buttons-container .btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
   background-color: var(--bg-card);
   color: var(--text-secondary);
   border: 1px solid var(--border);
-  padding: 6px 14px;
-  cursor: pointer;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.82rem;
+  font-weight: 500;
   transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-
-.page-buttons-container button:hover {
+.page-buttons-container .btn:hover {
   color: var(--accent);
   background-color: rgba(88, 166, 255, 0.08);
   border-color: var(--accent);
+}
+.page-buttons-container .btn.active,
+.page-buttons-container .btn:focus-visible {
+  color: #0d1117;
+  background-color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+@media (max-width: 575px) {
+  .page-buttons-container {
+    gap: 3px;
+  }
+  .page-buttons-container .btn {
+    min-width: 32px;
+    height: 32px;
+    font-size: 0.78rem;
+  }
 }

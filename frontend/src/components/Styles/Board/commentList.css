@@ -1,76 +1,125 @@
 /* ============================================================
    Comment List — Dark Dev Theme
    ============================================================ */
-.comment-list-container {
-  margin-top: 24px;
+
+/* ── Section header ──────────────────────────────────────── */
+.comment-section-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.comment-section-title::before {
+  content: "//";
+  color: var(--accent-green);
+  font-weight: 700;
 }
 
+/* ── List container ──────────────────────────────────────── */
+.comment-list-container {
+  margin-top: 32px;
+}
 .comment-list {
   list-style-type: none;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
+/* ── Comment card ────────────────────────────────────────── */
 .comment-item {
   background-color: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  margin-bottom: 12px;
-  padding: 16px;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
   transition: border-color 0.2s;
 }
 .comment-item:hover {
-  border-color: rgba(88, 166, 255, 0.3);
+  border-color: rgba(88, 166, 255, 0.25);
 }
 
+/* ── Comment header ──────────────────────────────────────── */
 .comment-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
+/* Author */
 .writer {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.875rem;
   color: var(--accent);
+  line-height: 1;
 }
 .writer::before {
   content: "@";
   opacity: 0.7;
+  font-weight: 400;
 }
 
+/* Date */
 .upload-date {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  font-size: 0.72rem;
+  color: var(--text-faint);
 }
 
+/* ── Comment body ────────────────────────────────────────── */
 .comment-content {
   font-size: 0.9rem;
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
+/* ── Reply controls ──────────────────────────────────────── */
 .reply-container {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   margin-top: 10px;
+  flex-wrap: wrap;
 }
 
 .reply-list,
 .reply-btn {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--text-faint);
   cursor: pointer;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 4px;
-  transition: color 0.15s, background-color 0.15s;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+  line-height: 1.4;
 }
 .reply-list:hover,
 .reply-btn:hover {
   color: var(--accent);
   background-color: rgba(88, 166, 255, 0.08);
-  border: none;
+  border-color: rgba(88, 166, 255, 0.2);
   transform: none;
+}
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 575px) {
+  .comment-item {
+    padding: 12px 14px;
+  }
+  .comment-content {
+    font-size: 0.875rem;
+  }
 }
