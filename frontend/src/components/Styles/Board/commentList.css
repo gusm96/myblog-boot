@@ -1,5 +1,8 @@
+/* ============================================================
+   Comment List — Dark Dev Theme
+   ============================================================ */
 .comment-list-container {
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 .comment-list {
@@ -8,56 +11,66 @@
 }
 
 .comment-item {
-  background-color: #f8f9fa;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  margin-bottom: 15px;
-  padding: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 12px;
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+.comment-item:hover {
+  border-color: rgba(88, 166, 255, 0.3);
 }
 
 .comment-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
 .writer {
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--accent);
+}
+.writer::before {
+  content: "@";
+  opacity: 0.7;
 }
 
 .upload-date {
-  color: #868e96;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 .comment-content {
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
 }
 
 .reply-container {
-  width: 100px;
   display: flex;
-  justify-content: space-around;
+  gap: 12px;
+  margin-top: 10px;
 }
-.reply-list {
-  font-size: small;
-  transition: transform 0.3s ease;
-  cursor: pointer;
-  &:hover {
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 1px 3px;
-    border-radius: 5px;
-    transform: scale(1.2); /* 호버 시 1.1배 확대되도록 설정 */
-  }
-}
+
+.reply-list,
 .reply-btn {
-  font-size: small;
-  transition: transform 0.3s ease;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
   cursor: pointer;
-  &:hover {
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 1px 3px;
-    border-radius: 5px;
-    transform: scale(1.2); /* 호버 시 1.1배 확대되도록 설정 */
-  }
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: color 0.15s, background-color 0.15s;
+}
+.reply-list:hover,
+.reply-btn:hover {
+  color: var(--accent);
+  background-color: rgba(88, 166, 255, 0.08);
+  border: none;
+  transform: none;
 }

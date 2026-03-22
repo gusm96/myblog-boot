@@ -1,30 +1,37 @@
-/* Tiptap ProseMirror 에디터 스타일 */
-
+/* ============================================================
+   Tiptap Editor — Dark Dev Theme
+   ============================================================ */
 .tiptap-wrapper {
-  border: 3px solid lightgray;
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   overflow: hidden;
+  background-color: var(--bg-card);
 }
 
 .tiptap-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  padding: 8px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  padding: 8px 12px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
 }
 
 .tiptap-toolbar .btn {
   min-width: 32px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   padding: 2px 8px;
+  font-family: var(--font-mono);
 }
 
+/* ProseMirror editor area */
 .ProseMirror {
   min-height: 500px;
-  padding: 20px;
+  padding: 20px 24px;
   outline: none;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.7;
 }
 
 .ProseMirror > * + * {
@@ -33,11 +40,13 @@
 
 .ProseMirror p {
   margin: 0 0 0.5em 0;
+  color: var(--text-primary);
 }
 
 .ProseMirror h1,
 .ProseMirror h2,
 .ProseMirror h3 {
+  color: var(--text-primary);
   line-height: 1.2;
   margin: 1em 0 0.4em;
 }
@@ -46,52 +55,61 @@
 .ProseMirror ol {
   padding-left: 1.5rem;
   margin: 0.4em 0;
+  color: var(--text-primary);
 }
 
 .ProseMirror blockquote {
-  border-left: 4px solid #ced4da;
+  border-left: 3px solid var(--accent);
   padding-left: 1rem;
   margin: 0.6em 0;
-  color: #6c757d;
+  color: var(--text-secondary);
+  background: rgba(88, 166, 255, 0.05);
 }
 
 .ProseMirror pre {
-  background-color: #f1f3f5;
-  border-radius: 4px;
-  padding: 0.8rem 1rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
   overflow-x: auto;
 }
 
 .ProseMirror pre code {
   background: none;
-  color: inherit;
+  color: var(--accent-green);
+  font-family: var(--font-mono);
   font-size: 0.875rem;
   padding: 0;
 }
 
 .ProseMirror code {
-  background-color: #f1f3f5;
-  border-radius: 2px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: var(--font-mono);
   font-size: 0.875rem;
-  padding: 0.1em 0.3em;
+  padding: 0.1em 0.4em;
+  color: var(--accent-purple);
 }
 
 .ProseMirror img {
   max-width: 100%;
   height: auto;
+  border-radius: 6px;
 }
 
 .ProseMirror hr {
   border: none;
-  border-top: 2px solid #dee2e6;
-  margin: 1em 0;
+  border-top: 1px solid var(--border);
+  margin: 1.2em 0;
 }
 
-/* placeholder */
+/* Placeholder */
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: #adb5bd;
+  color: var(--text-muted);
   pointer-events: none;
   float: left;
   height: 0;
+  font-style: italic;
 }

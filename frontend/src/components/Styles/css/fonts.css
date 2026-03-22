@@ -1,5 +1,12 @@
+/* ============================================================
+   Typography — Dark Dev Theme
+   ============================================================ */
 .category-header {
-  font-family: "Playfair Display", serif;
-  color: black;
-  margin-bottom: 30px;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }

@@ -1,23 +1,50 @@
+/* ============================================================
+   Header — Dark Dev Theme
+   ============================================================ */
 #header {
-  border-bottom: 1px solid #eee;
-  background-color: gainsboro;
-  font-weight: bolder;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
+
+/* Blog title */
 #header h1 {
-  font-family: "Playfair Display", serif;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
+
+/* Terminal-style "> " prefix */
+#header .navbar-brand h1::before {
+  content: "> ";
+  color: var(--accent-green);
+  font-weight: 700;
+}
+
+/* Inner max-width container */
 .inner {
   position: relative;
   max-width: 1080px;
   margin: 0 auto;
   text-decoration: none;
 }
+
+/* Nav links */
 .nav-link {
-  padding: 10px;
-  margin-right: 10px;
-  margin-bottom: 0px;
-  transition: transform 0.3s ease;
-  &:hover {
-    transform: scale(1.05);
-  }
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary) !important;
+  border-radius: 6px;
+  margin-right: 4px;
+  transition: color 0.2s, background-color 0.2s;
+}
+.nav-link:hover {
+  color: var(--accent) !important;
+  background-color: rgba(88, 166, 255, 0.08);
+  transform: none;
 }

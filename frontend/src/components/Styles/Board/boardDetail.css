@@ -1,23 +1,91 @@
+/* ============================================================
+   Board Detail — Dark Dev Theme
+   ============================================================ */
 .board-info {
   display: flex;
   justify-content: space-between;
-}
-.board-like-count {
-  margin-left: 10px;
-}
-.board-like-status {
-  color: red;
-  cursor: pointer;
-}
-.board-content {
-  margin-bottom: 20px;
-  color: black;
+  align-items: center;
+  padding: 12px 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
+.board-like-count {
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.board-like-status {
+  color: var(--accent-red);
+  cursor: pointer;
+}
+
+/* Board body content — article typography */
+.board-content {
+  margin-bottom: 24px;
+  color: var(--text-primary);
+  line-height: 1.8;
+  font-size: 0.975rem;
+}
+
+/* Headings inside board content */
+.board-content h1,
+.board-content h2,
+.board-content h3 {
+  color: var(--text-primary);
+  margin: 1.4em 0 0.5em;
+  font-family: var(--font-sans);
+}
+
+/* Code blocks inside board content */
+.board-content pre,
+.board-content code {
+  font-family: var(--font-mono);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.board-content pre {
+  padding: 16px;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+.board-content code {
+  padding: 2px 6px;
+  font-size: 0.875em;
+  color: var(--accent-purple);
+}
+.board-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-primary);
+}
+
+/* Blockquote */
+.board-content blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 8px 16px;
+  margin: 1em 0;
+  background-color: rgba(88, 166, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+/* Links in content */
+.board-content a {
+  color: var(--accent);
+}
+.board-content a:hover {
+  color: var(--accent-hover);
+}
+
+/* Heart icon */
 .fa-heart {
   cursor: pointer;
-  transition: transform 0.3s ease;
-  &:hover {
-    transform: scale(1.2); /* 호버 시 1.1배 확대되도록 설정 */
-  }
+  transition: transform 0.2s ease;
+}
+.fa-heart:hover {
+  transform: scale(1.2);
 }

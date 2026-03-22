@@ -1,21 +1,27 @@
+/* ============================================================
+   Page Buttons — Dark Dev Theme
+   ============================================================ */
 .page-buttons-container {
   display: flex;
   justify-content: center;
-  margin-top: 20px; /* 필요에 따라 조절하세요 */
+  gap: 4px;
+  margin: 28px 0 12px;
 }
 
 .page-buttons-container button {
-  background-color: gray;
-  color: white;
-  border: 1px solid gray;
-  padding: 8px 16px;
-  margin: 0 5px;
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
 }
 
 .page-buttons-container button:hover {
-  color: black;
-  background-color: ivory;
-  border: 1px solid black;
+  color: var(--accent);
+  background-color: rgba(88, 166, 255, 0.08);
+  border-color: var(--accent);
 }
