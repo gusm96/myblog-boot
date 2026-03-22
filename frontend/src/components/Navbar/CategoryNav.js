@@ -8,7 +8,7 @@ export const CategoryNav = () => {
   useEffect(() => {
     getCategoriesV2()
       .then((data) => setCategories(data))
-      .catch((error) => console.log(error));
+      .catch(() => {});
   }, []);
   return (
     <ListGroup id="category-list-group">

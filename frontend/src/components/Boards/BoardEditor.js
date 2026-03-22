@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useNavigate } from "react-router";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -51,6 +52,7 @@ const EditorToolbar = ({ editor }) => {
 };
 
 export const BoardEditor = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -86,7 +88,7 @@ export const BoardEditor = () => {
           setFormData((prev) => ({ ...prev, images: [...prev.images, data] }));
           e.target.value = "";
         })
-        .catch((error) => console.error("이미지 업로드 중 오류 발생:", error));
+        .catch(() => {});
     },
     [editor]
   );
@@ -111,10 +113,10 @@ export const BoardEditor = () => {
       .then((res) => {
         if (res.status === 200) {
           alert("게시글을 등록하였습니다.");
-          window.location.href = `/management/boards/${res.data}`;
+          navigate(`/management/boards/${res.data}`);
         }
       })
-      .catch((error) => console.log(error));
+      .catch(() => {});
   };
 
   return (

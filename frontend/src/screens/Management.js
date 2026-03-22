@@ -7,7 +7,7 @@ import { Container } from "react-bootstrap";
 
 export const Management = () => {
   const [boards, setBoards] = useState([]);
-  const [pageCount, setPageCount] = useState("");
+  const [pageCount, setPageCount] = useState(0);
   const [page] = useSearchParams("p");
   useEffect(() => {
     getBoardList(page)
@@ -15,7 +15,7 @@ export const Management = () => {
         setBoards(data.list);
         setPageCount(data.totalPage);
       })
-      .catch((error) => console.log(error));
+      .catch(() => {});
   }, [page]);
   return (
     <Container>

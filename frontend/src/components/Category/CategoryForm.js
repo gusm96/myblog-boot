@@ -10,7 +10,7 @@ export const CategoryForm = ({ formData, onChange }) => {
   useEffect(() => {
     getCategories()
       .then((data) => setCategories(data))
-      .catch((error) => console.log(error));
+      .catch(() => {});
   }, []);
 
   const handleNewCategory = (event) => {
@@ -28,9 +28,7 @@ export const CategoryForm = ({ formData, onChange }) => {
           setNewCategory("");
         }
       })
-      .catch((error) => {
-        console.log(error);
-      });
+      .catch(() => {});
   };
 
   const handleSelectChange = (event) => {

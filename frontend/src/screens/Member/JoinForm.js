@@ -3,8 +3,10 @@ import { useState } from "react";
 import { Button, Col, Container, Form, Row } from "react-bootstrap";
 import { join } from "../../services/authApi";
 import { useEffect } from "react";
+import { useNavigate } from "react-router";
 
 export const JoinForm = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password1: "",
@@ -48,9 +50,9 @@ export const JoinForm = () => {
     join(formData)
       .then(() => {
         if (window.confirm("바로 로그인 하시겠습니까?")) {
-          window.location.href = "/login";
+          navigate("/login");
         } else {
-          window.location.href = "/";
+          navigate("/");
         }
       })
       .catch((error) => {

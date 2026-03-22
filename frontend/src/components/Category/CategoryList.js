@@ -35,7 +35,6 @@ export const CategoryList = () => {
       })
       .catch((error) => {
         alert(error.message);
-        console.log(error);
       });
   };
 
@@ -48,7 +47,6 @@ export const CategoryList = () => {
         })
         .catch((error) => {
           alert(error.message);
-          console.log(error);
         });
     }
     return;

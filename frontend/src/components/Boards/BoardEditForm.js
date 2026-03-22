@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -57,6 +57,7 @@ const EditorToolbar = ({ editor }) => {
 };
 
 export const BoardEditForm = () => {
+  const navigate = useNavigate();
   const { boardId } = useParams();
   const [board, setBoard] = useState({
     title: "",
@@ -100,11 +101,9 @@ export const BoardEditForm = () => {
     editBoard(boardId, board, htmlString)
       .then((data) => {
         alert("게시글이 수정 되었습니다");
-        window.location.href = `/management/boards/${data}`;
+        navigate(`/management/boards/${data}`);
       })
-      .catch((error) => {
-        console.log(error);
-      });
+      .catch(() => {});
   };
 
   const handleChange = (e) => {
@@ -117,7 +116,7 @@ export const BoardEditForm = () => {
     if (window.confirm("정말로 삭제하시겠습니까?")) {
       deleteBoard(boardId)
         .then(() => window.history.go(-1))
-        .catch((error) => console.log(error));
+        .catch(() => {});
     }
   };
 
@@ -127,10 +126,10 @@ export const BoardEditForm = () => {
       undeleteBoard(boardId)
         .then((res) => {
           if (res.status === 200) {
-            window.location.href = "/management/temporary-storage";
+            navigate("/management/temporary-storage");
           }
         })
-        .catch((error) => console.log(error));
+        .catch(() => {});
     }
   };
 
@@ -144,10 +143,10 @@ export const BoardEditForm = () => {
       deletePermanently(boardId)
         .then((res) => {
           if (res.status === 200) {
-            window.location.href = "/management/temporary-storage";
+            navigate("/management/temporary-storage");
           }
         })
-        .catch((error) => console.log(error));
+        .catch(() => {});
     }
   };
 

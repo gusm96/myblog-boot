@@ -30,7 +30,7 @@ export const Comment = ({ boardId, comment }) => {
         setChild(data);
         setShowReply(true);
       })
-      .catch((error) => console.log(error));
+      .catch(() => {});
   };
   const handleOnSubmit = (e) => {
     e.preventDefault();
@@ -40,7 +40,7 @@ export const Comment = ({ boardId, comment }) => {
         alert(data);
         window.location.reload();
       })
-      .catch((error) => console.log(error));
+      .catch(() => {});
   };
   return (
     <div>

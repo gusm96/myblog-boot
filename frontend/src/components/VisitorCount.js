@@ -11,8 +11,6 @@ const VisitorCount = () => {
   });
 
   const [loading, setLoading] = useState(true);
-  // Axios 기본 설정
-  axios.defaults.withCredentials = true;
   useEffect(() => {
     const fetchVisitorData = async () => {
       try {
@@ -35,7 +33,7 @@ const VisitorCount = () => {
     return (
       <div
         className="d-flex justify-content-center align-items-center"
-        style={{ height: "100vh" }}
+        style={{ height: "200px" }}
       >
         <Spinner animation="border" role="status">
           <span className="visually-hidden">Loading...</span>

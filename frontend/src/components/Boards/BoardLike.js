@@ -28,7 +28,7 @@ export const BoardLike = ({ boardId }) => {
     if (isLoggedIn) {
       getBoardLikeStatus(boardId)
         .then((data) => setIsLiked(data))
-        .catch((error) => console.log(error.message));
+        .catch(() => {});
     }
   }, [boardLikes, isLoggedIn, boardId]);
 
@@ -43,7 +43,7 @@ export const BoardLike = ({ boardId }) => {
         setLikeCount(data);
         setIsLiked(true);
       })
-      .catch((error) => console.log(error));
+      .catch(() => {});
   };
 
   const handleBoardLikeCancel = (e) => {

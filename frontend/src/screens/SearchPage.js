@@ -8,7 +8,7 @@ import { PageButton } from "../components/Boards/PageButton";
 
 export const SearchPage = () => {
   const [boards, setBoards] = useState([]);
-  const [pageCount, setPageCount] = useState("");
+  const [pageCount, setPageCount] = useState(0);
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const type = params.get("type");
@@ -20,7 +20,7 @@ export const SearchPage = () => {
         setBoards(data.list);
         setPageCount(data.totalPage);
       })
-      .catch((error) => console.log(error));
+      .catch(() => {});
   }, [type, contents, page]);
   return (
     <Container>

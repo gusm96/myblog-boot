@@ -32,9 +32,7 @@ export const CategoryModal = () => {
           setNewCategory("");
         }
       })
-      .catch((error) => {
-        console.log(error);
-      });
+      .catch(() => {});
   };
   // 모달 클로즈 핸들러
   const handleCloseModal = () => {

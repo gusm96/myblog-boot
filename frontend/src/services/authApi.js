@@ -33,9 +33,7 @@ export const login = (formData) => {
 };
 
 export const logout = () => {
-  return axios
-    .get(`${MEMBER_LOGOUT}`, { withCredentials: true })
-    .catch((error) => console.log(error));
+  return axios.get(`${MEMBER_LOGOUT}`, { withCredentials: true });
 };
 
 // 토큰 재발급은 인증 쿠키 기반 — 인터셉터 토큰 불필요

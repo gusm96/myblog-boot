@@ -10,7 +10,7 @@ export const PageByCategory = () => {
   const [page] = useSearchParams("p");
   const { categoryName } = useParams();
   const [boards, setBoards] = useState([]);
-  const [pageCount, setPageCount] = useState("");
+  const [pageCount, setPageCount] = useState(0);
 
   useEffect(() => {
     getCategoryOfBoardList(categoryName, page)
@@ -18,7 +18,7 @@ export const PageByCategory = () => {
         setBoards(data.list);
         setPageCount(data.totalPage);
       })
-      .catch((error) => console.log(error));
+      .catch(() => {});
   }, [categoryName, page]);
 
   return (

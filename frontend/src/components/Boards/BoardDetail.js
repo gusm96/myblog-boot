@@ -10,6 +10,7 @@ import {
   getBoardLikeStatus,
 } from "../../services/boardApi";
 import Parser from "html-react-parser";
+import DOMPurify from "dompurify";
 import { CommentList } from "../Comments/CommentList";
 import "../Styles/Board/boardDetail.css";
 import { CommentForm } from "../Comments/CommentForm";
@@ -64,7 +65,7 @@ const BoardDetail = () => {
         setBoard((prevBoard) => ({ ...prevBoard, likes: data }));
         setIsBoardLiked(true);
       })
-      .catch((error) => console.log(error));
+      .catch(() => {});
   };
 
   const handleBoardLikeCancel = (e) => {
@@ -82,7 +83,7 @@ const BoardDetail = () => {
     <div>
       <h1>{board.title}</h1>
       <hr></hr>
-      <div>{Parser(board.content)}</div>
+      <div>{Parser(DOMPurify.sanitize(board.content))}</div>
       <div className="board-info">
         <div className="board-like">
           <span>조회수 {board.views}</span>

@@ -6,7 +6,7 @@ import { PageButton } from "../components/Boards/PageButton";
 
 export const TemporaryStorage = () => {
   const [boards, setBoards] = useState([]);
-  const [pageCount, setPageCount] = useState("");
+  const [pageCount, setPageCount] = useState(0);
   const [page] = useSearchParams("p");
   useEffect(() => {
     getDeletedBoards(page)
@@ -14,7 +14,7 @@ export const TemporaryStorage = () => {
         setBoards(data.list);
         setPageCount(data.totalPage);
       })
-      .catch((error) => console.log(error));
+      .catch(() => {});
   }, [page]);
   return (
     <div>

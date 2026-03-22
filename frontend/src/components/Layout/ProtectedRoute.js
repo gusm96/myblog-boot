@@ -1,8 +1,8 @@
-import { useSelector } from "react-redux";
-import { selectIsLoggedIn } from "../../redux/userSlice";
+import { useSelector, useDispatch } from "react-redux";
+import { selectIsLoggedIn, logout } from "../../redux/userSlice";
 import { getRoleFromToken } from "../../services/authApi";
 import { useState } from "react";
-import { Col, Container, Row } from "react-bootstrap";
+import { Col, Container, Row, Spinner } from "react-bootstrap";
 import { AdminNavBar } from "../Navbar/AdminNavBar";
 import { Navigate, Outlet, useLocation } from "react-router";
 import { useEffect } from "react";
@@ -11,6 +11,7 @@ import { Header } from "./Header";
 export const ProtectedRoute = () => {
   const [role, setRole] = useState(null);
   const isLoggedIn = useSelector(selectIsLoggedIn);
+  const dispatch = useDispatch();
   const headerTitle = "admin";
   const location = useLocation();
   useEffect(() => {
@@ -18,14 +19,23 @@ export const ProtectedRoute = () => {
       getRoleFromToken()
         .then((data) => setRole(data))
         .catch((error) => {
-          if (error.response.data === "토큰이 만료되었습니다.") {
+          if (error.response?.data === "토큰이 만료되었습니다.") {
+            dispatch(logout());
           }
         });
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, dispatch]);
 
   if (!isLoggedIn) {
     return <Navigate to="/login" state={{ from: location }} />;
+  } else if (role === null) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
   } else if (role === "ROLE_NORMAL") {
     alert("접근 권한이 없습니다.");
     return <Navigate to="/" />;

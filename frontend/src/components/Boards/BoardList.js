@@ -12,12 +12,11 @@ const BoardList = ({ boards, path }) => {
     },
   };
   const truncateText = (text, maxLength) => {
-    text.replace(/<[^>]*>/g, "");
-    if (text.length <= maxLength) {
-      return text;
-    } else {
-      return text.slice(0, maxLength) + "...";
+    const plainText = text.replace(/<[^>]*>/g, "");
+    if (plainText.length <= maxLength) {
+      return plainText;
     }
+    return plainText.slice(0, maxLength) + "...";
   };
   const cardStyle = {
     textDecoration: "none",
