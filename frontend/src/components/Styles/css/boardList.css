@@ -41,8 +41,8 @@
   color: var(--accent);
 }
 
-/* ── Preview content ─────────────────────────────────────── */
-.board-content {
+/* ── Preview content (목록 컨텍스트에서만 적용) ──────────── */
+.board-list .board-content {
   overflow: hidden;
   max-width: 100%;
   margin-bottom: 12px;

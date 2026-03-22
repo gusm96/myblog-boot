@@ -3,12 +3,23 @@ import { Button, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from "
 import { useSelector } from "react-redux";
 import { selectIsLoggedIn } from "../../redux/userSlice";
 import { addComment } from "../../services/boardApi";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../services/queryKeys";
 import "./commentForm.css";
 
 export const CommentForm = ({ boardId }) => {
-  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const isLoggedIn  = useSelector(selectIsLoggedIn);
+  const queryClient = useQueryClient();
   const [isLoggedInModal, setIsLoggedInModal] = useState(false);
   const [commentData, setCommentData] = useState({ comment: "", parentId: "" });
+
+  const addCommentMutation = useMutation({
+    mutationFn: (data) => addComment(boardId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(boardId) });
+      setCommentData({ comment: "", parentId: "" });
+    },
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,9 +37,7 @@ export const CommentForm = ({ boardId }) => {
       alert("댓글의 내용을 입력하세요.");
       return;
     }
-    addComment(boardId, commentData)
-      .then(() => window.location.reload())
-      .catch(() => {});
+    addCommentMutation.mutate(commentData);
   };
 
   return (
@@ -42,8 +51,13 @@ export const CommentForm = ({ boardId }) => {
           value={commentData.comment}
           onChange={handleChange}
         />
-        <Button variant="primary" type="submit" className="comment-form__submit">
-          작성
+        <Button
+          variant="primary"
+          type="submit"
+          className="comment-form__submit"
+          disabled={addCommentMutation.isPending}
+        >
+          {addCommentMutation.isPending ? "작성 중..." : "작성"}
         </Button>
       </form>
 

@@ -25,7 +25,17 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 // context7 TanStack Query 공식 문서 기반:
 // CSR SPA에서 QueryClient는 모듈 최상위에서 1회 생성 (렌더마다 재생성 방지)
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime:            1000 * 60 * 3,   // 3분: 기본 fresh 유지 시간
+      gcTime:               1000 * 60 * 10,  // 10분: 미사용 캐시 보관 시간
+      retry:                1,               // 실패 시 1회만 재시도 (기본 3회 감소)
+      refetchOnWindowFocus: false,           // 탭 전환 시 자동 재요청 OFF
+      refetchOnReconnect:   true,            // 네트워크 재연결 시 재요청 ON
+    },
+  },
+});
 
 export default App;
 

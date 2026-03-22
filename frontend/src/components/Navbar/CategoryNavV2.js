@@ -4,15 +4,17 @@ import { getCategoriesV2 } from "../../services/categoryApi";
 import { ListGroup, ListGroupItem } from "react-bootstrap";
 import { Link, useParams, useLocation } from "react-router";
 import "../Styles/css/listGroup.css";
+import { queryKeys } from "../../services/queryKeys";
 
 export const CategoryNavV2 = () => {
   const location = useLocation();
   const { categoryName } = useParams();
 
   const { isPending, isError, data } = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategoriesV2,
-    staleTime: 600000,
+    queryKey: queryKeys.categories.all(),
+    queryFn:  getCategoriesV2,
+    staleTime: 30 * 60 * 1000,   // 30분
+    gcTime:    60 * 60 * 1000,   // 60분 (gcTime > staleTime 보장)
   });
 
   const isActive = (name) => {

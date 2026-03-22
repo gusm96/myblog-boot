@@ -6,23 +6,25 @@ import { getBoardList } from "../services/boardApi";
 import { SearchBar } from "../components/SearchBar";
 import { PageButton } from "../components/Boards/PageButton";
 import "../components/Styles/css/fonts.css";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { queryKeys } from "../services/queryKeys";
+
 const Home = () => {
   const [page] = useSearchParams("p");
-  const { data, isPending, error } = useQuery({
-    queryKey: ["boardList", page],
-    queryFn: () => getBoardList(page),
-    staleTime: 5 * 1000,
-    gcTime: 5 * 1000,
+  const { data, isPending, error, isPlaceholderData } = useQuery({
+    queryKey: queryKeys.boards.list(page.toString()),
+    queryFn:  () => getBoardList(page),
+    staleTime: 5  * 60 * 1000,
+    gcTime:    15 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 
-  if (isPending) return <div>Loding...</div>;
-
-  if (error) return <ErrorMessage message={error.message} />;
+  if (isPending) return <div>Loading...</div>;
+  if (error)     return <ErrorMessage message={error.message} />;
 
   return (
-    <Container>
+    <Container style={{ opacity: isPlaceholderData ? 0.6 : 1 }}>
       <SearchBar />
       <BoardList boards={data.list} path="/boards" />
       <PageButton pageCount={data.totalPage} path="/boards?" />

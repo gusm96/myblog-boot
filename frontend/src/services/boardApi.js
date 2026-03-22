@@ -104,6 +104,12 @@ export const getBoardLikeStatus = (boardId) => {
     .then((res) => res.data);
 };
 
+export const getBoardLikeCount = (boardId) => {
+  return apiClient
+    .get(`${BOARD_CRUD}/${boardId}/likes`)
+    .then((res) => res.data);
+};
+
 export const uploadImageFile = (formData) => {
   return apiClient
     .post(`${IMAGE_FILE_CRUD}`, formData, {

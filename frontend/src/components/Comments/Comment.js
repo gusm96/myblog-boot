@@ -4,44 +4,46 @@ import { addComment, getChildComments } from "../../services/boardApi";
 import { useSelector } from "react-redux";
 import { selectIsLoggedIn } from "../../redux/userSlice";
 import { formatTimeAgo } from "../dateFormat";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../services/queryKeys";
 
 export const Comment = ({ boardId, comment }) => {
-  const isLoggedIn = useSelector(selectIsLoggedIn);
-  const [reply, setReply] = useState({
-    comment: "",
-    parentId: comment.id,
-  });
-  const [showReply, setShowReply] = useState(false);
+  const isLoggedIn  = useSelector(selectIsLoggedIn);
+  const queryClient = useQueryClient();
+  const [reply, setReply]               = useState({ comment: "", parentId: comment.id });
+  const [showReply, setShowReply]       = useState(false);
   const [showReplyForm, setShowReplyForm] = useState(false);
 
-  const [child, setChild] = useState([]);
+  // 자식 댓글: 펼칠 때만 요청, 이후 캐시 재사용
+  const { data: children = [] } = useQuery({
+    queryKey: queryKeys.comments.children(comment.id),
+    queryFn:  () => getChildComments(comment.id),
+    enabled:  showReply,
+    staleTime: 30 * 1000,
+    gcTime:     5 * 60 * 1000,
+  });
+
+  const replyMutation = useMutation({
+    mutationFn: (replyData) => addComment(boardId, replyData),
+    onSuccess: (data) => {
+      alert(data);
+      queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(boardId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.comments.children(comment.id) });
+      setReply({ comment: "", parentId: comment.id });
+      setShowReplyForm(false);
+    },
+  });
 
   const handleOnChange = (e) => {
     e.preventDefault();
-    setReply((prevReply) => ({
-      ...prevReply,
-      comment: e.target.value,
-    }));
+    setReply((prev) => ({ ...prev, comment: e.target.value }));
   };
 
-  const handleShowChild = (parentId) => {
-    getChildComments(parentId)
-      .then((data) => {
-        setChild(data);
-        setShowReply(true);
-      })
-      .catch(() => {});
-  };
   const handleOnSubmit = (e) => {
     e.preventDefault();
-    // axios
-    addComment(boardId, reply)
-      .then((data) => {
-        alert(data);
-        window.location.reload();
-      })
-      .catch(() => {});
+    replyMutation.mutate(reply);
   };
+
   return (
     <div>
       <div className="comment-header">
@@ -51,10 +53,7 @@ export const Comment = ({ boardId, comment }) => {
       <p className="comment-content">{comment.comment}</p>
       <div className="reply-container">
         {comment.childCount > 0 ? (
-          <span
-            className="reply-list"
-            onClick={() => handleShowChild(comment.id)}
-          >
+          <span className="reply-list" onClick={() => setShowReply(true)}>
             답글보기({comment.childCount})
           </span>
         ) : null}
@@ -67,15 +66,13 @@ export const Comment = ({ boardId, comment }) => {
       {showReply ? (
         <div className="comment-list-container">
           <ul className="comment-list">
-            {child.map((comment) => (
-              <li key={comment.id} className="comment-item">
+            {children.map((child) => (
+              <li key={child.id} className="comment-item">
                 <div className="comment-header">
-                  <span className="writer">{comment.writer}</span>
-                  <span className="upload-date">
-                    {formatTimeAgo(comment.write_date)}
-                  </span>
+                  <span className="writer">{child.writer}</span>
+                  <span className="upload-date">{formatTimeAgo(child.write_date)}</span>
                 </div>
-                <p className="comment-content">{comment.comment}</p>
+                <p className="comment-content">{child.comment}</p>
               </li>
             ))}
           </ul>
@@ -83,7 +80,7 @@ export const Comment = ({ boardId, comment }) => {
       ) : null}
       {showReplyForm ? (
         <div>
-          <hr></hr>
+          <hr />
           <Form>
             <InputGroup>
               <InputGroup.Text>답글</InputGroup.Text>
@@ -94,7 +91,11 @@ export const Comment = ({ boardId, comment }) => {
                 onChange={handleOnChange}
                 placeholder="댓글을 입력하세요."
               />
-              <Button type="submit" onClick={handleOnSubmit}>
+              <Button
+                type="submit"
+                onClick={handleOnSubmit}
+                disabled={replyMutation.isPending}
+              >
                 작성
               </Button>
               <Button type="button" onClick={() => setShowReplyForm(false)}>
