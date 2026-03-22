@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import moment from "moment";
+import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import { selectIsLoggedIn } from "../../redux/userSlice";
 import {
@@ -51,7 +51,7 @@ const BoardDetail = () => {
     fetchData();
   }, [boardId, isLoggedIn]);
 
-  const uploadDateFormat = moment(board.uploadDate).format("YYYY-MM-DD");
+  const uploadDateFormat = dayjs(board.uploadDate).format("YYYY-MM-DD");
 
   const handleBoardLike = (e) => {
     e.preventDefault();

@@ -8,7 +8,7 @@ import { useBoardQuery, useLikeStatusQuery } from "../../hooks/useQueries";
 import { ErrorMessage } from "../ErrorMessage";
 import { CommentForm } from "../Comments/CommentForm";
 import { CommentList } from "../Comments/CommentList";
-import moment from "moment";
+import dayjs from "dayjs";
 import { BoardLike } from "./BoardLike";
 
 export const BoardDetailV2 = () => {
@@ -31,7 +31,7 @@ export const BoardDetailV2 = () => {
           <br></br>
           <BoardLike boardId={board.data.id} likes={board.data.likes} />
         </div>
-        <span>{moment(board.data.createDate).format("YYYY-MM-DD")}</span>
+        <span>{dayjs(board.data.createDate).format("YYYY-MM-DD")}</span>
       </div>
       <hr></hr>
       {isLoggedIn ? (
