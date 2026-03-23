@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { Container } from "react-bootstrap";
+import { Container } from "../components/Styles/Container/Container.style";
 import { useParams } from "react-router";
 import { SearchBar } from "../components/SearchBar";
 import BoardList from "../components/Boards/BoardList";
