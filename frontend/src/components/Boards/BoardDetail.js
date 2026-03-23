@@ -19,7 +19,7 @@ export const BoardDetail = () => {
   const board = useBoardQuery(boardId);
   const likeStatus = useLikeStatusQuery(boardId, isLoggedIn);
 
-  if (board.isLoading || likeStatus.isLoading) {
+  if (board.isPending) {
     return (
       <div className="loading-center">
         <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem" }}>loading...</span>
