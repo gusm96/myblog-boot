@@ -31,19 +31,17 @@ export const BoardEditForm = () => {
 
   // 게시글 데이터 조회
   const { data: boardData } = useQuery({
-    queryKey: queryKeys.admin.board(boardId),
-    queryFn:  () => getBoardForAdmin(boardId),
-    enabled:  !!boardId,
-    staleTime:  5 * 60 * 1000,
-    gcTime:    15 * 60 * 1000,
+    queryKey:  queryKeys.admin.board(boardId),
+    queryFn:   () => getBoardForAdmin(boardId),
+    enabled:   !!boardId,
+    staleTime: 5 * 60 * 1000,
   });
 
   // 카테고리 목록 조회
   const { data: categories = [] } = useQuery({
-    queryKey: queryKeys.categories.list(),
-    queryFn:  getCategories,
+    queryKey:  queryKeys.categories.list(),
+    queryFn:   getCategories,
     staleTime: 30 * 60 * 1000,
-    gcTime:    60 * 60 * 1000,
   });
 
   // 게시글 데이터 → 폼 상태 동기화
@@ -70,6 +68,7 @@ export const BoardEditForm = () => {
     mutationFn: ({ board: b, html }) => editBoard(boardId, b, html),
     onSuccess: (data) => {
       alert("게시글이 수정되었습니다.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.lists() });   // 목록 캐시(제목·미리보기) 갱신
       queryClient.invalidateQueries({ queryKey: queryKeys.boards.details() });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.boardsAll() });
       navigate(`/management/boards/${data}`);

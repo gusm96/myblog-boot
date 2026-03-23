@@ -1,10 +1,12 @@
 import React, { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { marked } from "marked";
 import { uploadBoard, uploadImageFile } from "../../services/boardApi";
+import { queryKeys } from "../../services/queryKeys";
 import { Form } from "react-bootstrap";
 import { CategoryForm } from "../Category/CategoryForm";
 import EditorToolbar from "./EditorToolbar";
@@ -13,6 +15,7 @@ import "../Styles/Board/editorPage.css";
 
 const BoardEditor = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({ title: "", category: "", images: [] });
 
   const editor = useEditor({
@@ -61,6 +64,9 @@ const BoardEditor = () => {
     uploadBoard(formData, editor.getHTML())
       .then((res) => {
         if (res.status === 200) {
+          // 게시글 목록·카테고리 캐시 무효화 → persist된 localStorage 캐시도 갱신
+          queryClient.invalidateQueries({ queryKey: queryKeys.boards.lists() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.categories.all() });
           alert("게시글을 등록하였습니다.");
           navigate(`/management/boards/${res.data}`);
         }

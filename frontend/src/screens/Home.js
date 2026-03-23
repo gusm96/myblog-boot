@@ -15,8 +15,6 @@ const Home = () => {
   const { data, isPending, error, isPlaceholderData } = useQuery({
     queryKey: queryKeys.boards.list(page.toString()),
     queryFn:  () => getBoardList(page),
-    staleTime: 5  * 60 * 1000,
-    gcTime:    15 * 60 * 1000,
     placeholderData: keepPreviousData,
   });
 
