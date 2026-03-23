@@ -20,6 +20,6 @@ export const PageButton = ({ pageCount, path }) => {
   return <div className="page-buttons-container">{pageButton()}</div>;
 };
 
-PageButton.prototype = {
+PageButton.propTypes = {
   pageCount: PropTypes.number,
 };

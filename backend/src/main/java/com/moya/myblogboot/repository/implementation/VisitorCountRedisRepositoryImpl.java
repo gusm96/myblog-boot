@@ -28,17 +28,19 @@ public class VisitorCountRedisRepositoryImpl implements VisitorCountRedisReposit
     }
 
     @Override
-    public VisitorCountDto increment(String keyDate) {
+    public Optional<VisitorCountDto> increment(String keyDate) {
         String key = getKey(keyDate);
+
+        // Cold Cache 감지: 키가 없으면 서비스 레이어의 DB 복구 블록으로 위임
+        // hasKey()는 Boolean(nullable)이므로 Boolean.FALSE.equals()로 null-safe 처리
+        if (Boolean.FALSE.equals(redisTemplate.hasKey(key))) {
+            return Optional.empty();
+        }
+
         redisTemplate.opsForHash().increment(key, TOTAL_COUNT_KEY, 1L);
         redisTemplate.opsForHash().increment(key, TODAY_COUNT_KEY, 1L);
-        return findByDate(keyDate).orElseGet(
-                () -> VisitorCountDto.builder()
-                        .total(-1L)
-                        .today(-1L)
-                        .yesterday(-1L)
-                        .build()
-        );
+        redisTemplate.expire(key, 7, TimeUnit.DAYS);
+        return findByDate(keyDate);
     }
 
     @Override

@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import moment from "moment";
+import dayjs from "dayjs";
 import Parser, { domToReact } from "html-react-parser";
 import "../Styles/css/boardList.css";
 const BoardList = ({ boards, path }) => {
@@ -12,12 +12,11 @@ const BoardList = ({ boards, path }) => {
     },
   };
   const truncateText = (text, maxLength) => {
-    text.replace(/<[^>]*>/g, "");
-    if (text.length <= maxLength) {
-      return text;
-    } else {
-      return text.slice(0, maxLength) + "...";
+    const plainText = text.replace(/<[^>]*>/g, "");
+    if (plainText.length <= maxLength) {
+      return plainText;
     }
+    return plainText.slice(0, maxLength) + "...";
   };
   const cardStyle = {
     textDecoration: "none",
@@ -37,7 +36,7 @@ const BoardList = ({ boards, path }) => {
                   {Parser(truncateText(board.content, 500), parserOptions)}
                 </p>
                 <span className="text-muted board-date">
-                  {moment(board.createDate).format("YYYY-MM-DD")}
+                  {dayjs(board.createDate).format("YYYY-MM-DD")}
                 </span>
               </a>
             </div>

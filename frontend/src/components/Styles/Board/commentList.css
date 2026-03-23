@@ -1,63 +1,250 @@
-.comment-list-container {
-  margin-top: 20px;
+/* ============================================================
+   Comment List — Dark Dev Theme
+   ============================================================ */
+
+/* ── Section wrapper ──────────────────────────────────────── */
+.comment-section {
+  margin-top: 40px;
 }
 
+/* ── Section header ──────────────────────────────────────── */
+.comment-section-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-faint);
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.comment-section-title::before {
+  content: "//";
+  color: var(--accent-green);
+  font-weight: 700;
+}
+
+/* ── State messages (loading / error) ────────────────────── */
+.comment-state-msg {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  padding: 16px 0;
+  margin: 0;
+}
+.comment-state-msg--error {
+  color: var(--accent-red);
+}
+
+/* ── List container ──────────────────────────────────────── */
+.comment-list-container {
+  margin-top: 32px;
+}
 .comment-list {
   list-style-type: none;
   padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
+/* ── Comment card ────────────────────────────────────────── */
 .comment-item {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  padding: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  transition: border-color 0.2s;
+}
+.comment-item:hover {
+  border-color: rgba(88, 166, 255, 0.25);
 }
 
+/* ── Comment header ──────────────────────────────────────── */
 .comment-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
+/* Author */
 .writer {
-  font-weight: bold;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--accent);
+  line-height: 1;
+}
+.writer::before {
+  content: "@";
+  opacity: 0.7;
+  font-weight: 400;
 }
 
+/* Date */
 .upload-date {
-  color: #868e96;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-faint);
 }
 
+/* ── Comment body ────────────────────────────────────────── */
 .comment-content {
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
 }
 
+/* ── Reply controls ──────────────────────────────────────── */
 .reply-container {
-  width: 100px;
   display: flex;
-  justify-content: space-around;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
 }
-.reply-list {
-  font-size: small;
-  transition: transform 0.3s ease;
-  cursor: pointer;
-  &:hover {
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 1px 3px;
-    border-radius: 5px;
-    transform: scale(1.2); /* 호버 시 1.1배 확대되도록 설정 */
-  }
-}
+
+.reply-list,
 .reply-btn {
-  font-size: small;
-  transition: transform 0.3s ease;
+  appearance: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-faint);
   cursor: pointer;
-  &:hover {
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 1px 3px;
-    border-radius: 5px;
-    transform: scale(1.2); /* 호버 시 1.1배 확대되도록 설정 */
+  padding: 3px 10px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+  line-height: 1.4;
+}
+.reply-list:hover,
+.reply-list.active,
+.reply-btn:hover,
+.reply-btn.active {
+  color: var(--accent);
+  background-color: rgba(88, 166, 255, 0.08);
+  border-color: rgba(88, 166, 255, 0.2);
+}
+
+/* ── Reply thread (nested comments) ─────────────────────── */
+.reply-thread {
+  margin-top: 10px;
+  padding-left: 16px;
+  border-left: 2px solid var(--border);
+  gap: 8px;
+}
+.reply-item {
+  background-color: var(--bg-secondary);
+  border-color: var(--border);
+  padding: 10px 14px;
+}
+.reply-item .writer {
+  font-size: 0.82rem;
+  color: var(--accent-purple);
+}
+.reply-item .writer::before {
+  content: "↳ @";
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+/* ── Reply form ──────────────────────────────────────────── */
+.reply-form {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reply-form__textarea {
+  width: 100%;
+  min-height: 64px;
+  resize: vertical;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  padding: 8px 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.reply-form__textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+}
+.reply-form__textarea::placeholder {
+  color: var(--text-faint);
+}
+
+.reply-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.reply-form__cancel,
+.reply-form__submit {
+  appearance: none;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 5px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  line-height: 1.4;
+}
+
+.reply-form__cancel {
+  background: transparent;
+  color: var(--text-faint);
+}
+.reply-form__cancel:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-secondary);
+  border-color: var(--border-hover);
+}
+
+.reply-form__submit {
+  background-color: rgba(88, 166, 255, 0.15);
+  color: var(--accent);
+  border-color: rgba(88, 166, 255, 0.3);
+}
+.reply-form__submit:hover:not(:disabled) {
+  background-color: rgba(88, 166, 255, 0.25);
+  border-color: var(--accent);
+}
+.reply-form__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 575px) {
+  .comment-item {
+    padding: 12px 14px;
+  }
+  .comment-content {
+    font-size: 0.875rem;
+  }
+  .reply-form__actions {
+    flex-direction: row;
+  }
+  .reply-form__cancel,
+  .reply-form__submit {
+    flex: 1;
   }
 }

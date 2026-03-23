@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 
 import static com.moya.myblogboot.utils.DateUtil.getToday;
 
@@ -27,110 +26,133 @@ public class VisitorCountServiceImpl implements VisitorCountService {
 
     @Override
     public VisitorCountDto getVisitorCount(String date) {
-        // 매개변수로 주어지는 날짜로 Redis Store에서 값을 찾는다.
-        return visitorCountRedisRepository.findByDate(date).orElseGet(
-                () -> retrieveAndSaveRecentVisitorCount() // 값이 없는 경우 DB에서 해당 날짜의 값을 찾고 Redis Store에 저장한다.
-        );
+        // 1. Redis 캐시 조회
+        return visitorCountRedisRepository.findByDate(date).orElseGet(() -> {
+            // 2. 캐시 미스 → DB에서 조회하여 캐시에 저장 (읽기 전용, DB 쓰기 없음)
+            VisitorCountDto dto = buildVisitorCountDto(date);
+            visitorCountRedisRepository.save(date, dto);
+            return dto;
+        });
     }
 
     @Override
     @Transactional
     public VisitorCountDto incrementVisitorCount(String date) {
-        // Redis에서 방문자 수 증가
-        VisitorCountDto visitorCountDto = visitorCountRedisRepository.increment(date);
-        // 데이터가 존재하지 않는 경우
-        if (visitorCountDto == null || visitorCountDto.getTotal() < 0) {
-            retrieveAndSaveVisitorCount(date);
-            // 다시 Redis에서 증가 수행
-            return visitorCountRedisRepository.increment(date);
-        }
-        return visitorCountDto;
+        // Cache에서 방문자 수 증가 (키가 없으면 Optional.empty 반환)
+        return visitorCountRedisRepository.increment(date).orElseGet(() -> {
+            ensureTodayRecordAndCacheVisitorCount(date);
+            return visitorCountRedisRepository.increment(date)
+                    .orElseThrow(() -> new IllegalStateException("방문자 수 증가 실패"));
+        });
     }
 
-    // DB에서 VisitorCount 조회 후 Redis Store에 저장.
-    private void retrieveAndSaveVisitorCount(String date) {
-        visitorCountRedisRepository.save(date, retrieveVisitorCountDto(date));
-    }
-
-    private synchronized VisitorCountDto retrieveVisitorCountDto(String date) {
-        // 1. 오늘 방문자수 조회
-        VisitorCount todayVisitorCount = retrieveVisitorCountFromDB(date);
-        // 2. 어제 방문자수 조회
-        VisitorCount yesterdayVisitorCount = retrieveVisitorCountFromDB(DateUtil.getPreviousDay(date));
-
-        return VisitorCountDto.builder()
-                .total(todayVisitorCount.getTotalVisitors())
-                .today(todayVisitorCount.getTodayVisitors())
-                .yesterday(yesterdayVisitorCount.getTodayVisitors())
-                .build();
-    }
-
-    // DB 에서 VisitorCount 조회
+    @Override
     @Transactional
-    public VisitorCount retrieveVisitorCountFromDB(String formattedDate) {
-        LocalDate date;
-        try {
-            date = LocalDate.parse(formattedDate);
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("날짜 형식이 잘못되었습니다.");
-        }
-        return visitorCountRepository.findByDate(date).orElseGet(
-                () -> visitorCountRepository.save(VisitorCount.of(LocalDate.parse(formattedDate), 0L, 0L)));
+    public void syncVisitorCountToDb(String date) {
+        VisitorCountDto dto = getVisitorCount(date);
+        visitorCountRepository.save(VisitorCount.builder()
+                .date(LocalDate.parse(date))
+                .totalVisitors(dto.getTotal())
+                .todayVisitors(dto.getToday())
+                .build());
     }
 
     @Transactional
     @Override
     public void createTodayVisitorCount() {
-        VisitorCount recentVC = retrieveRecentVisitorCount();
+        VisitorCount recentVC = visitorCountRepository.findFirstByOrderByDateDesc()
+                .orElse(VisitorCount.builder()
+                        .totalVisitors(0L)
+                        .todayVisitors(0L)
+                        .date(null)
+                        .build());
 
-        // 최근의 값이 오늘의 VisitorCount라면 생성하지 않는다.
         if (isTodayVisitorCount(recentVC)) {
             return;
         }
-        createNewVisitorCount(recentVC);
+
+        try {
+            visitorCountRepository.save(VisitorCount.builder()
+                    .totalVisitors(recentVC.getTotalVisitors())
+                    .todayVisitors(0L)
+                    .date(LocalDate.parse(getToday()))
+                    .build());
+        } catch (Exception e) {
+            log.error("방문자 수 생성 중 에러발생 = {}", e.getMessage());
+        }
+    }
+
+    // --- private ---
+
+    /**
+     * DB에서 해당 날짜의 방문자 데이터를 조회하여 DTO를 구성한다. (읽기 전용, DB 쓰기 없음)
+     * - 해당 날짜 레코드가 없으면 가장 최근 레코드의 totalVisitors를 이어받고 todayVisitors=0으로 설정한다.
+     * - 어제 레코드가 없으면 yesterday=0으로 설정한다.
+     */
+    private VisitorCountDto buildVisitorCountDto(String date) {
+        LocalDate targetDate = LocalDate.parse(date);
+        LocalDate previousDate = LocalDate.parse(DateUtil.getPreviousDay(date));
+
+        // 해당 날짜 방문자수 조회
+        long total;
+        long today;
+        var targetOpt = visitorCountRepository.findByDate(targetDate);
+        if (targetOpt.isPresent()) {
+            total = targetOpt.get().getTotalVisitors();
+            today = targetOpt.get().getTodayVisitors();
+        } else {
+            // 해당 날짜 레코드 없음 → 가장 최근 레코드의 totalVisitors를 이어받음
+            total = visitorCountRepository.findFirstByOrderByDateDesc()
+                    .map(VisitorCount::getTotalVisitors)
+                    .orElse(0L);
+            today = 0L;
+        }
+
+        // 어제 방문자수 조회 — 없으면 0
+        long yesterday = visitorCountRepository.findByDate(previousDate)
+                .map(VisitorCount::getTodayVisitors)
+                .orElse(0L);
+
+        return VisitorCountDto.builder()
+                .total(total)
+                .today(today)
+                .yesterday(yesterday)
+                .build();
+    }
+
+    /**
+     * increment를 위한 캐시 준비: DB에 해당 날짜 레코드가 없으면 생성하고, Redis에 캐시한다.
+     * DB 레코드 생성은 스케줄러가 Redis→DB 동기화 전에 Redis가 플러시될 경우 데이터 유실을 방지한다.
+     */
+    private synchronized void ensureTodayRecordAndCacheVisitorCount(String date) {
+        LocalDate targetDate = LocalDate.parse(date);
+        LocalDate previousDate = LocalDate.parse(DateUtil.getPreviousDay(date));
+
+        // 해당 날짜 레코드 조회 — 없으면 DB에 생성 (데이터 안전을 위해)
+        VisitorCount targetRecord = visitorCountRepository.findByDate(targetDate)
+                .orElseGet(() -> {
+                    long recentTotal = visitorCountRepository.findFirstByOrderByDateDesc()
+                            .map(VisitorCount::getTotalVisitors)
+                            .orElse(0L);
+                    return visitorCountRepository.save(VisitorCount.of(targetDate, 0L, recentTotal));
+                });
+
+        // 어제 방문자수 조회 — 없으면 0
+        long yesterday = visitorCountRepository.findByDate(previousDate)
+                .map(VisitorCount::getTodayVisitors)
+                .orElse(0L);
+
+        VisitorCountDto dto = VisitorCountDto.builder()
+                .total(targetRecord.getTotalVisitors())
+                .today(targetRecord.getTodayVisitors())
+                .yesterday(yesterday)
+                .build();
+
+        visitorCountRedisRepository.save(date, dto);
     }
 
     private boolean isTodayVisitorCount(VisitorCount visitorCount) {
         return visitorCount.getDate() != null &&
                 visitorCount.getDate().isEqual(LocalDate.parse(getToday()));
-    }
-
-    private VisitorCount createNewVisitorCount(VisitorCount recentVC) {
-        VisitorCount todayVC = VisitorCount.builder()
-                .totalVisitors(recentVC.getTotalVisitors())
-                .todayVisitors(0L)
-                .date(LocalDate.parse(getToday()))
-                .build();
-
-        try {
-            return visitorCountRepository.save(todayVC);
-        } catch (Exception e) {
-            log.error("방문자 수 생성 중 에러발생 = {}", e.getMessage());
-            return VisitorCount.builder().build(); // 에러 발생 시 빈 객체 반환
-        }
-    }
-
-    private VisitorCountDto retrieveAndSaveRecentVisitorCount() {
-        VisitorCount visitorCount = retrieveRecentVisitorCount();
-
-        VisitorCountDto visitorCountDto = VisitorCountDto.builder()
-                .total(visitorCount.getTotalVisitors())
-                .today(0L)
-                .yesterday(visitorCount.getTodayVisitors())
-                .build();
-
-        visitorCountRedisRepository.save(getToday(), visitorCountDto);
-
-        return visitorCountDto;
-    }
-
-    private VisitorCount retrieveRecentVisitorCount() {
-        return visitorCountRepository.findRecentVisitorCount().orElseGet(
-                () -> VisitorCount.builder()
-                        .totalVisitors(0L)
-                        .todayVisitors(0L)
-                        .date(null)
-                        .build()
-        );
     }
 }

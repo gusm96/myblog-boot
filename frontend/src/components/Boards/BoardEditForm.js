@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -10,199 +10,227 @@ import {
   getBoardForAdmin,
   undeleteBoard,
 } from "../../services/boardApi";
-import { Button, Form, InputGroup } from "react-bootstrap";
-import { useSelector } from "react-redux";
-import { selectAccessToken } from "../../redux/userSlice";
 import { getCategories } from "../../services/categoryApi";
+import { Form } from "react-bootstrap";
+import EditorToolbar from "./EditorToolbar";
 import "../Styles/Board/editor.css";
-
-const EditorToolbar = ({ editor }) => {
-  if (!editor) return null;
-
-  const btn = (label, action, isActive = false) => (
-    <Button
-      key={label}
-      size="sm"
-      variant={isActive ? "secondary" : "outline-secondary"}
-      onMouseDown={(e) => {
-        e.preventDefault();
-        action();
-      }}
-    >
-      {label}
-    </Button>
-  );
-
-  return (
-    <div className="tiptap-toolbar">
-      {btn("B", () => editor.chain().focus().toggleBold().run(), editor.isActive("bold"))}
-      {btn("I", () => editor.chain().focus().toggleItalic().run(), editor.isActive("italic"))}
-      {btn("U", () => editor.chain().focus().toggleUnderline().run(), editor.isActive("underline"))}
-      {btn("S", () => editor.chain().focus().toggleStrike().run(), editor.isActive("strike"))}
-      <span className="border-start mx-1" />
-      {[1, 2, 3].map((level) =>
-        btn(
-          `H${level}`,
-          () => editor.chain().focus().toggleHeading({ level }).run(),
-          editor.isActive("heading", { level })
-        )
-      )}
-      <span className="border-start mx-1" />
-      {btn("• 목록", () => editor.chain().focus().toggleBulletList().run(), editor.isActive("bulletList"))}
-      {btn("1. 목록", () => editor.chain().focus().toggleOrderedList().run(), editor.isActive("orderedList"))}
-      <span className="border-start mx-1" />
-      {btn("코드블록", () => editor.chain().focus().toggleCodeBlock().run(), editor.isActive("codeBlock"))}
-      {btn("인용", () => editor.chain().focus().toggleBlockquote().run(), editor.isActive("blockquote"))}
-      {btn("구분선", () => editor.chain().focus().setHorizontalRule().run())}
-    </div>
-  );
-};
+import "../Styles/Board/editorPage.css";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../services/queryKeys";
 
 export const BoardEditForm = () => {
-  const accessToken = useSelector(selectAccessToken);
+  const navigate    = useNavigate();
   const { boardId } = useParams();
-  const [board, setBoard] = useState({
-    title: "",
-    category: "",
-    deleteDate: "",
-  });
-  const [categories, setCategories] = useState([]);
-  const [htmlContent, setHtmlContent] = useState("");
+  const queryClient = useQueryClient();
+
+  const [board, setBoard] = useState({ title: "", category: "", deleteDate: "" });
 
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Image.configure({ inline: false }),
-    ],
+    extensions: [StarterKit, Image.configure({ inline: false })],
   });
 
-  // 데이터 패치 (API 1회 호출)
-  useEffect(() => {
-    getBoardForAdmin(boardId, accessToken).then((data) => {
-      setBoard({
-        title: data.title,
-        category: data.category,
-        deleteDate: data.deleteDate,
-      });
-      setHtmlContent(data.content);
-    });
-    getCategories().then((data) => setCategories(data));
-  }, [boardId, accessToken]);
+  // 게시글 데이터 조회
+  const { data: boardData } = useQuery({
+    queryKey:  queryKeys.admin.board(boardId),
+    queryFn:   () => getBoardForAdmin(boardId),
+    enabled:   !!boardId,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  // editor와 htmlContent가 모두 준비됐을 때 내용 로드 (emitUpdate: false — undo 히스토리 오염 방지)
+  // 카테고리 목록 조회
+  const { data: categories = [] } = useQuery({
+    queryKey:  queryKeys.categories.list(),
+    queryFn:   getCategories,
+    staleTime: 30 * 60 * 1000,
+  });
+
+  // 게시글 데이터 → 폼 상태 동기화
   useEffect(() => {
-    if (editor && htmlContent) {
-      editor.commands.setContent(htmlContent, { emitUpdate: false });
+    if (boardData) {
+      setBoard({ title: boardData.title, category: boardData.category, deleteDate: boardData.deleteDate });
     }
-  }, [editor, htmlContent]);
+  }, [boardData]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!editor) return;
-    const htmlString = editor.getHTML();
-    editBoard(boardId, board, htmlString, accessToken)
-      .then((data) => {
-        alert("게시글이 수정 되었습니다");
-        window.location.href = `/management/boards/${data}`;
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
+  // 에디터 콘텐츠 초기화
+  useEffect(() => {
+    if (editor && boardData?.content) {
+      editor.commands.setContent(boardData.content, { emitUpdate: false });
+    }
+  }, [editor, boardData?.content]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setBoard((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ── Mutations ─────────────────────────────────────────────────
+  const editMutation = useMutation({
+    mutationFn: ({ board: b, html }) => editBoard(boardId, b, html),
+    onSuccess: (data) => {
+      alert("게시글이 수정되었습니다.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.lists() });   // 목록 캐시(제목·미리보기) 갱신
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.details() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.boardsAll() });
+      navigate(`/management/boards/${data}`);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteBoard(boardId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.boards.lists() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.boardsAll() });
+      navigate(-1);
+    },
+  });
+
+  const undeleteMutation = useMutation({
+    mutationFn: () => undeleteBoard(boardId),
+    onSuccess: (res) => {
+      if (res.status === 200) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.trashAll() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.boardsAll() });
+        navigate("/management/temporary-storage");
+      }
+    },
+  });
+
+  const deletePermanentlyMutation = useMutation({
+    mutationFn: () => deletePermanently(boardId),
+    onSuccess: (res) => {
+      if (res.status === 200) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.trashAll() });
+        navigate("/management/temporary-storage");
+      }
+    },
+  });
+
+  // ── Handlers ──────────────────────────────────────────────────
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!editor) return;
+    editMutation.mutate({ board, html: editor.getHTML() });
+  };
+
   const handleDelete = (e) => {
     e.preventDefault();
     if (window.confirm("정말로 삭제하시겠습니까?")) {
-      deleteBoard(boardId, accessToken)
-        .then(window.history.go(-1))
-        .catch((error) => console.log(error));
+      deleteMutation.mutate();
     }
   };
 
   const handleUndelete = (e) => {
     e.preventDefault();
     if (window.confirm("삭제를 취소하시겠습니까?")) {
-      undeleteBoard(boardId, accessToken)
-        .then((res) => {
-          if (res.status === 200) {
-            window.location.href = "/management/temporary-storage";
-          }
-        })
-        .catch((error) => console.log(error));
+      undeleteMutation.mutate();
     }
   };
 
   const handleDeletePermanently = (e) => {
     e.preventDefault();
-    if (
-      window.confirm(
-        "영구 삭제시 게시글을 복구할 수 없습니다.\n정말로 삭제하시겠습니까?"
-      )
-    ) {
-      deletePermanently(boardId, accessToken)
-        .then((res) => {
-          if (res.status === 200) {
-            window.location.href = "/management/temporary-storage";
-          }
-        })
-        .catch((error) => console.log(error));
+    if (window.confirm("영구 삭제 시 복구할 수 없습니다.\n정말로 삭제하시겠습니까?")) {
+      deletePermanentlyMutation.mutate();
     }
   };
 
+  const isDeleted = board.deleteDate && board.deleteDate !== "";
+
   return (
     <Form onSubmit={handleSubmit}>
-      <InputGroup className="mb-2">
-        <InputGroup.Text>제목</InputGroup.Text>
-        <Form.Control
-          placeholder="제목을 입력하세요."
-          name="title"
-          value={board.title}
-          onChange={handleChange}
-        />
-        <Form.Select
-          name="category"
-          value={board.category}
-          onChange={handleChange}
-        >
-          <option>카테고리</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </Form.Select>
-      </InputGroup>
+      <div className="editor-page">
 
-      <div className="tiptap-wrapper mb-2">
-        <EditorToolbar editor={editor} />
-        <EditorContent editor={editor} />
-      </div>
+        {/* ── 헤더 ────────────────────────────────── */}
+        <div className="editor-page__header">
+          <span className="editor-page__title">edit post</span>
+          <span className={`editor-status-badge ${isDeleted ? "editor-status-badge--deleted" : "editor-status-badge--live"}`}>
+            <span className="editor-status-badge__dot" />
+            {isDeleted ? "삭제됨" : "게시 중"}
+          </span>
+        </div>
 
-      <div className="d-flex gap-2">
-        <Button type="submit">수정</Button>
-        {board.deleteDate === null || board.deleteDate === "" ? (
-          <Button type="button" variant="danger" onClick={handleDelete}>
-            삭제
-          </Button>
-        ) : (
-          <>
-            <Button type="button" variant="warning" onClick={handleUndelete}>
-              삭제 취소
-            </Button>
-            <Button
-              type="button"
-              variant="danger"
-              onClick={handleDeletePermanently}
-            >
-              영구삭제
-            </Button>
-          </>
-        )}
+        {/* ── 메타: 제목 ──────────────────────────── */}
+        <div className="editor-meta">
+          <span className="editor-meta__label">title</span>
+          <Form.Control
+            className="editor-meta__title-input"
+            placeholder="제목을 입력하세요"
+            name="title"
+            value={board.title}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        {/* ── 메타: 카테고리 ──────────────────────── */}
+        <div className="editor-category-row">
+          <span className="editor-meta__label">category</span>
+          <Form.Select
+            className="editor-meta__category-select editor-meta__category-select--standalone"
+            name="category"
+            value={board.category}
+            onChange={handleChange}
+          >
+            <option value="">카테고리 선택</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </Form.Select>
+        </div>
+
+        {/* ── 에디터 ──────────────────────────────── */}
+        <div className="tiptap-wrapper">
+          <EditorToolbar editor={editor} />
+          <EditorContent editor={editor} />
+        </div>
+
+        {/* ── 액션 버튼 ───────────────────────────── */}
+        <div className="editor-actions">
+          <div className="editor-actions__left">
+            <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>
+              <i className="fa-solid fa-arrow-left" style={{ marginRight: 6 }} />
+              뒤로
+            </button>
+          </div>
+          <div className="editor-actions__right">
+            <button type="submit" className="btn btn-primary" disabled={editMutation.isPending}>
+              <i className="fa-solid fa-floppy-disk" style={{ marginRight: 6 }} />
+              {editMutation.isPending ? "저장 중..." : "수정 저장"}
+            </button>
+            {!isDeleted ? (
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+              >
+                <i className="fa-solid fa-trash" style={{ marginRight: 6 }} />
+                삭제
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-warning"
+                  onClick={handleUndelete}
+                  disabled={undeleteMutation.isPending}
+                >
+                  <i className="fa-solid fa-rotate-left" style={{ marginRight: 6 }} />
+                  삭제 취소
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={handleDeletePermanently}
+                  disabled={deletePermanentlyMutation.isPending}
+                >
+                  <i className="fa-solid fa-bomb" style={{ marginRight: 6 }} />
+                  영구삭제
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
       </div>
     </Form>
   );

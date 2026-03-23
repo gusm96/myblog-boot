@@ -17,18 +17,18 @@ public class UserViewedBoardRedisRepositoryImpl implements UserViewedBoardRedisR
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
-    public void save(Long userNum, Long boardId) {
-        String key = getKey(userNum);
+    public void save(String userToken, Long boardId) {
+        String key = getKey(userToken);
         redisTemplate.opsForSet().add(key, boardId);
         redisTemplate.expire(key, TTLCalculator.calculateSecondsUntilMidnight(), TimeUnit.SECONDS);
     }
 
     @Override
-    public boolean isExists(Long userNum, Long boardId) {
-        return redisTemplate.opsForSet().isMember(getKey(userNum), boardId);
+    public boolean isExists(String userToken, Long boardId) {
+        return redisTemplate.opsForSet().isMember(getKey(userToken), boardId);
     }
 
-    private String getKey(Long userNum) {
-        return USER_VIEWED_BOARD_KEY + userNum;
+    private String getKey(String userToken) {
+        return USER_VIEWED_BOARD_KEY + userToken;
     }
 }

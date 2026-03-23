@@ -14,6 +14,16 @@ public class CookieUtil {
         return cookie;
     }
 
+    public static Cookie addCookie(String cookieName, String cookieValue, int maxAge) {
+        Cookie cookie = new Cookie(cookieName, cookieValue);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setAttribute("SameSite", "Lax");
+        cookie.setMaxAge(maxAge);
+        return cookie;
+    }
+
     public static Cookie findCookie(HttpServletRequest request, String cookieName) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {

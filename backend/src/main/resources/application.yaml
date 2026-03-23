@@ -14,7 +14,7 @@ spring:
       timeout: 6000
       database: 0
   profiles:
-    active: dev
+    active: ${PROFILE}
 
 # CORS
 cors:
@@ -25,6 +25,11 @@ jwt:
   secret: ${JWT_SECRET_KEY}
   access-token-expiration: 600000
   refresh-token-expiration: 1209600000
+
+# Visitor HMAC
+visitor:
+  hmac:
+    secret: ${VISITOR_HMAC_SECRET}
 
 # S3 (버킷 삭제됨 — S3 코드 정리 전까지 임시 더미값 유지, 이후 블록 전체 제거 예정)
 cloud:

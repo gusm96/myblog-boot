@@ -30,8 +30,4 @@ public class VisitorCountDto {
         return map;
     }
 
-    public void increment(){
-        this.total++;
-        this.today++;
-    }
 }

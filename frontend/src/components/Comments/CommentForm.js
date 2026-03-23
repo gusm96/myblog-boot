@@ -1,105 +1,79 @@
 import React, { useState } from "react";
-import {
-  Button,
-  Modal,
-  ModalBody,
-  ModalFooter,
-  ModalHeader,
-  ModalTitle,
-} from "react-bootstrap";
+import { Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle, Button } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { selectIsLoggedIn } from "../../redux/userSlice";
 import { addComment } from "../../services/boardApi";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../services/queryKeys";
+import "./commentForm.css";
 
-export const CommentForm = ({ boardId, accessToken }) => {
-  const isLoggedIn = useSelector(selectIsLoggedIn);
+export const CommentForm = ({ boardId }) => {
+  const isLoggedIn  = useSelector(selectIsLoggedIn);
+  const queryClient = useQueryClient();
   const [isLoggedInModal, setIsLoggedInModal] = useState(false);
-  const [commentData, setCommentData] = useState({
-    comment: "",
-    parentId: "",
+  const [commentData, setCommentData] = useState({ comment: "", parentId: "" });
+
+  const addCommentMutation = useMutation({
+    mutationFn: (data) => addComment(boardId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(boardId) });
+      setCommentData({ comment: "", parentId: "" });
+    },
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCommentData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setCommentData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleCommentBoxClick = (e) => {
     e.preventDefault();
-    if (!isLoggedIn) {
-      setIsLoggedInModal(true);
-    }
+    if (!isLoggedIn) setIsLoggedInModal(true);
   };
 
   const handleOnSubmit = (e) => {
     e.preventDefault();
-    // textarea의 값이 0 or null or " "이 아닌지 확인
     if (commentData.comment.trim() === "") {
       alert("댓글의 내용을 입력하세요.");
-    } else {
-      addComment(boardId, commentData, accessToken)
-        .then((data) => {
-          window.location.reload();
-        })
-        .catch((error) => console.log(error));
+      return;
     }
+    addCommentMutation.mutate(commentData);
   };
 
-  const handleCloseLoginModal = () => {
-    setIsLoggedInModal(false);
-  };
   return (
-    <form
-      onSubmit={handleOnSubmit}
-      style={{
-        display: "flex",
-      }}
-    >
-      <textarea
-        onClick={handleCommentBoxClick}
-        name="comment"
-        placeholder="댓글을 입력하세요."
-        value={commentData.comment}
-        onChange={handleChange}
-        style={{
-          width: "70%",
-          margin: "0 10px 0 0",
-          padding: "10px",
-          borderRadius: "5px",
-          border: "1px solid #ced4da",
-        }}
-      ></textarea>
-      <Button
-        variant="primary"
-        type="submit"
-        style={{
-          width: "30%",
-          margin: "0",
-        }}
-      >
-        댓글 작성
-      </Button>
-      <Modal
-        show={isLoggedInModal}
-        onHide={handleCloseLoginModal}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          position: "absolute",
-          top: "0",
-          left: "0",
-        }}
-      >
+    <>
+      <form className="comment-form" onSubmit={handleOnSubmit}>
+        <textarea
+          className="comment-form__textarea"
+          onClick={handleCommentBoxClick}
+          name="comment"
+          placeholder="댓글을 입력하세요..."
+          value={commentData.comment}
+          onChange={handleChange}
+        />
+        <button
+          type="submit"
+          className="comment-form__submit"
+          disabled={addCommentMutation.isPending}
+        >
+          {addCommentMutation.isPending ? "작성 중..." : "작성"}
+        </button>
+      </form>
+
+      <Modal show={isLoggedInModal} onHide={() => setIsLoggedInModal(false)} centered>
         <ModalHeader closeButton>
-          <ModalTitle>로그인</ModalTitle>
+          <ModalTitle>로그인 필요</ModalTitle>
         </ModalHeader>
-        <ModalBody></ModalBody>
-        <ModalFooter>회원가입</ModalFooter>
+        <ModalBody>
+          <p style={{ color: "var(--text-secondary)", marginBottom: 0 }}>
+            댓글을 작성하려면 로그인이 필요합니다.
+          </p>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="primary" href="/login">로그인</Button>
+          <Button variant="secondary" onClick={() => setIsLoggedInModal(false)}>닫기</Button>
+        </ModalFooter>
       </Modal>
-    </form>
+    </>
   );
 };

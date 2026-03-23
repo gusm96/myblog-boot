@@ -1,67 +1,52 @@
 import React, { useEffect, useState } from "react";
-import { Button, Col, Form, InputGroup, Row } from "react-bootstrap";
+import { Button, Form, InputGroup } from "react-bootstrap";
+import "./Styles/css/searchBar.css";
+
 export const SearchBar = ({ type, contents }) => {
-  const [formData, setFormData] = useState({
-    type: "TITLE",
-    contents: "",
-  });
+  const [formData, setFormData] = useState({ type: "TITLE", contents: "" });
+
   useEffect(() => {
     if (type && contents) {
-      setFormData({
-        type: type,
-        contents: contents,
-      });
+      setFormData({ type, contents });
     }
   }, [type, contents]);
+
   const handleOnSubmit = (e) => {
     e.preventDefault();
-    // 리다이렉트
     window.location.href = `/search?type=${formData.type}&contents=${formData.contents}`;
   };
-  const handleOnChage = (e) => {
+
+  const handleOnChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
-    <Row
-      style={{
-        marginBottom: "30px",
-      }}
-    >
-      <Form>
-        <InputGroup>
-          <Col md={2}>
-            <Form.Select
-              aria-label="Default select example"
-              name="type"
-              value={formData.type}
-              onChange={handleOnChage}
-            >
-              <option value="TITLE">제목</option>
-              <option value="CONTENT">내용</option>
-            </Form.Select>
-          </Col>
-          <Col md={8}>
-            <Form.Control
-              aria-label="Default"
-              aria-describedby="inputGroup-sizing-default"
-              placeholder="검색할 내용을 입력하세요."
-              name="contents"
-              value={formData.contents}
-              onChange={handleOnChage}
-            />
-          </Col>
-          <Col md={2}>
-            <Button type="submit" onClick={handleOnSubmit}>
-              검색
-            </Button>
-          </Col>
+    <div className="search-bar-wrapper">
+      <Form onSubmit={handleOnSubmit}>
+        <InputGroup className="search-input-group">
+          <Form.Select
+            name="type"
+            value={formData.type}
+            onChange={handleOnChange}
+            className="search-type-select"
+            aria-label="검색 유형"
+          >
+            <option value="TITLE">제목</option>
+            <option value="CONTENT">내용</option>
+          </Form.Select>
+          <Form.Control
+            placeholder="검색어를 입력하세요..."
+            name="contents"
+            value={formData.contents}
+            onChange={handleOnChange}
+            aria-label="검색어 입력"
+          />
+          <Button type="submit" variant="primary" className="search-btn">
+            검색
+          </Button>
         </InputGroup>
       </Form>
-    </Row>
+    </div>
   );
 };

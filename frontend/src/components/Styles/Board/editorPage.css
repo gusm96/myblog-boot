@@ -1,0 +1,340 @@
+/* ============================================================
+   Editor Page Layout — Dark Dev Theme
+   (BoardEditor / BoardEditForm)
+   ============================================================ */
+
+/* ── Page wrapper ────────────────────────────────────────── */
+.editor-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 32px;
+}
+
+/* ── Page header ─────────────────────────────────────────── */
+.editor-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.editor-page__title {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.editor-page__title::before {
+  content: ">";
+  color: var(--accent-green);
+  font-weight: 700;
+}
+
+/* Status badge (edit page) */
+.editor-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid;
+}
+.editor-status-badge--live {
+  color: var(--accent-green);
+  border-color: rgba(63, 185, 80, 0.35);
+  background-color: rgba(63, 185, 80, 0.08);
+}
+.editor-status-badge--deleted {
+  color: var(--accent-red);
+  border-color: rgba(255, 123, 114, 0.35);
+  background-color: rgba(255, 123, 114, 0.08);
+}
+.editor-status-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+/* ── Meta row (title + category) ────────────────────────── */
+.editor-meta {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--bg-card);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.editor-meta:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+}
+
+.editor-meta__label {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  background-color: var(--bg-secondary);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.editor-meta__title-input {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--text-primary) !important;
+  font-size: 0.95rem;
+  font-weight: 500;
+  min-width: 0;
+  outline: none;
+}
+.editor-meta__title-input::placeholder {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.editor-meta__sep {
+  width: 1px;
+  background-color: var(--border);
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.editor-meta__category-select {
+  width: 160px !important;
+  flex-shrink: 0;
+  padding: 10px 14px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.editor-meta__add-cat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  flex-shrink: 0;
+  background-color: transparent;
+  border: none;
+  border-left: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s;
+  font-size: 0.85rem;
+}
+.editor-meta__add-cat-btn:hover {
+  color: var(--accent);
+  background-color: rgba(88, 166, 255, 0.08);
+}
+
+/* ── File uploads row ────────────────────────────────────── */
+.editor-uploads {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.editor-upload-item {
+  flex: 1;
+  min-width: 200px;
+  background-color: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  transition: border-color 0.2s;
+}
+.editor-upload-item:hover {
+  border-color: rgba(88, 166, 255, 0.4);
+}
+.editor-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.04em;
+}
+.editor-upload-label i {
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+/* file input override */
+.editor-upload-item .form-control[type="file"] {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.editor-upload-item .form-control[type="file"]::-webkit-file-upload-button {
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  padding: 3px 10px;
+  margin-right: 8px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: background-color 0.15s;
+}
+.editor-upload-item .form-control[type="file"]::-webkit-file-upload-button:hover {
+  background-color: rgba(88, 166, 255, 0.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Action bar ──────────────────────────────────────────── */
+.editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.editor-actions__left {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.editor-actions__right {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Category row (separate from title bar) ─────────────── */
+.editor-category-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--bg-card);
+  transition: border-color 0.2s;
+}
+.editor-category-row:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+}
+/* reuse editor-meta__label inside category row */
+.editor-category-row .editor-meta__label {
+  border-right: 1px solid var(--border);
+}
+/* CategoryForm's inner wrapper */
+.editor-category-row > div {
+  display: flex;
+  flex: 1;
+  align-items: stretch;
+  gap: 0;
+  min-width: 0;
+}
+.editor-category-row > div select {
+  flex: 1;
+  padding: 10px 14px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem;
+  outline: none;
+}
+.editor-category-row > div button[type="button"] {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, background-color 0.15s;
+}
+.editor-category-row > div button[type="button"]:hover {
+  color: var(--accent);
+  background-color: rgba(88, 166, 255, 0.08);
+}
+
+/* Standalone select (BoardEditForm — no add button) */
+.editor-meta__category-select--standalone {
+  flex: 1 !important;
+  width: auto !important;
+  padding: 10px 14px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .editor-meta {
+    flex-wrap: wrap;
+  }
+  .editor-meta__title-input {
+    order: 2;
+    width: 100%;
+    border-top: 1px solid var(--border) !important;
+    border-radius: 0 !important;
+  }
+  .editor-meta__label {
+    order: 1;
+  }
+  .editor-meta__category-select {
+    order: 3;
+    width: auto !important;
+    flex: 1;
+    border-top: 1px solid var(--border) !important;
+  }
+  .editor-meta__sep {
+    display: none;
+  }
+  .editor-meta__add-cat-btn {
+    order: 4;
+    border-top: 1px solid var(--border) !important;
+  }
+  .editor-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .editor-actions__left,
+  .editor-actions__right {
+    width: 100%;
+  }
+  .editor-actions__left .btn,
+  .editor-actions__right .btn {
+    flex: 1;
+  }
+}
