@@ -20,7 +20,7 @@ import { SearchPage } from "./screens/SearchPage";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { BoardDetailV2 } from "./components/Boards/BoardDetailV2";
+import { BoardDetail } from "./components/Boards/BoardDetail";
 import { PageByCategory } from "./screens/PageByCategory";
 import BoardEditor from "./components/Boards/BoardEditor";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -101,7 +101,7 @@ function App() {
             <Route path="boards" element={<Home />} />
             <Route path=":categoryName" element={<PageByCategory />} />
             <Route path="/search" element={<SearchPage />} />
-            <Route path="boards/:boardId" element={<BoardDetailV2 />} />
+            <Route path="boards/:boardId" element={<BoardDetail />} />
             <Route
               path="login"
               element={isLoggedIn ? <NavigateBack /> : <LoginForm />}

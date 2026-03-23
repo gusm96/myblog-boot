@@ -1,117 +1,64 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router";
-import dayjs from "dayjs";
+import React from "react";
 import { useSelector } from "react-redux";
+import { useParams } from "react-router";
 import { selectIsLoggedIn } from "../../redux/userSlice";
-import {
-  addBoardLike,
-  cancelBoardLike,
-  getBoard,
-  getBoardLikeStatus,
-} from "../../services/boardApi";
 import Parser from "html-react-parser";
 import DOMPurify from "dompurify";
-import { CommentList } from "../Comments/CommentList";
-import "../Styles/Board/boardDetail.css";
+import { useBoardQuery, useLikeStatusQuery } from "../../hooks/useQueries";
+import { ErrorMessage } from "../ErrorMessage";
 import { CommentForm } from "../Comments/CommentForm";
-const BoardDetail = () => {
-  const isLoggedIn = useSelector(selectIsLoggedIn);
+import { CommentList } from "../Comments/CommentList";
+import dayjs from "dayjs";
+import { BoardLike } from "./BoardLike";
+import "../Styles/Board/boardDetail.css";
+
+export const BoardDetail = () => {
   const { boardId } = useParams();
-  const [board, setBoard] = useState({
-    title: "",
-    content: "",
-    uploadDate: "",
-    views: "",
-    likes: "",
-  });
-  const [isBoardLiked, setIsBoardLiked] = useState(false);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
 
-  const fetchBoardData = async (boardId) => {
-    const boardData = await getBoard(boardId);
-    setBoard({
-      title: boardData.title,
-      content: boardData.content,
-      uploadDate: boardData.uploadDate,
-      views: boardData.views,
-      likes: boardData.likes,
-    });
-  };
+  const board = useBoardQuery(boardId);
+  const likeStatus = useLikeStatusQuery(boardId, isLoggedIn);
 
-  const fetchBoardLikeStatus = async (boardId, isLoggedIn) => {
-    if (isLoggedIn) {
-      const likeStatusData = await getBoardLikeStatus(boardId);
-      setIsBoardLiked(likeStatusData);
-    }
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      await fetchBoardData(boardId);
-      await fetchBoardLikeStatus(boardId, isLoggedIn);
-    };
-    fetchData();
-  }, [boardId, isLoggedIn]);
-
-  const uploadDateFormat = dayjs(board.uploadDate).format("YYYY-MM-DD");
-
-  const handleBoardLike = (e) => {
-    e.preventDefault();
-    if (!isLoggedIn) {
-      alert("로그인이 필요한 서비스입니다."); // 로그인하지 않은 경우 경고 메시지 표시
-      return; // 이벤트 핸들러 종료
-    }
-    addBoardLike(boardId)
-      .then((data) => {
-        setBoard((prevBoard) => ({ ...prevBoard, likes: data }));
-        setIsBoardLiked(true);
-      })
-      .catch(() => {});
-  };
-
-  const handleBoardLikeCancel = (e) => {
-    e.preventDefault();
-    if (!isLoggedIn) {
-      alert("로그인이 필요한 서비스입니다."); // 로그인하지 않은 경우 경고 메시지 표시
-      return; // 이벤트 핸들러 종료
-    }
-    cancelBoardLike(boardId).then((data) => {
-      setBoard((prevBoard) => ({ ...prevBoard, likes: data }));
-      setIsBoardLiked(false);
-    });
-  };
-  return (
-    <div>
-      <h1>{board.title}</h1>
-      <hr></hr>
-      <div>{Parser(DOMPurify.sanitize(board.content))}</div>
-      <div className="board-info">
-        <div className="board-like">
-          <span>조회수 {board.views}</span>
-          <br></br>
-          {isBoardLiked ? (
-            <i
-              className="fa-solid fa-heart board-like-status"
-              onClick={handleBoardLikeCancel}
-            />
-          ) : (
-            <i
-              className="fa-regular fa-heart board-like-status "
-              onClick={handleBoardLike}
-            />
-          )}
-          <span className="board-like-count">{board.likes}</span>
-        </div>
-        <span>{uploadDateFormat}</span>
+  if (board.isLoading || likeStatus.isLoading) {
+    return (
+      <div className="loading-center">
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem" }}>loading...</span>
       </div>
-      <hr></hr>
+    );
+  }
+  if (board.error) return <ErrorMessage message={board.error.message} />;
+
+  return (
+    <article>
+      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "4px", color: "var(--text-primary)" }}>
+        {board.data.title}
+      </h1>
+
+      <div className="board-info">
+        <div className="board-info-left">
+          <span>조회수 {board.data.views}</span>
+          <span>{dayjs(board.data.createDate).format("YYYY-MM-DD")}</span>
+        </div>
+        <div className="board-info-right">
+          <BoardLike boardId={board.data.id} likes={board.data.likes} />
+        </div>
+      </div>
+
+      <div className="board-content">
+        {Parser(DOMPurify.sanitize(board.data.content))}
+      </div>
+
+      <hr />
+
       {isLoggedIn ? (
-        <CommentForm boardId={boardId} />
+        <CommentForm boardId={board.data.id} />
       ) : (
-        <p>로그인을 하면 댓글을 작성할 수 있습니다.</p>
+        <p style={{ color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontSize: "0.82rem", padding: "12px 0" }}>
+          // 댓글을 작성하려면 로그인이 필요합니다.
+        </p>
       )}
-      <CommentList boardId={boardId} />
-    </div>
+
+      <CommentList boardId={board.data.id} />
+    </article>
   );
 };
-
-export default BoardDetail;
