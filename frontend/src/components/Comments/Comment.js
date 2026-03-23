@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Button, Form, InputGroup } from "react-bootstrap";
 import { addComment, getChildComments } from "../../services/boardApi";
 import { useSelector } from "react-redux";
 import { selectIsLoggedIn } from "../../redux/userSlice";
@@ -10,11 +9,10 @@ import { queryKeys } from "../../services/queryKeys";
 export const Comment = ({ boardId, comment }) => {
   const isLoggedIn  = useSelector(selectIsLoggedIn);
   const queryClient = useQueryClient();
-  const [reply, setReply]               = useState({ comment: "", parentId: comment.id });
-  const [showReply, setShowReply]       = useState(false);
+  const [reply, setReply]                 = useState({ comment: "", parentId: comment.id });
+  const [showReply, setShowReply]         = useState(false);
   const [showReplyForm, setShowReplyForm] = useState(false);
 
-  // 자식 댓글: 펼칠 때만 요청, 이후 캐시 재사용
   const { data: children = [] } = useQuery({
     queryKey: queryKeys.comments.children(comment.id),
     queryFn:  () => getChildComments(comment.id),
@@ -25,8 +23,7 @@ export const Comment = ({ boardId, comment }) => {
 
   const replyMutation = useMutation({
     mutationFn: (replyData) => addComment(boardId, replyData),
-    onSuccess: (data) => {
-      alert(data);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.comments.list(boardId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.comments.children(comment.id) });
       setReply({ comment: "", parentId: comment.id });
@@ -34,77 +31,79 @@ export const Comment = ({ boardId, comment }) => {
     },
   });
 
-  const handleOnChange = (e) => {
-    e.preventDefault();
-    setReply((prev) => ({ ...prev, comment: e.target.value }));
-  };
-
   const handleOnSubmit = (e) => {
     e.preventDefault();
+    if (reply.comment.trim() === "") return;
     replyMutation.mutate(reply);
   };
 
   return (
-    <div>
+    <div className="comment-inner">
       <div className="comment-header">
         <span className="writer">{comment.writer}</span>
         <span className="upload-date">{formatTimeAgo(comment.write_date)}</span>
       </div>
       <p className="comment-content">{comment.comment}</p>
+
       <div className="reply-container">
-        {comment.childCount > 0 ? (
-          <span className="reply-list" onClick={() => setShowReply(true)}>
-            답글보기({comment.childCount})
-          </span>
-        ) : null}
-        {isLoggedIn ? (
-          <span className="reply-btn" onClick={() => setShowReplyForm(true)}>
-            답글
-          </span>
-        ) : null}
+        {comment.childCount > 0 && (
+          <button
+            className={`reply-list${showReply ? " active" : ""}`}
+            onClick={() => setShowReply((v) => !v)}
+          >
+            {showReply ? "▲" : "▼"}&nbsp;답글 {comment.childCount}개
+          </button>
+        )}
+        {isLoggedIn && (
+          <button
+            className={`reply-btn${showReplyForm ? " active" : ""}`}
+            onClick={() => setShowReplyForm((v) => !v)}
+          >
+            답글 달기
+          </button>
+        )}
       </div>
-      {showReply ? (
-        <div className="comment-list-container">
-          <ul className="comment-list">
-            {children.map((child) => (
-              <li key={child.id} className="comment-item">
-                <div className="comment-header">
-                  <span className="writer">{child.writer}</span>
-                  <span className="upload-date">{formatTimeAgo(child.write_date)}</span>
-                </div>
-                <p className="comment-content">{child.comment}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-      {showReplyForm ? (
-        <div>
-          <hr />
-          <Form>
-            <InputGroup>
-              <InputGroup.Text>답글</InputGroup.Text>
-              <Form.Control
-                type="text"
-                name="comment"
-                value={reply.comment}
-                onChange={handleOnChange}
-                placeholder="댓글을 입력하세요."
-              />
-              <Button
-                type="submit"
-                onClick={handleOnSubmit}
-                disabled={replyMutation.isPending}
-              >
-                작성
-              </Button>
-              <Button type="button" onClick={() => setShowReplyForm(false)}>
-                취소
-              </Button>
-            </InputGroup>
-          </Form>
-        </div>
-      ) : null}
+
+      {showReply && (
+        <ul className="comment-list reply-thread">
+          {children.map((child) => (
+            <li key={child.id} className="comment-item reply-item">
+              <div className="comment-header">
+                <span className="writer">{child.writer}</span>
+                <span className="upload-date">{formatTimeAgo(child.write_date)}</span>
+              </div>
+              <p className="comment-content">{child.comment}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {showReplyForm && (
+        <form className="reply-form" onSubmit={handleOnSubmit}>
+          <textarea
+            className="reply-form__textarea"
+            placeholder="답글을 입력하세요..."
+            value={reply.comment}
+            onChange={(e) => setReply((prev) => ({ ...prev, comment: e.target.value }))}
+          />
+          <div className="reply-form__actions">
+            <button
+              type="button"
+              className="reply-form__cancel"
+              onClick={() => setShowReplyForm(false)}
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              className="reply-form__submit"
+              disabled={replyMutation.isPending}
+            >
+              {replyMutation.isPending ? "작성 중..." : "작성"}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 };

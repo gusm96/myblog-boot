@@ -4,10 +4,31 @@ import { useCommentsQuery } from "../../hooks/useQueries";
 
 export const CommentList = ({ boardId }) => {
   const comments = useCommentsQuery(boardId);
-  if (comments.isLoading) return <div>Loading...</div>;
-  if (comments.error) return <div>Error : {comments.error.message} </div>;
+
+  if (comments.isLoading) {
+    return (
+      <section className="comment-section">
+        <p className="comment-state-msg">// loading comments...</p>
+      </section>
+    );
+  }
+  if (comments.error) {
+    return (
+      <section className="comment-section">
+        <p className="comment-state-msg comment-state-msg--error">
+          // error: {comments.error.message}
+        </p>
+      </section>
+    );
+  }
+
+  const count = comments.data.length;
+
   return (
-    <div className="comment-list-container">
+    <section className="comment-section">
+      <h3 className="comment-section-title">
+        {count} {count === 1 ? "comment" : "comments"}
+      </h3>
       <ul className="comment-list">
         {comments.data.map((comment) => (
           <li key={comment.id} className="comment-item">
@@ -15,6 +36,6 @@ export const CommentList = ({ boardId }) => {
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 };

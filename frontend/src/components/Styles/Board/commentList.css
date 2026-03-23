@@ -2,13 +2,19 @@
    Comment List — Dark Dev Theme
    ============================================================ */
 
+/* ── Section wrapper ──────────────────────────────────────── */
+.comment-section {
+  margin-top: 40px;
+}
+
 /* ── Section header ──────────────────────────────────────── */
 .comment-section-title {
   font-family: var(--font-mono);
   font-size: 0.75rem;
+  font-weight: 400;
   color: var(--text-faint);
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: lowercase;
   padding-bottom: 12px;
   margin-bottom: 16px;
   border-bottom: 1px solid var(--border);
@@ -22,6 +28,18 @@
   font-weight: 700;
 }
 
+/* ── State messages (loading / error) ────────────────────── */
+.comment-state-msg {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  padding: 16px 0;
+  margin: 0;
+}
+.comment-state-msg--error {
+  color: var(--accent-red);
+}
+
 /* ── List container ──────────────────────────────────────── */
 .comment-list-container {
   margin-top: 32px;
@@ -29,6 +47,7 @@
 .comment-list {
   list-style-type: none;
   padding: 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -83,6 +102,7 @@
   color: var(--text-secondary);
   white-space: pre-wrap;
   word-break: break-word;
+  margin: 0;
 }
 
 /* ── Reply controls ──────────────────────────────────────── */
@@ -95,6 +115,7 @@
 
 .reply-list,
 .reply-btn {
+  appearance: none;
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--text-faint);
@@ -107,11 +128,108 @@
   line-height: 1.4;
 }
 .reply-list:hover,
-.reply-btn:hover {
+.reply-list.active,
+.reply-btn:hover,
+.reply-btn.active {
   color: var(--accent);
   background-color: rgba(88, 166, 255, 0.08);
   border-color: rgba(88, 166, 255, 0.2);
-  transform: none;
+}
+
+/* ── Reply thread (nested comments) ─────────────────────── */
+.reply-thread {
+  margin-top: 10px;
+  padding-left: 16px;
+  border-left: 2px solid var(--border);
+  gap: 8px;
+}
+.reply-item {
+  background-color: var(--bg-secondary);
+  border-color: var(--border);
+  padding: 10px 14px;
+}
+.reply-item .writer {
+  font-size: 0.82rem;
+  color: var(--accent-purple);
+}
+.reply-item .writer::before {
+  content: "↳ @";
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+/* ── Reply form ──────────────────────────────────────────── */
+.reply-form {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reply-form__textarea {
+  width: 100%;
+  min-height: 64px;
+  resize: vertical;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  padding: 8px 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.reply-form__textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+}
+.reply-form__textarea::placeholder {
+  color: var(--text-faint);
+}
+
+.reply-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.reply-form__cancel,
+.reply-form__submit {
+  appearance: none;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 5px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  line-height: 1.4;
+}
+
+.reply-form__cancel {
+  background: transparent;
+  color: var(--text-faint);
+}
+.reply-form__cancel:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-secondary);
+  border-color: var(--border-hover);
+}
+
+.reply-form__submit {
+  background-color: rgba(88, 166, 255, 0.15);
+  color: var(--accent);
+  border-color: rgba(88, 166, 255, 0.3);
+}
+.reply-form__submit:hover:not(:disabled) {
+  background-color: rgba(88, 166, 255, 0.25);
+  border-color: var(--accent);
+}
+.reply-form__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ── Mobile ──────────────────────────────────────────────── */
@@ -121,5 +239,12 @@
   }
   .comment-content {
     font-size: 0.875rem;
+  }
+  .reply-form__actions {
+    flex-direction: row;
+  }
+  .reply-form__cancel,
+  .reply-form__submit {
+    flex: 1;
   }
 }

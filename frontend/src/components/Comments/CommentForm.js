@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from "react-bootstrap";
+import { Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle, Button } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { selectIsLoggedIn } from "../../redux/userSlice";
 import { addComment } from "../../services/boardApi";
@@ -51,14 +51,13 @@ export const CommentForm = ({ boardId }) => {
           value={commentData.comment}
           onChange={handleChange}
         />
-        <Button
-          variant="primary"
+        <button
           type="submit"
           className="comment-form__submit"
           disabled={addCommentMutation.isPending}
         >
           {addCommentMutation.isPending ? "작성 중..." : "작성"}
-        </Button>
+        </button>
       </form>
 
       <Modal show={isLoggedInModal} onHide={() => setIsLoggedInModal(false)} centered>
