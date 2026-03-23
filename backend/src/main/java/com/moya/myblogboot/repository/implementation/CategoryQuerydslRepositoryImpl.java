@@ -22,8 +22,11 @@ public class CategoryQuerydslRepositoryImpl implements CategoryQuerydslRepositor
 
     @Override
     public List<CategoriesResDto> findCategoriesWithViewBoards() {
+        // fetchJoin + 컬렉션 → 게시글 수만큼 Category 행이 중복 생성됨
+        // distinct()로 Hibernate 레벨 중복 제거 (SQL DISTINCT + 인메모리 de-duplication)
         List<Category> categories = queryFactory
                 .selectFrom(category)
+                .distinct()
                 .leftJoin(category.boards, board).fetchJoin()
                 .where(category.boards.size().gt(0).and(board.boardStatus.eq(BoardStatus.VIEW)))
                 .fetch();
@@ -34,6 +37,7 @@ public class CategoryQuerydslRepositoryImpl implements CategoryQuerydslRepositor
     public List<CategoriesResDto> findAllDto () {
         List<Category> categories = queryFactory
                 .selectFrom(category)
+                .distinct()
                 .leftJoin(category.boards, board).fetchJoin()
                 .fetch();
         return categories.stream().map(category -> CategoriesResDto.builder().category(category).build()).collect(Collectors.toList());
