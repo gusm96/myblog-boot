@@ -43,7 +43,7 @@ public class BoardServiceImpl implements BoardService {
     private final FileUploadService fileUploadService;
     private final BoardCacheService boardCacheService;
     // 페이지별 최대 게시글 수
-    private static final int LIMIT = 4;
+    private static final int LIMIT = 8;
 
     // 모든 게시글 리스트
     @Override
