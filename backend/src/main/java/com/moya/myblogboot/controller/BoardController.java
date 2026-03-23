@@ -6,9 +6,8 @@ import com.moya.myblogboot.dto.board.BoardListResDto;
 import com.moya.myblogboot.dto.board.BoardReqDto;
 import com.moya.myblogboot.service.BoardLikeService;
 import com.moya.myblogboot.service.BoardService;
-import com.moya.myblogboot.service.UserViewedBoardService;
+import com.moya.myblogboot.service.BoardViewCookieService;
 import com.moya.myblogboot.utils.CookieUtil;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,7 +30,7 @@ public class BoardController {
 
     private final BoardService boardService;
     private final BoardLikeService boardLikeService;
-    private final UserViewedBoardService userViewedBoardService;
+    private final BoardViewCookieService boardViewCookieService;
 
     // 모든 게시글 리스트
     @GetMapping("/api/v1/boards")
@@ -118,21 +117,31 @@ public class BoardController {
         return ResponseEntity.ok().body(result);
     }
 
+    // 게시글 상세 조회 V7 (Deprecated — Redis 기반 중복 방지, Long/Integer 직렬화 버그 존재)
+    @Deprecated
     @GetMapping("/api/v7/boards/{boardId}")
-    public ResponseEntity<BoardDetailResDto> getBoardDetailV7(@RequestAttribute(USER_NUM_COOKIE) String userToken,
-                                                              @PathVariable("boardId") Long boardId) {
-        BoardDetailResDto boardDetailResDto;
-        try {
-            if (!userViewedBoardService.isViewedBoard(userToken, boardId)) {
-                boardDetailResDto = boardService.getBoardDetailAndIncrementViews(boardId);
-                userViewedBoardService.addViewedBoard(userToken, boardId);
-            } else {
-                boardDetailResDto = boardService.getBoardDetail(boardId);
-            }
-        } catch (Exception e) {
-            throw new EntityNotFoundException(e.getMessage());
+    public ResponseEntity<BoardDetailResDto> getBoardDetailV7(@PathVariable("boardId") Long boardId) {
+        return ResponseEntity.ok().body(boardService.getBoardDetailAndIncrementViews(boardId));
+    }
+
+    // 게시글 상세 조회 V8 — Cookie + HMAC 기반 Stateless 중복 방지
+    @GetMapping("/api/v8/boards/{boardId}")
+    public ResponseEntity<BoardDetailResDto> getBoardDetailV8(@PathVariable("boardId") Long boardId,
+                                                              HttpServletRequest request,
+                                                              HttpServletResponse response) {
+        Cookie cookie = CookieUtil.findCookie(request, VIEWED_BOARDS);
+        String cookieValue = (cookie != null) ? cookie.getValue() : null;
+
+        boolean valid = boardViewCookieService.isValid(cookieValue);
+
+        if (!valid || !boardViewCookieService.isViewed(cookieValue, boardId)) {
+            BoardDetailResDto dto = boardService.getBoardDetailAndIncrementViews(boardId);
+            String newValue = boardViewCookieService.addViewed(valid ? cookieValue : null, boardId);
+            response.addCookie(CookieUtil.addCookie(VIEWED_BOARDS, newValue, boardViewCookieService.secondsUntilMidnight()));
+            return ResponseEntity.ok(dto);
         }
-        return ResponseEntity.ok().body(boardDetailResDto);
+
+        return ResponseEntity.ok(boardService.getBoardDetail(boardId));
     }
 
     // 게시글 상세 관리자용
