@@ -56,6 +56,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public String update(Long categoryId, String modifiedCategoryName) {
         Category category = retrieve(categoryId);
+        if (categoryRepository.existsByName(modifiedCategoryName)) {
+            throw new DuplicateKeyException("이미 존재하는 카테고리입니다.");
+        }
         try {
             category.editCategory(modifiedCategoryName);
             return category.getName();
