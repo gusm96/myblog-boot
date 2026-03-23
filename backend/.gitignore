@@ -40,3 +40,6 @@ out/
 
 # QueryDSL 자동생성 소스 (build/ 외 generated/ 경로 사용 시 대비)
 src/main/generated/
+
+# 배치 파일
+run-dev.bat
