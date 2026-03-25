@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Button, Form, InputGroup } from "react-bootstrap";
+import { useNavigate } from "react-router";
 import "./Styles/css/searchBar.css";
 
 export const SearchBar = ({ type, contents }) => {
   const [formData, setFormData] = useState({ type: "TITLE", contents: "" });
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (type && contents) {
@@ -13,7 +15,7 @@ export const SearchBar = ({ type, contents }) => {
 
   const handleOnSubmit = (e) => {
     e.preventDefault();
-    window.location.href = `/search?type=${formData.type}&contents=${formData.contents}`;
+    navigate(`/search?type=${formData.type}&contents=${formData.contents}`);
   };
 
   const handleOnChange = (e) => {

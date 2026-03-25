@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import dayjs from "dayjs";
 import Parser, { domToReact } from "html-react-parser";
+import { Link } from "react-router";
 import "../Styles/css/boardList.css";
 const BoardList = ({ boards, path }) => {
   const parserOptions = {
@@ -30,7 +31,7 @@ const BoardList = ({ boards, path }) => {
         <div>
           {boards.map((board) => (
             <div key={board.id} className="mb-3 board-item">
-              <a href={`${path}/${board.id}`} style={cardStyle}>
+              <Link to={`${path}/${board.id}`} style={cardStyle}>
                 <span className="board-title">{board.title}</span>
                 <p className="board-content">
                   {Parser(truncateText(board.content, 500), parserOptions)}
@@ -38,7 +39,7 @@ const BoardList = ({ boards, path }) => {
                 <span className="text-muted board-date">
                   {dayjs(board.createDate).format("YYYY-MM-DD")}
                 </span>
-              </a>
+              </Link>
             </div>
           ))}
           <hr></hr>
