@@ -22,6 +22,8 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
+    private static final long CACHE_TTL_SECONDS = 60 * 60L; // 1시간
+
     @Override
     public Set<Long> getKeys(String pattern) {
         return redisTemplate.execute((RedisCallback<Set<Long>>) connection -> {
@@ -58,6 +60,7 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
         String key = getKey(board.getId());
         String viewsKey = getViewsKey(key);
         Long updateViews = redisTemplate.opsForValue().increment(viewsKey);
+        redisTemplate.expire(viewsKey, CACHE_TTL_SECONDS, TimeUnit.SECONDS);
         board.setUpdateViews(updateViews);
         // 수정된 데이터 저장.
         setBoardForRedis(key, board);
@@ -69,6 +72,7 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
         String key = getKey(board.getId());
         String likesKey = getLikesKey(key);
         Long updateLikes = redisTemplate.opsForValue().increment(likesKey);
+        redisTemplate.expire(likesKey, CACHE_TTL_SECONDS, TimeUnit.SECONDS);
         board.setUpdateLikes(updateLikes);
         // 수정된 데이터 저장.
         setBoardForRedis(key, board);
@@ -80,6 +84,7 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
         String key = getKey(board.getId());
         String likesKey = getLikesKey(key);
         Long updateLikes = redisTemplate.opsForValue().decrement(likesKey);
+        redisTemplate.expire(likesKey, CACHE_TTL_SECONDS, TimeUnit.SECONDS);
         board.setUpdateLikes(updateLikes);
         // 수정된 데이터 저장.
         setBoardForRedis(key, board);
@@ -120,7 +125,7 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
     }
 
     private void setBoardForRedis(String key, BoardForRedis boardForRedis) {
-        redisTemplate.opsForValue().set(key, boardForRedis);
+        redisTemplate.opsForValue().set(key, boardForRedis, CACHE_TTL_SECONDS, TimeUnit.SECONDS);
     }
 
     private String getKey(Long boardId) {

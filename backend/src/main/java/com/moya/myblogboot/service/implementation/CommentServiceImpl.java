@@ -68,7 +68,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public String update(Long commentId, Long memberId, String modifiedComment) {
-        Comment findComment = retrieve(commentId);
+        Comment findComment = retrieveWithMember(commentId);
         if (!findComment.getMember().getId().equals(memberId)) {
             throw new UnauthorizedAccessException("권한이 없습니다.");
         }
@@ -80,7 +80,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public String delete(Long commentId, Long memberId) {
-        Comment findComment = retrieve(commentId);
+        Comment findComment = retrieveWithMember(commentId);
         if (!findComment.getMember().getId().equals(memberId)) {
             throw new UnauthorizedAccessException("권한이 없습니다.");
         }
@@ -97,6 +97,11 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public Comment retrieve(Long commentId) {
         return commentRepository.findById(commentId).orElseThrow(()
+                -> new EntityNotFoundException("해당 댓글은 삭제되었거나 존재하지 않습니다."));
+    }
+
+    private Comment retrieveWithMember(Long commentId) {
+        return commentRepository.findByIdWithMember(commentId).orElseThrow(()
                 -> new EntityNotFoundException("해당 댓글은 삭제되었거나 존재하지 않습니다."));
     }
 

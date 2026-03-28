@@ -7,7 +7,9 @@ import static com.moya.myblogboot.utils.DateUtil.*;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @Profile("!test")
 @Component
 @RequiredArgsConstructor
-public class VisitorCountScheduledTask {
+public class VisitorCountScheduledTask implements ApplicationListener<ContextClosedEvent> {
     private final VisitorCountService visitorCountService;
     private final Lock lock = new ReentrantLock();
 
@@ -64,5 +66,20 @@ public class VisitorCountScheduledTask {
     @Scheduled(cron = "0 1 0 * * ?", zone = "Asia/Seoul")
     public void createTodayVisitorCountAtMidnight() {
         visitorCountService.createTodayVisitorCount();
+    }
+
+    // 정상 종료(SIGTERM) 시 Redis → DB 즉시 동기화
+    @Override
+    public void onApplicationEvent(ContextClosedEvent event) {
+        lock.lock();
+        try {
+            String today = getToday();
+            visitorCountService.syncVisitorCountToDb(today);
+            log.info("Shutdown: Redis → DB 동기화 완료 ({})", today);
+        } catch (Exception e) {
+            log.error("Shutdown: 동기화 실패 — AOF 복원에 의존. 원인: {}", e.getMessage());
+        } finally {
+            lock.unlock();
+        }
     }
 }
