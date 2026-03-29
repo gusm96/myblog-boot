@@ -1,16 +1,8 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.comment.CommentReqDto;
-import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.domain.token.TokenInfo;
-import com.moya.myblogboot.service.AuthService;
-import com.moya.myblogboot.service.BoardService;
 import com.moya.myblogboot.service.CommentService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;

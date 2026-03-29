@@ -212,14 +212,6 @@ class BoardControllerTest extends AbstractContainerBaseTest {
     }
 
     @Test
-    @DisplayName("게시글 상세 조회 V7 (Deprecated)")
-    void getBoardDetailV7() throws Exception {
-        mockMvc.perform(get("/api/v7/boards/{boardId}", boardId))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(boardId));
-    }
-
-    @Test
     @DisplayName("게시글 상세 조회 V8 — 최초 조회: 조회수 증가 + viewed_boards 쿠키 발급")
     void getBoardDetailV8_최초조회() throws Exception {
         ResultActions resultActions = mockMvc.perform(get("/api/v8/boards/{boardId}", boardId));

@@ -40,11 +40,6 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
     }
 
     @Override
-    public void saveClientIp(String key) {
-        redisTemplate.opsForValue().set(key, "", 24, TimeUnit.HOURS);
-    }
-
-    @Override
     public Optional<BoardForRedis> findOne(Long boardId) {
         String key = getKey(boardId);
         BoardForRedis boardForRedis = getBoardForRedis(key);
@@ -113,11 +108,6 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
         redisTemplate.delete(key);
         redisTemplate.delete(viewsKey);
         redisTemplate.delete(likesKey);
-    }
-
-    @Override
-    public boolean isDuplicateBoardViewCount(String key) {
-        return redisTemplate.hasKey(key);
     }
 
     private BoardForRedis getBoardForRedis(String key) {

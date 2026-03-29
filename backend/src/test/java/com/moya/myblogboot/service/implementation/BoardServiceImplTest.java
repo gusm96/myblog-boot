@@ -13,7 +13,6 @@ import com.moya.myblogboot.repository.CategoryRepository;
 import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.service.BoardService;
 import com.moya.myblogboot.exception.custom.EntityNotFoundException;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -176,24 +175,4 @@ class BoardServiceImplTest extends AbstractContainerBaseTest {
                 () -> boardService.findById(999L));
     }
 
-    @Test
-    @DisplayName("조회수 중복 검사 - 최초 접근 시 false 반환")
-    void isDuplicateBoardViewCount_firstAccess() {
-        String key = "board:view:test:" + UUID.randomUUID();
-
-        boolean result = boardService.isDuplicateBoardViewCount(key);
-
-        assertThat(result).isFalse();
-    }
-
-    @Test
-    @DisplayName("조회수 중복 검사 - 재접근 시 true 반환")
-    void isDuplicateBoardViewCount_duplicate() {
-        String key = "board:view:test:" + UUID.randomUUID();
-        boardService.isDuplicateBoardViewCount(key);
-
-        boolean result = boardService.isDuplicateBoardViewCount(key);
-
-        assertThat(result).isTrue();
-    }
 }

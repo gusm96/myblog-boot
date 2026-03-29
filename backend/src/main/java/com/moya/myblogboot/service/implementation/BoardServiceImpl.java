@@ -78,18 +78,6 @@ public class BoardServiceImpl implements BoardService {
         return convertToBoardListResDto(boards);
     }
 
-    @Override
-    public boolean isDuplicateBoardViewCount(String key) {
-        // 검사 로직
-        if (boardRedisRepository.isDuplicateBoardViewCount(key)) {
-            return true;
-        } else {
-            // 중복되지 않은 경우 IP가 포함된 Key를 Redis store에 저장.
-            boardRedisRepository.saveClientIp(key);
-            return false;
-        }
-    }
-
     // 게시글 상세 조회
     @Override
     public BoardDetailResDto getBoardDetail(Long boardId) {

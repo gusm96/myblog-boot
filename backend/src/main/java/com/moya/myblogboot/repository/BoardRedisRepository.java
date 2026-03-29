@@ -24,7 +24,4 @@ public interface BoardRedisRepository {
 
     void update(BoardForRedis board);
 
-    boolean isDuplicateBoardViewCount(String key);
-
-    void saveClientIp(String key);
 }
