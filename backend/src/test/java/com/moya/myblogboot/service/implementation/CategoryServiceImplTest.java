@@ -9,13 +9,13 @@ import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
 import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.service.CategoryService;
-import jakarta.persistence.EntityNotFoundException;
+import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DuplicateKeyException;
+import com.moya.myblogboot.exception.custom.DuplicateException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,25 +64,23 @@ class CategoryServiceImplTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("카테고리 생성 성공")
     void create() {
-        String result = categoryService.create("새카테고리");
+        categoryService.create("새카테고리");
 
-        assertThat(result).isEqualTo("카테고리가 정상적으로 등록되었습니다.");
         assertThat(categoryRepository.existsByName("새카테고리")).isTrue();
     }
 
     @Test
     @DisplayName("카테고리 생성 실패 - 중복된 이름")
     void create_duplicate() {
-        assertThrows(DuplicateKeyException.class,
+        assertThrows(DuplicateException.class,
                 () -> categoryService.create("테스트카테고리"));
     }
 
     @Test
     @DisplayName("카테고리 수정 성공")
     void update() {
-        String result = categoryService.update(testCategory.getId(), "수정된카테고리");
+        categoryService.update(testCategory.getId(), "수정된카테고리");
 
-        assertThat(result).isEqualTo("수정된카테고리");
         assertThat(testCategory.getName()).isEqualTo("수정된카테고리");
     }
 
@@ -100,9 +98,8 @@ class CategoryServiceImplTest extends AbstractContainerBaseTest {
                 .name("빈카테고리")
                 .build());
 
-        String result = categoryService.delete(emptyCategory.getId());
+        categoryService.delete(emptyCategory.getId());
 
-        assertThat(result).isEqualTo("카테고리가 삭제되었습니다.");
         assertThat(categoryRepository.findById(emptyCategory.getId())).isEmpty();
     }
 
@@ -117,7 +114,7 @@ class CategoryServiceImplTest extends AbstractContainerBaseTest {
                 .build());
         testCategory.addBoard(board);
 
-        assertThrows(RuntimeException.class,
+        assertThrows(com.moya.myblogboot.exception.BusinessException.class,
                 () -> categoryService.delete(testCategory.getId()));
     }
 }

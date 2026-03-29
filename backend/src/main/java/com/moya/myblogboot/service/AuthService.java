@@ -8,7 +8,7 @@ import com.moya.myblogboot.domain.token.TokenInfo;
 
 public interface AuthService {
 
-    String memberJoin(MemberJoinReqDto memberJoinReqDto);
+    void memberJoin(MemberJoinReqDto memberJoinReqDto);
 
     Token memberLogin(MemberLoginReqDto memberLoginReqDto);
 

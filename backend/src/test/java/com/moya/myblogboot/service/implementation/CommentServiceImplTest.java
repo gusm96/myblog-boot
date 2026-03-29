@@ -14,7 +14,7 @@ import com.moya.myblogboot.repository.CategoryRepository;
 import com.moya.myblogboot.repository.CommentRepository;
 import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.service.CommentService;
-import jakarta.persistence.EntityNotFoundException;
+import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -84,9 +84,8 @@ class CommentServiceImplTest extends AbstractContainerBaseTest {
         CommentReqDto reqDto = new CommentReqDto();
         reqDto.setComment("새로운 댓글");
 
-        String result = commentService.write(reqDto, testMember.getId(), testBoard.getId());
-
-        assertThat(result).isEqualTo("댓글이 등록되었습니다.");
+        // void 반환 — 예외 없이 완료되면 성공
+        commentService.write(reqDto, testMember.getId(), testBoard.getId());
     }
 
     @Test
@@ -96,18 +95,16 @@ class CommentServiceImplTest extends AbstractContainerBaseTest {
         reqDto.setComment("대댓글입니다.");
         reqDto.setParentId(testComment.getId());
 
-        String result = commentService.write(reqDto, testMember.getId(), testBoard.getId());
+        commentService.write(reqDto, testMember.getId(), testBoard.getId());
 
-        assertThat(result).isEqualTo("댓글이 등록되었습니다.");
         assertThat(testComment.getChild()).hasSize(1);
     }
 
     @Test
     @DisplayName("댓글 수정 성공")
     void update() {
-        String result = commentService.update(testComment.getId(), testMember.getId(), "수정된 댓글");
+        commentService.update(testComment.getId(), testMember.getId(), "수정된 댓글");
 
-        assertThat(result).isEqualTo("댓글이 수정되었습니다.");
         assertThat(testComment.getComment()).isEqualTo("수정된 댓글");
         assertThat(testComment.getModificationStatus()).isEqualTo(ModificationStatus.MODIFIED);
     }
@@ -122,9 +119,8 @@ class CommentServiceImplTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("댓글 삭제 성공")
     void delete() {
-        String result = commentService.delete(testComment.getId(), testMember.getId());
+        commentService.delete(testComment.getId(), testMember.getId());
 
-        assertThat(result).isEqualTo("댓글이 삭제되었습니다.");
         assertThrows(EntityNotFoundException.class,
                 () -> commentService.retrieve(testComment.getId()));
     }

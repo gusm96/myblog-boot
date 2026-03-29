@@ -13,10 +13,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DuplicateKeyException;
+import com.moya.myblogboot.exception.custom.DuplicateException;
+import com.moya.myblogboot.exception.custom.EntityNotFoundException;
+import com.moya.myblogboot.exception.custom.UnauthorizedException;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,9 +74,9 @@ class AuthServiceImplTest extends AbstractContainerBaseTest {
                 .build();
 
         // 회원이 중복되었을 때
-        assertThrows(DuplicateKeyException.class, () -> authService.memberJoin(reqMember2));
-        String result = authService.memberJoin(reqMember1);
-        assertEquals(result, "회원가입을 성공했습니다.");
+        assertThrows(DuplicateException.class, () -> authService.memberJoin(reqMember2));
+        // void 반환 — 예외 없이 정상 완료되면 성공
+        assertDoesNotThrow(() -> authService.memberJoin(reqMember1));
     }
 
     @Test
@@ -97,8 +97,8 @@ class AuthServiceImplTest extends AbstractContainerBaseTest {
                 .username("testMember")
                 .password("testPassword")
                 .build();
-        assertThrows(UsernameNotFoundException.class, () -> authService.memberLogin(notExistsUsername));
-        assertThrows(BadCredentialsException.class, () -> authService.memberLogin(notEqualsPassword));
+        assertThrows(EntityNotFoundException.class, () -> authService.memberLogin(notExistsUsername));
+        assertThrows(UnauthorizedException.class, () -> authService.memberLogin(notEqualsPassword));
         Object result = authService.memberLogin(memberLoginReqDto);
         assertTrue(result instanceof Token);
     }

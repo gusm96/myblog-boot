@@ -1,7 +1,10 @@
 package com.moya.myblogboot.exception.custom;
 
-public class InvalidateTokenException extends RuntimeException{
-    public InvalidateTokenException (String message){
-        super(message);
+import com.moya.myblogboot.exception.BusinessException;
+import com.moya.myblogboot.exception.ErrorCode;
+
+public class InvalidateTokenException extends BusinessException {
+    public InvalidateTokenException() {
+        super(ErrorCode.INVALID_TOKEN);
     }
 }

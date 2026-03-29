@@ -6,6 +6,8 @@ import com.moya.myblogboot.domain.file.ImageFile;
 import com.moya.myblogboot.domain.file.ImageFileDto;
 import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.dto.board.*;
+import com.moya.myblogboot.exception.ErrorCode;
+import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.BoardRedisRepository;
 import com.moya.myblogboot.repository.BoardRepository;
@@ -15,10 +17,8 @@ import com.moya.myblogboot.service.BoardCacheService;
 import com.moya.myblogboot.service.BoardService;
 import com.moya.myblogboot.service.CategoryService;
 import com.moya.myblogboot.service.FileUploadService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -111,17 +111,12 @@ public class BoardServiceImpl implements BoardService {
         Member member = authService.retrieve(memberId);
         Category category = categoryService.retrieve(boardReqDto.getCategory());
         Board newBoard = boardReqDto.toEntity(category, member);
-        try {
-            if (boardReqDto.getImages() != null && boardReqDto.getImages().size() > 0) {
-                saveImageFile(boardReqDto.getImages(), newBoard);
-            }
-            Board result = boardRepository.save(newBoard);
-            category.addBoard(result);
-            return result.getId();
-        } catch (Exception e) {
-            log.error("게시글 등록 중 에러 발생 : {}", e.getMessage());
-            throw new RuntimeException("게시글 등록을 실패했습니다");
+        if (boardReqDto.getImages() != null && !boardReqDto.getImages().isEmpty()) {
+            saveImageFile(boardReqDto.getImages(), newBoard);
         }
+        Board result = boardRepository.save(newBoard);
+        category.addBoard(result);
+        return result.getId();
     }
 
     // 게시글 수정
@@ -186,14 +181,9 @@ public class BoardServiceImpl implements BoardService {
     // 게시글 Entity 조회
     @Override
     public Board findById(Long boardId) {
-        try {
-            return boardRepository.findById(boardId).orElseThrow(
-                    () -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다.")
-            );
-        } catch (InvalidDataAccessApiUsageException e) {
-            e.printStackTrace();
-            throw new RuntimeException("게시글 조회중 오류 발생.");
-        }
+        return boardRepository.findById(boardId).orElseThrow(
+                () -> new EntityNotFoundException(ErrorCode.BOARD_NOT_FOUND)
+        );
     }
 
     private BoardListResDto convertToBoardListResDto(Page<Board> boards) {
@@ -211,7 +201,7 @@ public class BoardServiceImpl implements BoardService {
     // 게시글 수정/삭제 권한 검사.
     private void verifyBoardAccessAuthorization(Long boardsMemberId, Long memberId) {
         if (!boardsMemberId.equals(memberId))
-            throw new UnauthorizedAccessException("게시글 수정 권한이 없습니다.");
+            throw new UnauthorizedAccessException(ErrorCode.BOARD_ACCESS_DENIED);
     }
 
     // 게시글 영구 삭제
@@ -221,12 +211,8 @@ public class BoardServiceImpl implements BoardService {
         fileUploadService.deleteFiles(board.getImageFiles());
         // Redis Store에 저장된 Data Delete
         boardCacheService.deleteBoard(boardForRedis);
-        try {
-            // DB에 저장된 Data Delete
-            boardRepository.delete(board);
-        } catch (Exception e) {
-            throw new RuntimeException("게시글 삭제를 실패했습니다.");
-        }
+        // DB에 저장된 Data Delete
+        boardRepository.delete(board);
     }
 
     // Board Entity 조회 후 Redis Store에 저장.

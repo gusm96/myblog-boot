@@ -1,94 +1,103 @@
 package com.moya.myblogboot.exception;
 
 import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
-import com.moya.myblogboot.exception.custom.ExpiredTokenException;
-import com.moya.myblogboot.exception.custom.ImageDeleteFailException;
-import com.moya.myblogboot.exception.custom.ImageUploadFailException;
-import com.moya.myblogboot.exception.custom.InvalidateTokenException;
-import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.utils.CookieUtil;
-import io.jsonwebtoken.ExpiredJwtException;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.PersistenceException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.dao.DuplicateKeyException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import lombok.extern.slf4j.Slf4j;
-
-import io.jsonwebtoken.security.SecurityException;
-import org.springframework.security.access.AccessDeniedException;
-
-import java.util.NoSuchElementException;
+import java.util.List;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 데이터 중복에 대한 예외처리
-    @ExceptionHandler(DuplicateKeyException.class)
-    public ResponseEntity<?> handleDuplicateKeyException(DuplicateKeyException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    // 비즈니스 예외 — 모든 커스텀 예외를 한 번에 처리
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
+        ErrorCode errorCode = e.getErrorCode();
+        log.warn("Business exception: {} - {}", errorCode.getCode(), e.getMessage(), e);
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode));
     }
 
-    // NotFoundException
-    @ExceptionHandler({EntityNotFoundException.class, UsernameNotFoundException.class, NoSuchElementException.class})
-    public ResponseEntity<?> handleNotFoundException(Exception e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-    }
-
-    // 잘못된 비밀 번호
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<?> handleBadCredentialsException(BadCredentialsException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getBindingResult().getAllErrors().get(0).getDefaultMessage());
-    }
-
-    // 인가 실패 (403)
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException e) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-    }
-
-    // Token 예외 처리 (401)
-    @ExceptionHandler({SecurityException.class, ExpiredTokenException.class, ExpiredJwtException.class,
-            InvalidateTokenException.class, UnauthorizedAccessException.class})
-    public ResponseEntity<?> handleUnauthorizedAccessException(Exception e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-    }
-    // RefreshToken 만료
+    // RefreshToken 만료 — 쿠키 삭제 후 에러 응답
     @ExceptionHandler(ExpiredRefreshTokenException.class)
-    public ResponseEntity<?> handleExpiredRefreshTokenException(HttpServletRequest request, HttpServletResponse response, ExpiredRefreshTokenException e) {
+    public ResponseEntity<ErrorResponse> handleExpiredRefreshTokenException(
+            HttpServletRequest request, HttpServletResponse response,
+            ExpiredRefreshTokenException e) {
         Cookie refreshTokenCookie = CookieUtil.findCookie(request, "refresh_token_key");
         if (refreshTokenCookie != null) {
             CookieUtil.deleteCookie(response, refreshTokenCookie);
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        ErrorCode errorCode = e.getErrorCode();
+        log.warn("Refresh token expired: {}", errorCode.getCode());
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode));
     }
 
-    // Internal Sever Error
-    @ExceptionHandler({RuntimeException.class, PersistenceException.class})
-    public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
-        log.error("Internal Server Error: ", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류가 발생했습니다.");
+    // 인가 실패 (403) — Spring Security AccessDeniedException
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
+        log.warn("Access denied: {}", e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(ErrorCode.ACCESS_DENIED));
     }
 
-    // ImageFile 업로드/삭제 실패
-    @ExceptionHandler({ImageUploadFailException.class, ImageDeleteFailException.class})
-    public ResponseEntity<?> handleS3ImageUploadAndDeleteFailException(Exception e){
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    // Validation 예외 — @Valid 검증 실패
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
+        List<ErrorResponse.FieldError> fieldErrors =
+                e.getBindingResult().getFieldErrors().stream()
+                        .map(error -> ErrorResponse.FieldError.builder()
+                                .field(error.getField())
+                                .value(error.getRejectedValue() != null
+                                        ? error.getRejectedValue().toString() : "")
+                                .reason(error.getDefaultMessage())
+                                .build())
+                        .toList();
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(ErrorCode.INVALID_INPUT, fieldErrors));
     }
 
+    // 타입 불일치 — @RequestParam, @PathVariable 타입 변환 실패
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+        log.warn("Type mismatch: param={}, value={}, requiredType={}",
+                e.getName(), e.getValue(), e.getRequiredType());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(ErrorCode.INVALID_TYPE_VALUE));
+    }
+
+    // JSON 파싱 실패 — 잘못된 요청 본문
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleNotReadable(HttpMessageNotReadableException e) {
+        log.warn("Message not readable: {}", e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(ErrorCode.INVALID_REQUEST_BODY));
+    }
+
+    // 예상치 못한 예외 — 최후의 방어선
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpected(Exception e) {
+        log.error("Unexpected exception: ", e);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR));
+    }
 }

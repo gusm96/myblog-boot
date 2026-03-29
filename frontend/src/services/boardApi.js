@@ -90,12 +90,10 @@ export const getChildComments = (parentId) => {
 };
 
 export const addComment = (boardId, commentData) => {
-  return apiClient
-    .post(`${COMMENT_CRUD}/${boardId}`, {
-      comment: commentData.comment,
-      parentId: commentData.parentId,
-    })
-    .then((res) => res.data);
+  return apiClient.post(`${COMMENT_CRUD}/${boardId}`, {
+    comment: commentData.comment,
+    parentId: commentData.parentId,
+  });
 };
 
 export const getBoardLikeStatus = (boardId) => {

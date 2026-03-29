@@ -59,20 +59,21 @@ function App() {
   }, [access_token]);
 
   useEffect(() => {
-    // 로그인 상태면 access Token 주기적으로 검증.
-    if (isLoggedIn && access_token !== null) {
+    // 로그인 상태면 앱 마운트 시 access Token 1회 갱신.
+    if (isLoggedIn) {
       reissuingAccessToken()
         .then((data) => {
           dispatch(updateUserAccessToken(data));
         })
         .catch((error) => {
-          if (error.response.status === 401 || error.response.status === 500) {
+          if (error.response?.status === 401) {
             alert("토큰이 만료되어 로그아웃 합니다.");
             dispatch(userLogout());
           }
         });
     }
-  }, [isLoggedIn, access_token, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
 
   return (
     <PersistQueryClientProvider

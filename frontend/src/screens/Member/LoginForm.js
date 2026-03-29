@@ -27,7 +27,7 @@ export const LoginForm = () => {
         navigate(from);
       })
       .catch((error) => {
-        alert(error.response?.data || "로그인에 실패했습니다.");
+        alert(error.response?.data?.message || "로그인에 실패했습니다.");
       });
   };
 

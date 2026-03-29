@@ -23,7 +23,5 @@ export const addNewCategory = (categoryName) => {
 };
 
 export const deleteCategory = (categoryId) => {
-  return apiClient
-    .delete(`${CATEGORY_CRUD}/${categoryId}`)
-    .then((res) => res.data);
+  return apiClient.delete(`${CATEGORY_CRUD}/${categoryId}`);
 };

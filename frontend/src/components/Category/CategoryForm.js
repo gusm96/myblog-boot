@@ -16,15 +16,15 @@ export const CategoryForm = ({ formData, onChange }) => {
   const handleNewCategory = (e) => {
     e.preventDefault();
     addNewCategory(newCategory)
-      .then((res) => {
-        if (res.status === 200) {
-          alert("카테고리 추가 완료");
-          setCategories((prev) => [...prev, { id: prev.length + 1, name: newCategory }]);
-          setShowModal(false);
-          setNewCategory("");
-        }
+      .then(() => {
+        alert("카테고리 추가 완료");
+        setCategories((prev) => [...prev, { id: prev.length + 1, name: newCategory }]);
+        setShowModal(false);
+        setNewCategory("");
       })
-      .catch(() => {});
+      .catch((error) => {
+        alert(error.response?.data?.message || "카테고리 추가에 실패했습니다.");
+      });
   };
 
   return (

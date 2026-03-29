@@ -45,7 +45,7 @@ public class JwtUtil {
                     .build()
                     .parseSignedClaims(token);
         } catch (ExpiredJwtException e) {
-            throw new ExpiredTokenException("토큰이 만료되었습니다");
+            throw new ExpiredTokenException();
         } catch (SecurityException e) {
             throw new SecurityException("유효하지 않은 토큰입니다.", e);
         } catch (MalformedJwtException e) {

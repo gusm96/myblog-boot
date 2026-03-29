@@ -45,7 +45,7 @@ export const JoinForm = () => {
         }
       })
       .catch((error) => {
-        alert(error.response?.data || "회원가입에 실패했습니다.");
+        alert(error.response?.data?.message || "회원가입에 실패했습니다.");
       });
   };
 

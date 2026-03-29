@@ -10,13 +10,11 @@ import {
 } from "../apiConfig";
 
 export const join = (formData) => {
-  return axios
-    .post(`${MEMBER_JOIN}`, {
-      username: formData.username,
-      password: formData.password1,
-      nickname: formData.nickname,
-    })
-    .then((res) => res.data);
+  return axios.post(`${MEMBER_JOIN}`, {
+    username: formData.username,
+    password: formData.password1,
+    nickname: formData.nickname,
+  });
 };
 
 export const login = (formData) => {

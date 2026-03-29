@@ -3,13 +3,14 @@ package com.moya.myblogboot.service.implementation;
 import com.moya.myblogboot.domain.category.CategoriesResDto;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.category.CategoryResDto;
+import com.moya.myblogboot.exception.BusinessException;
+import com.moya.myblogboot.exception.ErrorCode;
+import com.moya.myblogboot.exception.custom.DuplicateException;
+import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.repository.CategoryRepository;
 import com.moya.myblogboot.service.CategoryService;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,27 +27,22 @@ public class CategoryServiceImpl implements CategoryService {
     public List<CategoryResDto> retrieveAll() {
         return categoryRepository.findAll().stream().map(CategoryResDto::of).toList();
     }
+
     @Override
     @Transactional
-    public String create(String categoryName){
-        // Category 중복 검사
-        if(categoryRepository.existsByName(categoryName)){
-            throw new DuplicateKeyException("이미 존재하는 카테고리입니다.");
+    public void create(String categoryName) {
+        if (categoryRepository.existsByName(categoryName)) {
+            throw new DuplicateException(ErrorCode.DUPLICATE_CATEGORY);
         }
         Category category = Category.builder().name(categoryName).build();
-        try {
-            categoryRepository.save(category);
-            return "카테고리가 정상적으로 등록되었습니다.";
-        } catch (Exception e) {
-            log.error("카테고리 등록 실패.");
-            throw new PersistenceException("카테고리 등록을 실패했습니다.");
-        }
+        categoryRepository.save(category);
     }
 
     @Override
     public List<CategoriesResDto> retrieveAllWithViewBoards() {
         return categoryRepository.findCategoriesWithViewBoards();
     }
+
     @Override
     public List<CategoriesResDto> retrieveDto() {
         return categoryRepository.findAllDto();
@@ -54,38 +50,28 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
-    public String update(Long categoryId, String modifiedCategoryName) {
+    public void update(Long categoryId, String modifiedCategoryName) {
         Category category = retrieve(categoryId);
         if (categoryRepository.existsByName(modifiedCategoryName)) {
-            throw new DuplicateKeyException("이미 존재하는 카테고리입니다.");
+            throw new DuplicateException(ErrorCode.DUPLICATE_CATEGORY);
         }
-        try {
-            category.editCategory(modifiedCategoryName);
-            return category.getName();
-        } catch (Exception e) {
-            log.error("카테고리 수정 실패");
-            throw new RuntimeException("카테고리 수정 중 오류가 발생했습니다.");
-        }
+        category.editCategory(modifiedCategoryName);
     }
+
     // 카테고리 삭제
     @Override
     @Transactional
-    public String delete(Long categoryId) {
+    public void delete(Long categoryId) {
         Category category = retrieve(categoryId);
-        if(category.getBoards().size() > 0) {
-            throw new RuntimeException("등록된 게시글이 존재해 삭제할 수 없습니다.");
+        if (!category.getBoards().isEmpty()) {
+            throw new BusinessException(ErrorCode.CATEGORY_HAS_BOARDS);
         }
-        try {
-            categoryRepository.delete(category);
-            return "카테고리가 삭제되었습니다.";
-        } catch (Exception e) {
-            log.error("카테고리 삭제 실패");
-            throw new RuntimeException("카테고리 삭제 중 오류가 발생했습니다.");
-        }
+        categoryRepository.delete(category);
     }
+
     @Override
     public Category retrieve(Long categoryId) {
         return categoryRepository.findById(categoryId).orElseThrow(()
-                -> new EntityNotFoundException("해당 카테고리를 찾을 수 없습니다."));
+                -> new EntityNotFoundException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 }

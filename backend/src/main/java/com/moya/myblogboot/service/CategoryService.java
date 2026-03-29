@@ -7,13 +7,13 @@ import com.moya.myblogboot.domain.category.CategoryResDto;
 import java.util.List;
 
 public interface CategoryService {
-    String create(String categoryName);
+    void create(String categoryName);
 
     List<CategoryResDto> retrieveAll();
 
-    String update(Long categoryId, String modifiedCategoryName);
+    void update(Long categoryId, String modifiedCategoryName);
 
-    String delete(Long categoryId);
+    void delete(Long categoryId);
 
     Category retrieve(Long categoryId);
 

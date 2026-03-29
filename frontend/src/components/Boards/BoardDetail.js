@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router";
 import { selectIsLoggedIn } from "../../redux/userSlice";
 import Parser from "html-react-parser";
 import DOMPurify from "dompurify";
-import { useBoardQuery, useLikeStatusQuery } from "../../hooks/useQueries";
+import { useBoardQuery } from "../../hooks/useQueries";
 import { ErrorMessage } from "../ErrorMessage";
 import { CommentForm } from "../Comments/CommentForm";
 import { CommentList } from "../Comments/CommentList";
@@ -17,7 +17,6 @@ export const BoardDetail = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
   const board = useBoardQuery(boardId);
-  const likeStatus = useLikeStatusQuery(boardId, isLoggedIn);
 
   if (board.isPending) {
     return (
