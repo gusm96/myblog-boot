@@ -38,29 +38,32 @@ public class CommentController {
 
     // 댓글 작성
     @PostMapping("/api/v1/comments/{boardId}")
-    public ResponseEntity<String> writeComment(Principal principal,
-                                                       @PathVariable("boardId") Long boardId,
-                                                       @RequestBody CommentReqDto commentReqDto) {
+    public ResponseEntity<Void> writeComment(Principal principal,
+                                             @PathVariable("boardId") Long boardId,
+                                             @RequestBody CommentReqDto commentReqDto) {
         Long memberId = getMemberId(principal);
-        return ResponseEntity.ok().body(commentService.write(commentReqDto, memberId, boardId));
+        commentService.write(commentReqDto, memberId, boardId);
+        return ResponseEntity.ok().build();
     }
 
     // 댓글 수정
     @PutMapping("/api/v1/comments/{commentId}")
-    public ResponseEntity<String> editComment(Principal principal,
-                                                     @PathVariable("commentId") Long commentId,
-                                                     @RequestBody CommentReqDto commentReqDto) {
+    public ResponseEntity<Void> editComment(Principal principal,
+                                            @PathVariable("commentId") Long commentId,
+                                            @RequestBody CommentReqDto commentReqDto) {
         Long memberId = getMemberId(principal);
-        return ResponseEntity.ok().body(commentService.update(commentId, memberId, commentReqDto.getComment()));
+        commentService.update(commentId, memberId, commentReqDto.getComment());
+        return ResponseEntity.ok().build();
     }
 
     // 댓글 삭제
     @DeleteMapping("/api/v1/comments/{commentId}")
-    public ResponseEntity<String> deleteComment(
+    public ResponseEntity<Void> deleteComment(
             Principal principal,
             @PathVariable("commentId") Long commentId) {
         Long memberId = getMemberId(principal);
-        return ResponseEntity.ok().body(commentService.delete(commentId, memberId));
+        commentService.delete(commentId, memberId);
+        return ResponseEntity.ok().build();
     }
 
     private Long getMemberId(Principal principal) {

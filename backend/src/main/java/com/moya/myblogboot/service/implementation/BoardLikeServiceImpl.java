@@ -2,6 +2,9 @@ package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.dto.board.BoardForRedis;
 import com.moya.myblogboot.domain.board.BoardLike;
+import com.moya.myblogboot.exception.ErrorCode;
+import com.moya.myblogboot.exception.custom.DuplicateException;
+import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.repository.BoardLikeRepository;
 import com.moya.myblogboot.repository.BoardRedisRepository;
 import com.moya.myblogboot.service.AuthService;
@@ -9,10 +12,8 @@ import com.moya.myblogboot.service.BoardLikeService;
 import com.moya.myblogboot.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Slf4j
@@ -27,31 +28,21 @@ public class BoardLikeServiceImpl implements BoardLikeService {
     @Override
     public Long addLikes(Long boardId, Long memberId) {
         if (isLiked(boardId, memberId)) {
-            throw new DuplicateKeyException("이미 \"좋아요\"한 게시글 입니다.");
+            throw new DuplicateException(ErrorCode.DUPLICATE_BOARD_LIKE);
         }
         BoardForRedis board = boardService.getBoardFromCache(boardId);
-        try {
-            addBoardLike(boardId, memberId);
-            return boardRedisRepository.incrementLikes(board).totalLikes();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("게시글 \"좋아요\"를 실패했습니다.");
-        }
+        addBoardLike(boardId, memberId);
+        return boardRedisRepository.incrementLikes(board).totalLikes();
     }
 
     @Override
     public Long cancelLikes(Long boardId, Long memberId) {
         if (!isLiked(boardId, memberId)) {
-            throw new NoSuchElementException("잘못된 요청입니다.");
+            throw new EntityNotFoundException(ErrorCode.BOARD_LIKE_NOT_FOUND);
         }
         BoardForRedis board = boardService.getBoardFromCache(boardId);
-        try {
-            deleteBoardLike(boardId, memberId);
-            return boardRedisRepository.decrementLikes(board).totalLikes();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("게시글 \"좋아요 취소\"를 실패했습니다.");
-        }
+        deleteBoardLike(boardId, memberId);
+        return boardRedisRepository.decrementLikes(board).totalLikes();
     }
 
     @Override

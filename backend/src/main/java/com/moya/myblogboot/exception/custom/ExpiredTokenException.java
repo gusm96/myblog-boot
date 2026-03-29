@@ -1,7 +1,10 @@
 package com.moya.myblogboot.exception.custom;
 
-public class ExpiredTokenException extends RuntimeException {
-    public ExpiredTokenException(String message) {
-        super(message);
+import com.moya.myblogboot.exception.BusinessException;
+import com.moya.myblogboot.exception.ErrorCode;
+
+public class ExpiredTokenException extends BusinessException {
+    public ExpiredTokenException() {
+        super(ErrorCode.EXPIRED_TOKEN);
     }
 }

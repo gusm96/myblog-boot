@@ -2,9 +2,11 @@ import React from "react";
 import PropTypes from "prop-types";
 import "../Styles/css/pageButton.css";
 import { Button } from "react-bootstrap";
+import { useNavigate } from "react-router";
 export const PageButton = ({ pageCount, path }) => {
+  const navigate = useNavigate();
   const handleOnClick = (page) => {
-    window.location.href = `${path}p=${page}`;
+    navigate(`/${path}p=${page}`);
   };
   const pageButton = () => {
     const buttons = [];

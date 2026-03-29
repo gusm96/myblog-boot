@@ -51,7 +51,7 @@ public class FileUploadServiceImpl implements FileUploadService {
                     .build();
         } catch (IOException e) {
             log.error("이미지 업로드 실패, {}", e.getMessage());
-            throw new ImageUploadFailException("이미지 업로드를 실패했습니다.");
+            throw new ImageUploadFailException();
         }
     }
 
@@ -63,7 +63,7 @@ public class FileUploadServiceImpl implements FileUploadService {
             log.info("이미지 삭제 FileName = {}", imageFileName);
         } catch (Exception e) {
             log.error("이미지 삭제 실패 {}", e.getMessage());
-            throw new ImageDeleteFailException("이미지 삭제를 실패했습니다.");
+            throw new ImageDeleteFailException();
         }
     }
 
@@ -75,7 +75,7 @@ public class FileUploadServiceImpl implements FileUploadService {
                     amazonS3.deleteObject(bucketName, imageFile.getFileName()));
         } catch (Exception e) {
             log.error("이미지 삭제 실패 {}", e.getMessage());
-            throw new ImageDeleteFailException("이미지 삭제를 실패했습니다.");
+            throw new ImageDeleteFailException();
         }
     }
 

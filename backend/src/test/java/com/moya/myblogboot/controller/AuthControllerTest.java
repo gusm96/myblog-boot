@@ -99,7 +99,6 @@ class AuthControllerTest extends AbstractContainerBaseTest {
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().string("회원가입을 성공했습니다."))
                 .andDo(restDocs.document(
                         requestFields(
                                 fieldWithPath("username").description("사용자 아이디 (6~20자 영문 소문자·숫자)"),

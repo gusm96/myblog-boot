@@ -27,9 +27,13 @@ public interface BoardRepository extends JpaRepository<Board, Long>, BoardQueryd
             countQuery = "select count(b) from Board b where b.boardStatus = :boardStatus")
     Page<Board> findAll(@Param("boardStatus") BoardStatus boardStatus, Pageable pageable);
 
-    @Query("select b from Board b where b.category.name = :categoryName and b.boardStatus = 'VIEW'")
+    @Query(value = "select b from Board b join fetch b.member join fetch b.category " +
+            "where b.category.name = :categoryName and b.boardStatus = 'VIEW'",
+            countQuery = "select count(b) from Board b where b.category.name = :categoryName and b.boardStatus = 'VIEW'")
     Page<Board> findAllByCategoryName(@Param("categoryName") String categoryName, PageRequest pageRequest);
 
-    @Query("select b from Board b where b.deleteDate is not null")
+    @Query(value = "select b from Board b join fetch b.member join fetch b.category " +
+            "where b.deleteDate is not null",
+            countQuery = "select count(b) from Board b where b.deleteDate is not null")
     Page<Board> findByDeletionStatus(PageRequest pageRequest);
 }

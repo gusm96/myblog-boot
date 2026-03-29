@@ -14,7 +14,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(userNumCookieInterceptor)
-                .addPathPatterns("/api/v2/visitor-count")
-                .addPathPatterns("/api/v7/boards/**");
+                .addPathPatterns("/api/v2/visitor-count");
     }
 }

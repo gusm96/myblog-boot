@@ -29,8 +29,9 @@ public class AuthController {
 
     // 회원 가입
     @PostMapping("/api/v1/join")
-    public ResponseEntity<String> join(@RequestBody @Valid MemberJoinReqDto memberJoinReqDto) {
-        return ResponseEntity.ok().body(authService.memberJoin(memberJoinReqDto));
+    public ResponseEntity<Void> join(@RequestBody @Valid MemberJoinReqDto memberJoinReqDto) {
+        authService.memberJoin(memberJoinReqDto);
+        return ResponseEntity.ok().build();
     }
 
     // 로그인
@@ -66,7 +67,7 @@ public class AuthController {
     public ResponseEntity<String> reissuingAccessToken(HttpServletRequest request) {
         Cookie refreshTokenCookie = CookieUtil.findCookie(request, REFRESH_TOKEN_COOKIE);
         if (refreshTokenCookie == null || refreshTokenCookie.getValue().equals(""))
-            throw new InvalidateTokenException("토큰이 존재하지 않습니다.");
+            throw new InvalidateTokenException();
         return ResponseEntity.ok().body(authService.reissuingAccessToken(refreshTokenCookie.getValue()));
     }
 
@@ -85,7 +86,7 @@ public class AuthController {
     private static String getToken(HttpServletRequest request) {
         String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authorization == null || !authorization.toLowerCase().startsWith("bearer ")) {
-            throw new InvalidateTokenException("유효하지 않은 인증 정보입니다.");
+            throw new InvalidateTokenException();
         }
         return authorization.substring(7);
     }

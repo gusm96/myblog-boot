@@ -35,7 +35,6 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        log.info("HTTP Method : {}", request.getMethod());
 
         // Token이 없을 시 Block
         if (authorization == null || !authorization.toLowerCase().startsWith("bearer ")) {
@@ -49,7 +48,7 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Token Expired되었는지 여부
+        // Token 검증
         try {
             JwtUtil.validateToken(token, secret);
         } catch (SecurityException e) {
@@ -63,18 +62,16 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Token에 저장된 정보
+        // Token에서 인증 정보 추출
         TokenInfo tokenInfo = JwtUtil.getTokenInfo(token, secret);
         Long memberPrimaryKey = tokenInfo.getMemberPrimaryKey();
-        // 권한 지정
-        log.info("Member_Primary_Key : {}", memberPrimaryKey);
-        log.info("Role : {}", tokenInfo.getRole());
+
+        log.debug("{} {} | member={} role={}", request.getMethod(),
+                request.getRequestURI(), memberPrimaryKey, tokenInfo.getRole());
 
         // 권한 부여
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(memberPrimaryKey, null, List.of(new SimpleGrantedAuthority(tokenInfo.getRole())));
-
-        // Detail을 넣어준다.
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         filterChain.doFilter(request, response);
@@ -83,7 +80,6 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-        log.info("Path : {}", path);
         return (ShouldNotFilterPath.EXCLUDE_PATHS.stream().anyMatch(path::startsWith));
     }
 }

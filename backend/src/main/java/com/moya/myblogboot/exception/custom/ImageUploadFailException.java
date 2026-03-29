@@ -1,7 +1,10 @@
 package com.moya.myblogboot.exception.custom;
 
-public class ImageUploadFailException extends RuntimeException{
-    public ImageUploadFailException (String message) {
-        super(message);
+import com.moya.myblogboot.exception.BusinessException;
+import com.moya.myblogboot.exception.ErrorCode;
+
+public class ImageUploadFailException extends BusinessException {
+    public ImageUploadFailException() {
+        super(ErrorCode.IMAGE_UPLOAD_FAIL);
     }
 }

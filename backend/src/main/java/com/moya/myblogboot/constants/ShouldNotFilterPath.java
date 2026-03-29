@@ -8,14 +8,11 @@ public class ShouldNotFilterPath {
             "/api/v1/join",
             "/api/v1/login",
             "/api/v1/logout",
-            "/api/v2/boards",
-            "/api/v3/boards",
-            "/api/v4/boards",
-            "/api/v5/boards",
-            "/api/v6/boards",
-            "/api/v7/boards",
-            "/api/v1/boards/search",
             "/api/v1/reissuing-token",
-            "/api/v1/password-strength-check"
+            "/api/v1/password-strength-check",
+            "/api/v1/boards/search",
+            "/api/v2/categories",
+            "/api/v8/boards",
+            "/api/v2/visitor-count"
     );
 }

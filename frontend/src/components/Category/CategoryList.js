@@ -27,29 +27,27 @@ export const CategoryList = () => {
   };
   const handleNewCategory = (e) => {
     addNewCategory(category)
-      .then((data) => {
-        if (data !== null || data !== "") {
-          alert("카테고리가 등록되었습니다.");
-          setCategory("");
-        }
+      .then(() => {
+        alert("카테고리가 등록되었습니다.");
+        setCategory("");
+        getCategoriesForAdmin().then((data) => setCategories(data));
       })
       .catch((error) => {
-        alert(error.message);
+        alert(error.response?.data?.message || "카테고리 등록에 실패했습니다.");
       });
   };
 
   const handleDeleteCategory = (e) => {
     if (window.confirm("정말로 삭제하시겠습니까?")) {
       deleteCategory(e.target.value)
-        .then((data) => {
-          alert(data);
-          window.location.reload();
+        .then(() => {
+          alert("카테고리가 삭제되었습니다.");
+          getCategoriesForAdmin().then((data) => setCategories(data));
         })
         .catch((error) => {
-          alert(error.message);
+          alert(error.response?.data?.message || "카테고리 삭제에 실패했습니다.");
         });
     }
-    return;
   };
   return (
     <Container className="categories-container">

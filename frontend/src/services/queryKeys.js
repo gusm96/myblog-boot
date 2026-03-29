@@ -16,9 +16,9 @@ export const queryKeys = {
 
   // ── 카테고리 ────────────────────────────────────────────────
   categories: {
-    all:    ()             => ['categories'],
-    list:   ()             => [...queryKeys.categories.all(), 'list'],
-    boards: (name, page)   => [...queryKeys.categories.all(), name, { page: String(page) }],
+    all:    ()     => ['categories'],
+    list:   ()     => [...queryKeys.categories.all(), 'list'],
+    boards: (name) => [...queryKeys.categories.all(), name, 'boards'],
   },
 
   // ── 댓글 ────────────────────────────────────────────────────

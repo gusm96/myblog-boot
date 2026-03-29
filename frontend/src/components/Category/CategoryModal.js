@@ -19,20 +19,20 @@ export const CategoryModal = () => {
   const handleNewCategory = (event) => {
     event.preventDefault();
     addNewCategory(newCategory)
-      .then((res) => {
-        if (res.status === 200) {
-          alert("카테고리 추가 완료");
-          const newCategoryObject = {
-            id: categories.length + 1,
-            name: newCategory,
-          };
-          setCategories([...categories, newCategoryObject]);
+      .then(() => {
+        alert("카테고리 추가 완료");
+        const newCategoryObject = {
+          id: categories.length + 1,
+          name: newCategory,
+        };
+        setCategories([...categories, newCategoryObject]);
 
-          setShowModal(false);
-          setNewCategory("");
-        }
+        setShowModal(false);
+        setNewCategory("");
       })
-      .catch(() => {});
+      .catch((error) => {
+        alert(error.response?.data?.message || "카테고리 추가에 실패했습니다.");
+      });
   };
   // 모달 클로즈 핸들러
   const handleCloseModal = () => {

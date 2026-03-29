@@ -1,5 +1,6 @@
 import React from "react";
 import { Container, Nav, Navbar } from "react-bootstrap";
+import { Link, useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
 import { userLogout } from "../../redux/authAction";
 import { logout } from "../../services/authApi";
@@ -7,11 +8,12 @@ import "../Styles/css/header.css";
 
 export const Header = ({ headerTitle, isLoggedIn }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const handleLogout = () => {
     if (window.confirm("정말 로그아웃 하시겠습니까?")) {
       dispatch(userLogout());
       logout();
-      window.location.reload();
+      navigate("/");
     }
     return;
   };
@@ -20,11 +22,11 @@ export const Header = ({ headerTitle, isLoggedIn }) => {
       <Navbar collapseOnSelect expand="lg" variant="light" className="inner">
         <Container>
           {headerTitle === "admin" ? (
-            <Navbar.Brand href="/management">
+            <Navbar.Brand as={Link} to="/management">
               <h1>{"MyBlog 관리자모드"}</h1>
             </Navbar.Brand>
           ) : (
-            <Navbar.Brand href="/">
+            <Navbar.Brand as={Link} to="/">
               <h1>{headerTitle}</h1>
             </Navbar.Brand>
           )}
@@ -33,7 +35,7 @@ export const Header = ({ headerTitle, isLoggedIn }) => {
             {isLoggedIn ? (
               <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
             ) : (
-              <Nav.Link href="/login">Login</Nav.Link>
+              <Nav.Link as={Link} to="/login">Login</Nav.Link>
             )}
           </Nav>
         </Container>
@@ -43,7 +45,7 @@ export const Header = ({ headerTitle, isLoggedIn }) => {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
-              <Nav.Link className="nav-link" href="/">
+              <Nav.Link as={Link} to="/" className="nav-link">
                 홈
               </Nav.Link>
               <Nav.Link className="nav-link" href="#guestbook">

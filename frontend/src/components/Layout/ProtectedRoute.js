@@ -18,7 +18,7 @@ export const ProtectedRoute = () => {
       getRoleFromToken()
         .then((data) => setRole(data))
         .catch((error) => {
-          if (error.response?.data === "토큰이 만료되었습니다.") {
+          if (error.response?.status === 401) {
             dispatch(logout());
           }
         });

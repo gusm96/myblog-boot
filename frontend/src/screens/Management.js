@@ -8,10 +8,11 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { queryKeys } from "../services/queryKeys";
 
 export const Management = () => {
-  const [page] = useSearchParams("p");
+  const [searchParams] = useSearchParams();
+  const page = Number(searchParams.get("p")) || 1;
 
   const { data, isPending, isPlaceholderData } = useQuery({
-    queryKey: queryKeys.admin.boards(page.toString()),
+    queryKey: queryKeys.admin.boards(page),
     queryFn:  () => getBoardList(page),
     staleTime: 3  * 60 * 1000,
     gcTime:    10 * 60 * 1000,

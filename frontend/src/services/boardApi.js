@@ -20,13 +20,13 @@ export const getBoardForAdmin = (boardId) => {
     .then((res) => res.data);
 };
 
-export const getBoardList = (page) => {
-  return apiClient.get(`${BOARD_CRUD}?${page}`).then((res) => res.data);
+export const getBoardList = (page = 1) => {
+  return apiClient.get(`${BOARD_CRUD}?p=${page}`).then((res) => res.data);
 };
 
-export const getCategoryOfBoardList = (categoryName, page) => {
+export const getCategoryOfBoardList = (categoryName, page = 1) => {
   return apiClient
-    .get(`${CATEGORY_OF_BOARD_LIST}?c=${categoryName}&${page}`)
+    .get(`${CATEGORY_OF_BOARD_LIST}?c=${categoryName}&p=${page}`)
     .then((res) => res.data);
 };
 
@@ -90,12 +90,10 @@ export const getChildComments = (parentId) => {
 };
 
 export const addComment = (boardId, commentData) => {
-  return apiClient
-    .post(`${COMMENT_CRUD}/${boardId}`, {
-      comment: commentData.comment,
-      parentId: commentData.parentId,
-    })
-    .then((res) => res.data);
+  return apiClient.post(`${COMMENT_CRUD}/${boardId}`, {
+    comment: commentData.comment,
+    parentId: commentData.parentId,
+  });
 };
 
 export const getBoardLikeStatus = (boardId) => {

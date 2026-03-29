@@ -12,7 +12,7 @@ import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
 import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.service.BoardService;
-import jakarta.persistence.EntityNotFoundException;
+import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

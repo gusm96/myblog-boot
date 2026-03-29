@@ -36,6 +36,8 @@ public class BoardQuerydslRepositoryImpl implements BoardQuerydslRepository {
                 : board.content.contains(contents);
 
         List<Board> boards = queryFactory.selectFrom(board)
+                .join(board.member).fetchJoin()
+                .join(board.category).fetchJoin()
                 .where(condition)
                 .orderBy(board.updateDate.desc())
                 .offset(pageable.getOffset())

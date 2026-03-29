@@ -29,12 +29,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import jakarta.servlet.http.Cookie;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.restdocs.headers.HeaderDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
@@ -209,13 +212,22 @@ class BoardControllerTest extends AbstractContainerBaseTest {
     }
 
     @Test
-    @DisplayName("게시글 상세 조회 V7")
+    @DisplayName("게시글 상세 조회 V7 (Deprecated)")
     void getBoardDetailV7() throws Exception {
-        ResultActions resultActions = mockMvc.perform(get("/api/v7/boards/{boardId}", boardId));
+        mockMvc.perform(get("/api/v7/boards/{boardId}", boardId))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(boardId));
+    }
+
+    @Test
+    @DisplayName("게시글 상세 조회 V8 — 최초 조회: 조회수 증가 + viewed_boards 쿠키 발급")
+    void getBoardDetailV8_최초조회() throws Exception {
+        ResultActions resultActions = mockMvc.perform(get("/api/v8/boards/{boardId}", boardId));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(boardId))
+                .andExpect(MockMvcResultMatchers.cookie().exists("viewed_boards"))
                 .andDo(restDocs.document(
                         pathParameters(
                                 parameterWithName("boardId").description("게시글 ID")
@@ -232,6 +244,34 @@ class BoardControllerTest extends AbstractContainerBaseTest {
                                 fieldWithPath("boardStatus").description("게시글 상태")
                         )
                 ));
+    }
+
+    @Test
+    @DisplayName("게시글 상세 조회 V8 — 중복 조회: viewed_boards 쿠키 포함 시 조회수 증가 없음")
+    void getBoardDetailV8_중복조회() throws Exception {
+        // 1차 조회로 쿠키 발급
+        MvcResult firstResult = mockMvc.perform(get("/api/v8/boards/{boardId}", boardId))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        Cookie viewedCookie = firstResult.getResponse().getCookie("viewed_boards");
+        assertThat(viewedCookie).isNotNull();
+
+        long viewsAfterFirst = ((Number) new com.fasterxml.jackson.databind.ObjectMapper()
+                .readTree(firstResult.getResponse().getContentAsString())
+                .get("views").numberValue()).longValue();
+
+        // 2차 조회 (동일 쿠키 포함)
+        MvcResult secondResult = mockMvc.perform(get("/api/v8/boards/{boardId}", boardId)
+                        .cookie(viewedCookie))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        long viewsAfterSecond = ((Number) new com.fasterxml.jackson.databind.ObjectMapper()
+                .readTree(secondResult.getResponse().getContentAsString())
+                .get("views").numberValue()).longValue();
+
+        assertThat(viewsAfterSecond).isEqualTo(viewsAfterFirst);
     }
 
     @Test
@@ -454,9 +494,9 @@ class BoardControllerTest extends AbstractContainerBaseTest {
     }
 
     @Test
-    @DisplayName("게시글 상세 조회 실패 - 존재하지 않는 게시글")
-    void getBoardDetailV7NotFound() throws Exception {
-        mockMvc.perform(get("/api/v7/boards/{boardId}", Long.MAX_VALUE))
+    @DisplayName("게시글 상세 조회 V8 실패 - 존재하지 않는 게시글")
+    void getBoardDetailV8NotFound() throws Exception {
+        mockMvc.perform(get("/api/v8/boards/{boardId}", Long.MAX_VALUE))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 

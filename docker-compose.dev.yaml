@@ -22,11 +22,15 @@ services:
       - dbdata-dev:/var/lib/mysql
 
   redis:
-    image: redis
+    image: redis:7-alpine
     restart: always
     container_name: rediscache-dev
+    command: redis-server --appendonly yes --appendfsync everysec
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data-dev:/data
 
 volumes:
   dbdata-dev:
+  redis-data-dev:
