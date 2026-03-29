@@ -2,9 +2,9 @@ package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.comment.CommentReqDto;
 import com.moya.myblogboot.service.CommentService;
+import com.moya.myblogboot.utils.PrincipalUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -33,7 +33,7 @@ public class CommentController {
     public ResponseEntity<Void> writeComment(Principal principal,
                                              @PathVariable("boardId") Long boardId,
                                              @RequestBody CommentReqDto commentReqDto) {
-        Long memberId = getMemberId(principal);
+        Long memberId = PrincipalUtil.getMemberId(principal);
         commentService.write(commentReqDto, memberId, boardId);
         return ResponseEntity.ok().build();
     }
@@ -43,7 +43,7 @@ public class CommentController {
     public ResponseEntity<Void> editComment(Principal principal,
                                             @PathVariable("commentId") Long commentId,
                                             @RequestBody CommentReqDto commentReqDto) {
-        Long memberId = getMemberId(principal);
+        Long memberId = PrincipalUtil.getMemberId(principal);
         commentService.update(commentId, memberId, commentReqDto.getComment());
         return ResponseEntity.ok().build();
     }
@@ -53,16 +53,8 @@ public class CommentController {
     public ResponseEntity<Void> deleteComment(
             Principal principal,
             @PathVariable("commentId") Long commentId) {
-        Long memberId = getMemberId(principal);
+        Long memberId = PrincipalUtil.getMemberId(principal);
         commentService.delete(commentId, memberId);
         return ResponseEntity.ok().build();
-    }
-
-    private Long getMemberId(Principal principal) {
-        Long memberId = -1L;
-        if (principal instanceof UsernamePasswordAuthenticationToken) {
-            memberId = (Long) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
-        }
-        return memberId;
     }
 }
