@@ -3,6 +3,7 @@ package com.moya.myblogboot.scheduler;
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.dto.board.BoardForRedis;
 import com.moya.myblogboot.repository.BoardRedisRepository;
+import com.moya.myblogboot.service.BoardCacheService;
 import com.moya.myblogboot.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import static com.moya.myblogboot.domain.keys.RedisKey.*;
 @RequiredArgsConstructor
 public class BoardScheduledTask {
     private final BoardRedisRepository boardRedisRepository;
+    private final BoardCacheService boardCacheService;
     private final BoardService boardService;
     private final Lock lock = new ReentrantLock();
     private static final Long SECONDS_IN_15DAYS = 15L * 24L * 60L * 60L; // 15일
@@ -60,7 +62,7 @@ public class BoardScheduledTask {
 
             for (Long boardId : keys) {
                 try {
-                    BoardForRedis boardForRedis = boardService.getBoardFromCache(boardId);
+                    BoardForRedis boardForRedis = boardCacheService.getBoardFromCache(boardId);
                     if (boardForRedis != null) {
                         updateBoard(boardForRedis);
                         deleteFromCache(boardId, boardForRedis);

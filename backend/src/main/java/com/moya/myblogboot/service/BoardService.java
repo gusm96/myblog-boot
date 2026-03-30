@@ -2,7 +2,6 @@ package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.board.*;
 import com.moya.myblogboot.dto.board.BoardDetailResDto;
-import com.moya.myblogboot.dto.board.BoardForRedis;
 import com.moya.myblogboot.dto.board.BoardListResDto;
 import com.moya.myblogboot.dto.board.BoardReqDto;
 
@@ -21,8 +20,6 @@ public interface BoardService {
     BoardDetailResDto getBoardDetail(Long boardId);
 
     BoardDetailResDto getBoardDetailAndIncrementViews(Long boardId);
-
-    BoardForRedis getBoardFromCache(Long boardId);
 
     BoardListResDto retrieveAllDeleted(int page);
 

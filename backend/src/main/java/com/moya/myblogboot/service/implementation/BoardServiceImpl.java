@@ -27,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -81,14 +80,14 @@ public class BoardServiceImpl implements BoardService {
     // 게시글 상세 조회
     @Override
     public BoardDetailResDto getBoardDetail(Long boardId) {
-        BoardForRedis boardForRedis = getBoardFromCache(boardId);
+        BoardForRedis boardForRedis = boardCacheService.getBoardFromCache(boardId);
         return BoardDetailResDto.builder().boardForRedis(boardForRedis).build();
     }
 
     // 게시글 조회 및 조회수 증가
     @Override
     public BoardDetailResDto getBoardDetailAndIncrementViews(Long boardId) {
-        BoardForRedis boardForRedis = getBoardFromCache(boardId);
+        BoardForRedis boardForRedis = boardCacheService.getBoardFromCache(boardId);
         return BoardDetailResDto.builder().boardForRedis(incrementViews(boardForRedis)).build();
     }
 
@@ -118,7 +117,7 @@ public class BoardServiceImpl implements BoardService {
         Category modifiedCategory = categoryService.retrieve(modifiedDto.getCategory());
         board.updateBoard(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent()); // 변경감지
         // 변경 된 내용 Redis Store에 업데이트
-        boardCacheService.updateBoard(getBoardFromCache(board.getId()), board);
+        boardCacheService.updateBoard(boardCacheService.getBoardFromCache(board.getId()), board);
         return boardId;
     }
 
@@ -133,7 +132,7 @@ public class BoardServiceImpl implements BoardService {
         // 삭제 요청일 갱신
         board.deleteBoard();
         // 현재 게시글 상태 Redis Store에 Update
-        boardCacheService.updateBoard(getBoardFromCache(board.getId()), board);
+        boardCacheService.updateBoard(boardCacheService.getBoardFromCache(board.getId()), board);
     }
 
     // 게시글 삭제 취소
@@ -147,7 +146,7 @@ public class BoardServiceImpl implements BoardService {
         // DeleteDate, BoardStatus 업데이트
         board.undeleteBoard();
         // Redis Store에 저장된 Data 업데이트
-        boardCacheService.updateBoard(getBoardFromCache(board.getId()), board);
+        boardCacheService.updateBoard(boardCacheService.getBoardFromCache(board.getId()), board);
     }
 
     // 보관 기간이 만료된 게시글 영구 삭제
@@ -194,7 +193,7 @@ public class BoardServiceImpl implements BoardService {
 
     // 게시글 영구 삭제
     private void deleteBoards(Board board) {
-        BoardForRedis boardForRedis = getBoardFromCache(board.getId());
+        BoardForRedis boardForRedis = boardCacheService.getBoardFromCache(board.getId());
         // 이미지 파일 찾아서 S3에서 삭제
         fileUploadService.deleteFiles(board.getImageFiles());
         // Redis Store에 저장된 Data Delete
@@ -203,26 +202,9 @@ public class BoardServiceImpl implements BoardService {
         boardRepository.delete(board);
     }
 
-    // Board Entity 조회 후 Redis Store에 저장.
-    private BoardForRedis retrieveBoardAndSetRedisStore(Long boardId) {
-        Board board = findById(boardId);
-        return boardRedisRepository.save(board);
-    }
-
     // 조회 수 증가.
     private BoardForRedis incrementViews(BoardForRedis boardForRedis) {
         return boardRedisRepository.incrementViews(boardForRedis);
-    }
-
-    // Redis Store에서 데이터 조회
-    @Override
-    public BoardForRedis getBoardFromCache(Long boardId) {
-        Optional<BoardForRedis> boardForRedis = boardRedisRepository.findOne(boardId);
-        if (boardForRedis.isEmpty()) {
-            // DB에서 Board 조회 후 Redis store에 저장.
-            return retrieveBoardAndSetRedisStore(boardId);
-        }
-        return boardForRedis.get();
     }
 
     // 이미지 파일 저장

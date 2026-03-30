@@ -8,6 +8,7 @@ import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.repository.BoardLikeRepository;
 import com.moya.myblogboot.repository.BoardRedisRepository;
 import com.moya.myblogboot.service.AuthService;
+import com.moya.myblogboot.service.BoardCacheService;
 import com.moya.myblogboot.service.BoardLikeService;
 import com.moya.myblogboot.service.BoardService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.Optional;
 public class BoardLikeServiceImpl implements BoardLikeService {
     private final BoardRedisRepository boardRedisRepository;
     private final BoardLikeRepository boardLikeRepository;
+    private final BoardCacheService boardCacheService;
     private final BoardService boardService;
     private final AuthService authService;
 
@@ -30,7 +32,7 @@ public class BoardLikeServiceImpl implements BoardLikeService {
         if (isLiked(boardId, memberId)) {
             throw new DuplicateException(ErrorCode.DUPLICATE_BOARD_LIKE);
         }
-        BoardForRedis board = boardService.getBoardFromCache(boardId);
+        BoardForRedis board = boardCacheService.getBoardFromCache(boardId);
         addBoardLike(boardId, memberId);
         return boardRedisRepository.incrementLikes(board).totalLikes();
     }
@@ -40,7 +42,7 @@ public class BoardLikeServiceImpl implements BoardLikeService {
         if (!isLiked(boardId, memberId)) {
             throw new EntityNotFoundException(ErrorCode.BOARD_LIKE_NOT_FOUND);
         }
-        BoardForRedis board = boardService.getBoardFromCache(boardId);
+        BoardForRedis board = boardCacheService.getBoardFromCache(boardId);
         deleteBoardLike(boardId, memberId);
         return boardRedisRepository.decrementLikes(board).totalLikes();
     }

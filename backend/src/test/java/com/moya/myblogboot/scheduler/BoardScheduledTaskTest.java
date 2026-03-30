@@ -3,6 +3,7 @@ package com.moya.myblogboot.scheduler;
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.dto.board.BoardForRedis;
 import com.moya.myblogboot.repository.BoardRedisRepository;
+import com.moya.myblogboot.service.BoardCacheService;
 import com.moya.myblogboot.service.BoardService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ class BoardScheduledTaskTest {
     private BoardRedisRepository boardRedisRepository;
 
     @Mock
+    private BoardCacheService boardCacheService;
+
+    @Mock
     private BoardService boardService;
 
     @Test
@@ -44,8 +48,8 @@ class BoardScheduledTaskTest {
         BoardForRedis cache1 = new BoardForRedis(board1);
         BoardForRedis cache2 = new BoardForRedis(board2);
 
-        given(boardService.getBoardFromCache(1L)).willReturn(cache1);
-        given(boardService.getBoardFromCache(2L)).willReturn(cache2);
+        given(boardCacheService.getBoardFromCache(1L)).willReturn(cache1);
+        given(boardCacheService.getBoardFromCache(2L)).willReturn(cache2);
         given(boardService.findById(any())).willReturn(board1, board2);
 
         // when
@@ -66,7 +70,7 @@ class BoardScheduledTaskTest {
         boardScheduledTask.updateFromRedisStoreToDB();
 
         // then
-        verify(boardService, never()).getBoardFromCache(any());
+        verify(boardCacheService, never()).getBoardFromCache(any());
         verify(boardService, never()).findById(any());
     }
 
@@ -81,16 +85,16 @@ class BoardScheduledTaskTest {
         BoardForRedis validCache = new BoardForRedis(board);
 
         // 1L: 성공, 2L: 예외 발생, 3L: 성공
-        given(boardService.getBoardFromCache(1L)).willReturn(validCache);
-        given(boardService.getBoardFromCache(2L)).willThrow(new RuntimeException("Redis connection error"));
-        given(boardService.getBoardFromCache(3L)).willReturn(validCache);
+        given(boardCacheService.getBoardFromCache(1L)).willReturn(validCache);
+        given(boardCacheService.getBoardFromCache(2L)).willThrow(new RuntimeException("Redis connection error"));
+        given(boardCacheService.getBoardFromCache(3L)).willReturn(validCache);
         given(boardService.findById(any())).willReturn(board);
 
         // when
         boardScheduledTask.updateFromRedisStoreToDB();
 
         // then - 2L 실패해도 1L, 3L은 처리됨
-        verify(boardService, times(3)).getBoardFromCache(any());
+        verify(boardCacheService, times(3)).getBoardFromCache(any());
         verify(boardService, times(2)).findById(any());
     }
 
@@ -100,7 +104,7 @@ class BoardScheduledTaskTest {
         // given
         Set<Long> keys = Set.of(1L);
         given(boardRedisRepository.getKeys(anyString())).willReturn(keys);
-        given(boardService.getBoardFromCache(1L)).willReturn(null);
+        given(boardCacheService.getBoardFromCache(1L)).willReturn(null);
 
         // when
         boardScheduledTask.updateFromRedisStoreToDB();
