@@ -1,6 +1,7 @@
 package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.comment.CommentReqDto;
+import com.moya.myblogboot.domain.comment.CommentResDto;
 import com.moya.myblogboot.service.CommentService;
 import com.moya.myblogboot.utils.PrincipalUtil;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +19,13 @@ public class CommentController {
 
     // 댓글 리스트
     @GetMapping("/api/v1/comments/{boardId}")
-    public ResponseEntity<List> getComments(@PathVariable("boardId") Long boardId) {
+    public ResponseEntity<List<CommentResDto>> getComments(@PathVariable("boardId") Long boardId) {
         return ResponseEntity.ok().body(commentService.retrieveAll(boardId));
     }
 
     // 자식 댓글 리스트
     @GetMapping("/api/v1/comments/child/{parentId}")
-    public ResponseEntity<List> getChildComments(@PathVariable("parentId") Long parentId) {
+    public ResponseEntity<List<CommentResDto>> getChildComments(@PathVariable("parentId") Long parentId) {
         return ResponseEntity.ok().body(commentService.retrieveAllChild(parentId));
     }
 
