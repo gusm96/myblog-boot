@@ -1,5 +1,6 @@
 package com.moya.myblogboot.service.implementation;
 
+import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.dto.board.BoardForRedis;
 import com.moya.myblogboot.domain.board.BoardLike;
 import com.moya.myblogboot.exception.ErrorCode;
@@ -7,10 +8,10 @@ import com.moya.myblogboot.exception.custom.DuplicateException;
 import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.repository.BoardLikeRepository;
 import com.moya.myblogboot.repository.BoardRedisRepository;
+import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.BoardCacheService;
 import com.moya.myblogboot.service.BoardLikeService;
-import com.moya.myblogboot.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,8 +24,8 @@ import java.util.Optional;
 public class BoardLikeServiceImpl implements BoardLikeService {
     private final BoardRedisRepository boardRedisRepository;
     private final BoardLikeRepository boardLikeRepository;
+    private final BoardRepository boardRepository;
     private final BoardCacheService boardCacheService;
-    private final BoardService boardService;
     private final AuthService authService;
 
     @Override
@@ -53,8 +54,10 @@ public class BoardLikeServiceImpl implements BoardLikeService {
     }
 
     void addBoardLike(Long boardId, Long memberId) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.BOARD_NOT_FOUND));
         BoardLike boardLike = BoardLike.builder()
-                .board(boardService.findById(boardId))
+                .board(board)
                 .member(authService.retrieve(memberId))
                 .build();
         boardLikeRepository.save(boardLike);

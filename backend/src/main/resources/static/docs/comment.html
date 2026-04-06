@@ -536,7 +536,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h4 id="_댓글_작성_http_request">HTTP request</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">POST /api/v1/comments/135 HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">POST /api/v1/comments/140 HTTP/1.1
 Content-Type: application/json
 Content-Length: 52
 Host: localhost:8080
@@ -557,16 +557,12 @@ Authorization: Bearer {access_token}
 Vary: Origin
 Vary: Access-Control-Request-Method
 Vary: Access-Control-Request-Headers
-Content-Type: text/plain;charset=UTF-8
-Content-Length: 32
 X-Content-Type-Options: nosniff
 X-XSS-Protection: 0
 Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
-X-Frame-Options: DENY
-
-댓글이 등록되었습니다.</code></pre>
+X-Frame-Options: DENY</code></pre>
 </div>
 </div>
 </div>
@@ -599,7 +595,7 @@ X-Frame-Options: DENY
 <h4 id="_댓글_리스트_http_request">HTTP request</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /api/v1/comments/138 HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /api/v1/comments/143 HTTP/1.1
 Host: localhost:8080
 Authorization: Bearer {access_token}</code></pre>
 </div>
@@ -620,41 +616,41 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 915
+Content-Length: 917
 
 [ {
   "id" : 206,
   "writer" : "testMember",
   "comment" : "test",
-  "write_date" : "2026-03-23T14:15:25.445266",
+  "write_date" : "2026-04-01T00:47:05.0584285",
   "modificationStatus" : "NOT_MODIFIED",
   "childCount" : 5
 }, {
   "id" : 200,
   "writer" : "testMember",
   "comment" : "test",
-  "write_date" : "2026-03-23T14:15:25.443254",
+  "write_date" : "2026-04-01T00:47:05.0574284",
   "modificationStatus" : "NOT_MODIFIED",
   "childCount" : 5
 }, {
   "id" : 194,
   "writer" : "testMember",
   "comment" : "test",
-  "write_date" : "2026-03-23T14:15:25.4417225",
+  "write_date" : "2026-04-01T00:47:05.0564318",
   "modificationStatus" : "NOT_MODIFIED",
   "childCount" : 5
 }, {
   "id" : 188,
   "writer" : "testMember",
   "comment" : "test",
-  "write_date" : "2026-03-23T14:15:25.4401904",
+  "write_date" : "2026-04-01T00:47:05.0544294",
   "modificationStatus" : "NOT_MODIFIED",
   "childCount" : 5
 }, {
   "id" : 182,
   "writer" : "testMember",
   "comment" : "test",
-  "write_date" : "2026-03-23T14:15:25.4396045",
+  "write_date" : "2026-04-01T00:47:05.0515768",
   "modificationStatus" : "NOT_MODIFIED",
   "childCount" : 5
 } ]</code></pre>
@@ -760,41 +756,41 @@ Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
-Content-Length: 922
+Content-Length: 921
 
 [ {
   "id" : 147,
   "writer" : "testMember",
   "comment" : "child",
-  "write_date" : "2026-03-23T14:15:25.0405461",
+  "write_date" : "2026-04-01T00:47:04.730608",
   "modificationStatus" : "NOT_MODIFIED",
   "childCount" : 0
 }, {
   "id" : 148,
   "writer" : "testMember",
   "comment" : "child",
-  "write_date" : "2026-03-23T14:15:25.0405461",
+  "write_date" : "2026-04-01T00:47:04.7316063",
   "modificationStatus" : "NOT_MODIFIED",
   "childCount" : 0
 }, {
   "id" : 149,
   "writer" : "testMember",
   "comment" : "child",
-  "write_date" : "2026-03-23T14:15:25.0405461",
+  "write_date" : "2026-04-01T00:47:04.7316063",
   "modificationStatus" : "NOT_MODIFIED",
   "childCount" : 0
 }, {
   "id" : 150,
   "writer" : "testMember",
   "comment" : "child",
-  "write_date" : "2026-03-23T14:15:25.0405461",
+  "write_date" : "2026-04-01T00:47:04.7316063",
   "modificationStatus" : "NOT_MODIFIED",
   "childCount" : 0
 }, {
   "id" : 151,
   "writer" : "testMember",
   "comment" : "child",
-  "write_date" : "2026-03-23T14:15:25.0405461",
+  "write_date" : "2026-04-01T00:47:04.7316063",
   "modificationStatus" : "NOT_MODIFIED",
   "childCount" : 0
 } ]</code></pre>
@@ -961,16 +957,12 @@ Authorization: Bearer {access_token}
 Vary: Origin
 Vary: Access-Control-Request-Method
 Vary: Access-Control-Request-Headers
-Content-Type: text/plain;charset=UTF-8
-Content-Length: 32
 X-Content-Type-Options: nosniff
 X-XSS-Protection: 0
 Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
-X-Frame-Options: DENY
-
-댓글이 수정되었습니다.</code></pre>
+X-Frame-Options: DENY</code></pre>
 </div>
 </div>
 </div>
@@ -1038,16 +1030,12 @@ Authorization: Bearer {access_token}</code></pre>
 Vary: Origin
 Vary: Access-Control-Request-Method
 Vary: Access-Control-Request-Headers
-Content-Type: text/plain;charset=UTF-8
-Content-Length: 32
 X-Content-Type-Options: nosniff
 X-XSS-Protection: 0
 Cache-Control: no-cache, no-store, max-age=0, must-revalidate
 Pragma: no-cache
 Expires: 0
-X-Frame-Options: DENY
-
-댓글이 삭제되었습니다.</code></pre>
+X-Frame-Options: DENY</code></pre>
 </div>
 </div>
 </div>
