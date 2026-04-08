@@ -1,6 +1,7 @@
 package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.service.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,8 +11,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -23,15 +22,13 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig  {
+@RequiredArgsConstructor
+public class WebSecurityConfig {
     @Value("${jwt.secret}")
     private String secret;
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
-    private AuthService authService;
-    public void setAuthService(AuthService authService) {
-        this.authService = authService;
-    }
+    private final AuthService authService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -52,9 +49,6 @@ public class WebSecurityConfig  {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories-management/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v2/likes/**").hasAnyRole("NORMAL", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v2/likes/**").hasAnyRole("NORMAL", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v2/likes/**").hasAnyRole("NORMAL", "ADMIN")
                         .requestMatchers(new AntPathRequestMatcher("/api/v1/images/**")).hasRole("ADMIN")
                         .anyRequest().permitAll()
                 )
@@ -78,12 +72,5 @@ public class WebSecurityConfig  {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
-    // 비밀번호 해싱을 위한 Bcrypt
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
 
 }

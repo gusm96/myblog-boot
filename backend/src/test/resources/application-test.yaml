@@ -54,11 +54,14 @@ visitor:
   hmac:
     secret: ${VISITOR_HMAC_SECRET:test-hmac-secret-key-for-testing-environment-only}
 
-# Board View HMAC
+# Board HMAC
 board:
   view:
     hmac:
       secret: ${BOARD_VIEW_HMAC_SECRET:test-board-view-hmac-secret-key-for-testing}
+  like:
+    hmac:
+      secret: ${BOARD_LIKE_HMAC_SECRET:test-board-like-hmac-secret-key-for-testing}
 
 # S3 (테스트 환경: 실제 S3 호출 없음, 더미 값 사용)
 cloud:

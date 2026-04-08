@@ -9,9 +9,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter
@@ -28,8 +26,6 @@ public class Board extends BaseTimeEntity {
     private String content; // 내용
     private Long views = 0L; // 조회수
     private Long likes = 0L; // 좋아요 수
-    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<BoardLike> boardLikes = new HashSet<>();
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ImageFile> imageFiles = new ArrayList<>();

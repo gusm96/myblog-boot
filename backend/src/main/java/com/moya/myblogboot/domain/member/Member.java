@@ -1,12 +1,8 @@
 package com.moya.myblogboot.domain.member;
 
 import com.moya.myblogboot.domain.base.BaseTimeEntity;
-import com.moya.myblogboot.domain.board.BoardLike;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.HashSet;
-import java.util.Set;
 
 
 @Entity
@@ -23,8 +19,6 @@ public class Member extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<BoardLike> boardLikes = new HashSet<>();
     @Builder
     public Member(String username, String password, String nickname) {
         this.username = username;

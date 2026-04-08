@@ -16,11 +16,9 @@ import java.util.Optional;
 
 public interface BoardRepository extends JpaRepository<Board, Long>, BoardQuerydslRepository {
 
-    @Query("select distinct b from Board b " +
+    @Query("select b from Board b " +
             "join fetch b.member " +
-            "left join fetch b.boardLikes boardLike " +
-            "left join fetch boardLike.member " +
-            "join fetch b.category where b.id = :boardId ")
+            "join fetch b.category where b.id = :boardId")
     Optional<Board> findById(@Param("boardId") Long boardId);
 
     @Query(value = "select b from Board b join fetch b.member join fetch b.category where b.boardStatus = :boardStatus",

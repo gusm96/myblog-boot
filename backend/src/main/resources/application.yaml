@@ -31,6 +31,15 @@ visitor:
   hmac:
     secret: ${VISITOR_HMAC_SECRET}
 
+# Board HMAC
+board:
+  view:
+    hmac:
+      secret: ${BOARD_VIEW_HMAC_SECRET}
+  like:
+    hmac:
+      secret: ${BOARD_LIKE_HMAC_SECRET}
+
 # S3 (버킷 삭제됨 — S3 코드 정리 전까지 임시 더미값 유지, 이후 블록 전체 제거 예정)
 cloud:
   aws:

@@ -3,6 +3,7 @@ package com.moya.myblogboot.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
+import com.moya.myblogboot.constants.CookieName;
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.dto.board.BoardReqDto;
 import com.moya.myblogboot.domain.board.SearchType;
@@ -447,17 +448,14 @@ class BoardControllerTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("게시글 좋아요")
     void addBoardLike() throws Exception {
-        ResultActions resultActions = mockMvc.perform(post("/api/v2/likes/{boardId}", boardId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+        ResultActions resultActions = mockMvc.perform(post("/api/v2/likes/{boardId}", boardId));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.cookie().exists(CookieName.LIKED_BOARDS))
                 .andDo(restDocs.document(
                         pathParameters(
                                 parameterWithName("boardId").description("좋아요할 게시글 ID")
-                        ),
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token")
                         ),
                         responseBody()
                 ));
@@ -466,20 +464,22 @@ class BoardControllerTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("게시글 좋아요 여부 체크")
     void checkBoardLike() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v2/likes/" + boardId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+        // 좋아요 추가 후 발급된 쿠키 획득
+        MvcResult likeResult = mockMvc.perform(post("/api/v2/likes/{boardId}", boardId))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        Cookie likedCookie = likeResult.getResponse().getCookie(CookieName.LIKED_BOARDS);
+        assertThat(likedCookie).isNotNull();
 
         ResultActions resultActions = mockMvc.perform(get("/api/v2/likes/{boardId}", boardId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .cookie(likedCookie));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string("true"))
                 .andDo(restDocs.document(
                         pathParameters(
                                 parameterWithName("boardId").description("게시글 ID")
-                        ),
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token")
                         ),
                         responseBody()
                 ));
@@ -526,11 +526,15 @@ class BoardControllerTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("게시글 좋아요 취소")
     void cancelBoardLike() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v2/likes/" + boardId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+        // 좋아요 추가 후 발급된 쿠키 획득
+        MvcResult likeResult = mockMvc.perform(post("/api/v2/likes/{boardId}", boardId))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        Cookie likedCookie = likeResult.getResponse().getCookie(CookieName.LIKED_BOARDS);
+        assertThat(likedCookie).isNotNull();
 
         ResultActions resultActions = mockMvc.perform(delete("/api/v2/likes/{boardId}", boardId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .cookie(likedCookie));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -538,9 +542,7 @@ class BoardControllerTest extends AbstractContainerBaseTest {
                         pathParameters(
                                 parameterWithName("boardId").description("좋아요 취소할 게시글 ID")
                         ),
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token")
-                        )
+                        responseBody()
                 ));
     }
 }
