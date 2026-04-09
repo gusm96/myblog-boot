@@ -1,8 +1,7 @@
 package com.moya.myblogboot.domain.comment;
 
-import com.moya.myblogboot.domain.board.ModificationStatus;
 import com.moya.myblogboot.domain.board.Board;
-import com.moya.myblogboot.domain.member.Member;
+import com.moya.myblogboot.domain.board.ModificationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,9 +29,17 @@ public class Comment {
     @Enumerated(EnumType.STRING)
     private ModificationStatus modificationStatus;
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "member_id")
-    private Member member;
+    @Column(nullable = false, length = 10)
+    private String nickname;       // 작성자 닉네임 (어드민: "[관리자]")
+
+    @Column(nullable = false, length = 4)
+    private String discriminator;  // 4자리 식별번호 (어드민: "0000")
+
+    @Column(nullable = false)
+    private String password;       // BCrypt 해시 (어드민 댓글은 빈 문자열)
+
+    @Column(nullable = false)
+    private Boolean isAdmin;       // 어드민 작성 여부
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "board_id")
@@ -45,26 +52,28 @@ public class Comment {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Comment> child = new ArrayList<>();
 
-    // 댓글 작성
     @Builder
-    public Comment(String comment, Member member , Board board) {
+    public Comment(String comment, String nickname, String discriminator,
+                   String password, Boolean isAdmin, Board board) {
         this.comment = comment;
+        this.nickname = nickname;
+        this.discriminator = discriminator;
+        this.password = password;
+        this.isAdmin = isAdmin;
         this.write_date = LocalDateTime.now();
         this.modificationStatus = ModificationStatus.NOT_MODIFIED;
-        this.member = member;
         this.board = board;
     }
-
 
     public void addParentComment(Comment parent) {
         this.parent = parent;
     }
-    // 대댓글 작성
+
     public void addChildComment(Comment child) {
         this.child.add(child);
         child.addParentComment(this);
     }
-    // 수정 메서드
+
     public void updateComment(String comment) {
         this.comment = comment;
         this.modificationStatus = ModificationStatus.MODIFIED;

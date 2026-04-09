@@ -4,13 +4,13 @@ import com.moya.myblogboot.domain.board.ModificationStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CommentResDto {
     private Long id;
-    private String writer;
+    private String writer;    // "nickname#discriminator" 또는 "[관리자]"
+    private Boolean isAdmin;
     private String comment;
     private LocalDateTime write_date;
     private ModificationStatus modificationStatus;
@@ -19,7 +19,10 @@ public class CommentResDto {
     @Builder
     public CommentResDto(Comment comment) {
         this.id = comment.getId();
-        this.writer = comment.getMember().getNickname();
+        this.writer = Boolean.TRUE.equals(comment.getIsAdmin())
+                ? "[관리자]"
+                : comment.getNickname() + "#" + comment.getDiscriminator();
+        this.isAdmin = comment.getIsAdmin();
         this.comment = comment.getComment();
         this.write_date = comment.getWrite_date();
         this.modificationStatus = comment.getModificationStatus();

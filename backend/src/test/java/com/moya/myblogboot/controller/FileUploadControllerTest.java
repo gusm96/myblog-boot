@@ -6,10 +6,10 @@ import com.amazonaws.services.s3.model.PutObjectResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
+import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.file.ImageFileDto;
-import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.member.MemberLoginReqDto;
-import com.moya.myblogboot.repository.MemberRepository;
+import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -63,7 +63,7 @@ class FileUploadControllerTest extends AbstractContainerBaseTest {
     @Autowired
     private AuthService authService;
     @Autowired
-    private MemberRepository memberRepository;
+    private AdminRepository adminRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
@@ -85,19 +85,17 @@ class FileUploadControllerTest extends AbstractContainerBaseTest {
 
     @BeforeEach
     void login() {
-        Member admin = Member.builder()
+        Admin admin = Admin.builder()
                 .username("adminUser")
                 .password(passwordEncoder.encode("adminPassword"))
-                .nickname("Admin")
                 .build();
-        admin.addRoleAdmin();
-        memberRepository.save(admin);
+        adminRepository.save(admin);
 
         MemberLoginReqDto loginReqDto = MemberLoginReqDto.builder()
                 .username("adminUser")
                 .password("adminPassword")
                 .build();
-        accessToken = "bearer " + authService.memberLogin(loginReqDto).getAccess_token();
+        accessToken = "bearer " + authService.adminLogin(loginReqDto).getAccess_token();
     }
 
     @BeforeEach

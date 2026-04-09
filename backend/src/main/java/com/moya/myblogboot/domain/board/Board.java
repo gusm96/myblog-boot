@@ -1,10 +1,10 @@
 package com.moya.myblogboot.domain.board;
 
+import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.base.BaseTimeEntity;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.domain.file.ImageFile;
-import com.moya.myblogboot.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,21 +21,21 @@ public class Board extends BaseTimeEntity {
     @Column(name = "board_id")
     private Long id;
     @Column(nullable = false)
-    private String title; // 제목
+    private String title;
     @Column(nullable = false, columnDefinition = "longtext")
-    private String content; // 내용
-    private Long views = 0L; // 조회수
-    private Long likes = 0L; // 좋아요 수
+    private String content;
+    private Long views = 0L;
+    private Long likes = 0L;
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ImageFile> imageFiles = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    private BoardStatus boardStatus = BoardStatus.VIEW;// VIEW, HIDE
+    private BoardStatus boardStatus = BoardStatus.VIEW;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    @JoinColumn(name = "admin_id", nullable = false)
+    private Admin admin;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
@@ -44,16 +44,14 @@ public class Board extends BaseTimeEntity {
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
-    /*생성 메서드*/
     @Builder
-    public Board(String title, String content, Category category, Member member) {
+    public Board(String title, String content, Category category, Admin admin) {
         this.title = title;
         this.content = content;
         this.category = category;
-        this.member = member;
+        this.admin = admin;
     }
 
-    // 게시글 수정
     public void updateBoard(Category category, String title, String content) {
         this.category = category;
         this.title = title;
@@ -61,7 +59,6 @@ public class Board extends BaseTimeEntity {
         this.update();
     }
 
-    // 게시글 숨김 상태 수정
     public void updateBoardStatus(BoardStatus boardStatus) {
         this.boardStatus = boardStatus;
     }

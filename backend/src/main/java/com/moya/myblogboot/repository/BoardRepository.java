@@ -17,20 +17,20 @@ import java.util.Optional;
 public interface BoardRepository extends JpaRepository<Board, Long>, BoardQuerydslRepository {
 
     @Query("select b from Board b " +
-            "join fetch b.member " +
+            "join fetch b.admin " +
             "join fetch b.category where b.id = :boardId")
     Optional<Board> findById(@Param("boardId") Long boardId);
 
-    @Query(value = "select b from Board b join fetch b.member join fetch b.category where b.boardStatus = :boardStatus",
+    @Query(value = "select b from Board b join fetch b.admin join fetch b.category where b.boardStatus = :boardStatus",
             countQuery = "select count(b) from Board b where b.boardStatus = :boardStatus")
     Page<Board> findAll(@Param("boardStatus") BoardStatus boardStatus, Pageable pageable);
 
-    @Query(value = "select b from Board b join fetch b.member join fetch b.category " +
+    @Query(value = "select b from Board b join fetch b.admin join fetch b.category " +
             "where b.category.name = :categoryName and b.boardStatus = 'VIEW'",
             countQuery = "select count(b) from Board b where b.category.name = :categoryName and b.boardStatus = 'VIEW'")
     Page<Board> findAllByCategoryName(@Param("categoryName") String categoryName, PageRequest pageRequest);
 
-    @Query(value = "select b from Board b join fetch b.member join fetch b.category " +
+    @Query(value = "select b from Board b join fetch b.admin join fetch b.category " +
             "where b.deleteDate is not null",
             countQuery = "select count(b) from Board b where b.deleteDate is not null")
     Page<Board> findByDeletionStatus(PageRequest pageRequest);

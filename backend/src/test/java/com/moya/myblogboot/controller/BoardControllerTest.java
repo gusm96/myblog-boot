@@ -4,15 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.constants.CookieName;
+import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.dto.board.BoardReqDto;
 import com.moya.myblogboot.domain.board.SearchType;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.member.Member;
 import com.moya.myblogboot.domain.member.MemberLoginReqDto;
+import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.BoardRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
-import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -63,7 +63,7 @@ class BoardControllerTest extends AbstractContainerBaseTest {
     @Autowired
     private AuthService authService;
     @Autowired
-    private MemberRepository memberRepository;
+    private AdminRepository adminRepository;
     @Autowired
     private CategoryRepository categoryRepository;
     @Autowired
@@ -86,20 +86,18 @@ class BoardControllerTest extends AbstractContainerBaseTest {
 
     @BeforeEach
     void before() {
-        Member member = Member.builder()
+        Admin admin = Admin.builder()
                 .username("testMember")
                 .password(passwordEncoder.encode("testPassword"))
-                .nickname("testMember")
                 .build();
-        member.addRoleAdmin();
-        Member saveMember = memberRepository.save(member);
+        Admin saveAdmin = adminRepository.save(admin);
         Category category = Category.builder().name("Test").build();
         Category saveCategory = categoryRepository.save(category);
         categoryId = saveCategory.getId();
 
         for (int i = 0; i < 5; i++) {
             Board newBoard = Board.builder()
-                    .member(saveMember)
+                    .admin(saveAdmin)
                     .category(saveCategory)
                     .title("title")
                     .content("content")
@@ -113,7 +111,7 @@ class BoardControllerTest extends AbstractContainerBaseTest {
                 .password("testPassword")
                 .build();
 
-        accessToken = "bearer " + authService.memberLogin(loginReqDto).getAccess_token();
+        accessToken = "bearer " + authService.adminLogin(loginReqDto).getAccess_token();
     }
 
     @Test

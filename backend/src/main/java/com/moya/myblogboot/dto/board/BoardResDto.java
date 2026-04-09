@@ -28,7 +28,6 @@ public class BoardResDto {
         this.boardStatus = board.getBoardStatus();
     }
 
-    // List<Board> to List<BoardResDto>
     public static BoardResDto of(Board board) {
         return BoardResDto.builder()
                 .board(board)

@@ -1,18 +1,12 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.member.MemberLoginReqDto;
-import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.domain.member.MemberJoinReqDto;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.domain.token.TokenInfo;
 
 public interface AuthService {
 
-    void memberJoin(MemberJoinReqDto memberJoinReqDto);
-
-    Token memberLogin(MemberLoginReqDto memberLoginReqDto);
-
-    Member retrieve(Long memberId);
+    Token adminLogin(MemberLoginReqDto loginReqDto);
 
     String reissuingAccessToken(String refreshToken);
 

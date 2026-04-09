@@ -24,13 +24,11 @@ public class Category {
     @OneToMany(mappedBy = "category")
     private List<Board> boards = new ArrayList<>();
 
-    // 생성 메서드
     @Builder
     public Category(String name) {
         this.name = name;
     }
 
-    // 수정 메서드
     public void editCategory(String name){
         this.name = name;
     }

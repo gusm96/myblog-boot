@@ -30,13 +30,11 @@ public class BoardController {
     private final BoardService boardService;
     private final BoardViewCookieService boardViewCookieService;
 
-    // 모든 게시글 리스트
     @GetMapping("/api/v1/boards")
     public ResponseEntity<BoardListResDto> getAllBoards(@RequestParam(name = "p", defaultValue = "1") int page) {
         return ResponseEntity.ok().body(boardService.retrieveAll(getPage(page)));
     }
 
-    // 카테고리별 게시글 리스트
     @GetMapping("/api/v1/boards/category")
     public ResponseEntity<BoardListResDto> getCategoryBoards(
             @RequestParam("c") String category,
@@ -45,7 +43,6 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.retrieveAllByCategory(category, getPage(page)));
     }
 
-    // 검색 결과 게시글 리스트
     @GetMapping("/api/v1/boards/search")
     public ResponseEntity<BoardListResDto> getSearchedBoards(
             @RequestParam("type") SearchType searchType,
@@ -54,7 +51,7 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.retrieveAllBySearched(searchType, searchContents, getPage(page)));
     }
 
-    // 게시글 상세 조회 V8 — Cookie + HMAC 기반 Stateless 중복 방지
+    // HMAC 서명 쿠키로 중복 조회를 Stateless하게 방지 — 미조회 시 조회수 증가
     @GetMapping("/api/v8/boards/{boardId}")
     public ResponseEntity<BoardDetailResDto> getBoardDetailV8(@PathVariable("boardId") Long boardId,
                                                               HttpServletRequest request,
@@ -74,7 +71,6 @@ public class BoardController {
         return ResponseEntity.ok(boardService.getBoardDetail(boardId));
     }
 
-    // 게시글 상세 관리자용
     @GetMapping("/api/v1/management/boards/{boardId}")
     public ResponseEntity<BoardDetailResDto> getBoardDetailForAdmin(@PathVariable("boardId") Long boardId,
                                                                     Principal principal) {
@@ -83,7 +79,6 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.getBoardDetail(boardId));
     }
 
-    // 게시글 작성
     @PostMapping("/api/v1/boards")
     public ResponseEntity<Long> writeBoard(@RequestBody @Valid BoardReqDto boardReqDto,
                                            Principal principal) {
@@ -91,7 +86,6 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.write(boardReqDto, memberId));
     }
 
-    // 게시글 수정
     @PutMapping("/api/v1/boards/{boardId}")
     public ResponseEntity<Long> editBoard(@PathVariable("boardId") Long boardId,
                                           @RequestBody @Valid BoardReqDto boardReqDto,
@@ -100,7 +94,6 @@ public class BoardController {
         return ResponseEntity.ok().body(boardService.edit(memberId, boardId, boardReqDto));
     }
 
-    // 게시글 삭제
     @DeleteMapping("/api/v1/boards/{boardId}")
     public ResponseEntity<Boolean> deleteBoard(@PathVariable("boardId") Long boardId,
                                                Principal principal) {

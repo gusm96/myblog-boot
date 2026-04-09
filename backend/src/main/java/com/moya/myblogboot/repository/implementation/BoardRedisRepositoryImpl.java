@@ -57,7 +57,6 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
         Long updateViews = redisTemplate.opsForValue().increment(viewsKey);
         redisTemplate.expire(viewsKey, CACHE_TTL_SECONDS, TimeUnit.SECONDS);
         board.setUpdateViews(updateViews);
-        // 수정된 데이터 저장.
         setBoardForRedis(key, board);
         return board;
     }
@@ -69,7 +68,6 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
         Long updateLikes = redisTemplate.opsForValue().increment(likesKey);
         redisTemplate.expire(likesKey, CACHE_TTL_SECONDS, TimeUnit.SECONDS);
         board.setUpdateLikes(updateLikes);
-        // 수정된 데이터 저장.
         setBoardForRedis(key, board);
         return board;
     }
@@ -81,7 +79,6 @@ public class BoardRedisRepositoryImpl implements BoardRedisRepository {
         Long updateLikes = redisTemplate.opsForValue().decrement(likesKey);
         redisTemplate.expire(likesKey, CACHE_TTL_SECONDS, TimeUnit.SECONDS);
         board.setUpdateLikes(updateLikes);
-        // 수정된 데이터 저장.
         setBoardForRedis(key, board);
         return board;
     }

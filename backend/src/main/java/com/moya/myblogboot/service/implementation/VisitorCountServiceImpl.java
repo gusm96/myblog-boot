@@ -82,8 +82,6 @@ public class VisitorCountServiceImpl implements VisitorCountService {
         }
     }
 
-    // --- private ---
-
     /**
      * DB에서 해당 날짜의 방문자 데이터를 조회하여 DTO를 구성한다. (읽기 전용, DB 쓰기 없음)
      * - 해당 날짜 레코드가 없으면 가장 최근 레코드의 totalVisitors를 이어받고 todayVisitors=0으로 설정한다.
@@ -93,7 +91,6 @@ public class VisitorCountServiceImpl implements VisitorCountService {
         LocalDate targetDate = LocalDate.parse(date);
         LocalDate previousDate = LocalDate.parse(DateUtil.getPreviousDay(date));
 
-        // 해당 날짜 방문자수 조회
         long total;
         long today;
         var targetOpt = visitorCountRepository.findByDate(targetDate);

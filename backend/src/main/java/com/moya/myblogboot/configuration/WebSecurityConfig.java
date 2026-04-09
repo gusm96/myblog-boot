@@ -42,9 +42,6 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/boards/**").hasRole("ADMIN")
                         .requestMatchers(new AntPathRequestMatcher("/api/v1/deleted-boards/**")).hasRole("ADMIN")
                         .requestMatchers(new AntPathRequestMatcher("/api/v1/management/**")).hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/comments/**").hasAnyRole("NORMAL", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/comments/**").hasAnyRole("NORMAL", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/comments/**").hasAnyRole("NORMAL", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/categories").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/categories/**").hasRole("ADMIN")
@@ -59,7 +56,6 @@ public class WebSecurityConfig {
                 .build();
     }
 
-    // cors 허용을 위한 설정
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

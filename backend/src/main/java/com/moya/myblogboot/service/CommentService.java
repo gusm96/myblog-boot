@@ -1,19 +1,16 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.board.Board;
-import com.moya.myblogboot.domain.comment.Comment;
-import com.moya.myblogboot.domain.comment.CommentReqDto;
-import com.moya.myblogboot.domain.comment.CommentResDto;
-import com.moya.myblogboot.domain.member.Member;
+import com.moya.myblogboot.domain.comment.*;
 
 import java.util.List;
 
 public interface CommentService {
-    void write(CommentReqDto commentReqDto, Long memberId, Long boardId);
 
-    void update(Long commentId, Long memberId, String modifiedComment);
+    CommentWriteResDto write(CommentReqDto reqDto, Long boardId, boolean isAdmin);
 
-    void delete(Long commentId, Long memberId);
+    void update(Long commentId, CommentUpdateReqDto reqDto, boolean isAdmin);
+
+    void delete(Long commentId, CommentDeleteReqDto reqDto, boolean isAdmin);
 
     List<CommentResDto> retrieveAll(Long boardId);
 

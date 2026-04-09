@@ -28,15 +28,12 @@ public class FileUploadServiceImpl implements FileUploadService {
     @Value("${cloud.aws.s3.bucketName}")
     private String bucketName;
 
-
-    // S3에 ImageFile 저장
     @Override
     public ImageFileDto upload(MultipartFile file) {
         try {
-            // 파일 저장
-            String fileName = file.getOriginalFilename(); // 오리지널 파일명
-            String ext = fileName.substring(fileName.lastIndexOf(".")); // 파일 확장자명
-            String randomFileName = randomImageName(fileName); // 이름 중복을 방지하기 위한 랜던 파일명
+            String fileName = file.getOriginalFilename();
+            String ext = fileName.substring(fileName.lastIndexOf("."));
+            String randomFileName = randomImageName(fileName);
 
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType("image/" + ext);
@@ -55,7 +52,6 @@ public class FileUploadServiceImpl implements FileUploadService {
         }
     }
 
-    // S3에서 ImageFile 삭제
     @Override
     public void delete(String imageFileName) {
         try {
@@ -67,7 +63,6 @@ public class FileUploadServiceImpl implements FileUploadService {
         }
     }
 
-    // S3에서 ImageFile 삭제
     @Override
     public void deleteFiles(List<ImageFile> imageFiles) {
         try {

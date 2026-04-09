@@ -22,7 +22,7 @@ public enum ErrorCode {
     EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A005", "리프레시 토큰이 만료되었습니다."),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "A006", "비밀번호가 일치하지 않습니다."),
 
-    // 회원
+    // 어드민
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "회원이 존재하지 않습니다."),
     DUPLICATE_USERNAME(HttpStatus.CONFLICT, "M002", "이미 존재하는 아이디입니다."),
 

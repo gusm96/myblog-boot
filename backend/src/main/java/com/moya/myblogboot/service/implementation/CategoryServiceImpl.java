@@ -58,7 +58,6 @@ public class CategoryServiceImpl implements CategoryService {
         category.editCategory(modifiedCategoryName);
     }
 
-    // 카테고리 삭제
     @Override
     @Transactional
     public void delete(Long categoryId) {

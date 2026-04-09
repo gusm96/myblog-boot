@@ -20,12 +20,6 @@ spring:
       mode: always
       platform: mariadb
 
-# Board View HMAC
-board:
-  view:
-    hmac:
-      secret: ${BOARD_VIEW_HMAC_SECRET}
-
 logging:
   level:
     org:

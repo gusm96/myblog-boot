@@ -21,7 +21,6 @@ public class BoardLikeController {
     private final BoardLikeService boardLikeService;
     private final BoardService boardService;
 
-    // 게시글 좋아요 여부 확인
     @GetMapping("/api/v2/likes/{boardId}")
     public ResponseEntity<Boolean> checkBoardLike(
             @PathVariable("boardId") Long boardId,
@@ -32,7 +31,6 @@ public class BoardLikeController {
         return ResponseEntity.ok(liked);
     }
 
-    // 게시글 좋아요
     @PostMapping("/api/v2/likes/{boardId}")
     public ResponseEntity<Long> addBoardLike(
             @PathVariable("boardId") Long boardId,
@@ -51,7 +49,6 @@ public class BoardLikeController {
         return ResponseEntity.ok(totalLikes);
     }
 
-    // 게시글 좋아요 취소
     @DeleteMapping("/api/v2/likes/{boardId}")
     public ResponseEntity<Long> cancelBoardLike(
             @PathVariable("boardId") Long boardId,
@@ -75,13 +72,11 @@ public class BoardLikeController {
         return ResponseEntity.ok(totalLikes);
     }
 
-    // 조회수 조회
     @GetMapping("/api/v1/boards/{boardId}/views")
     public ResponseEntity<Long> getViews(@PathVariable("boardId") Long boardId) {
         return ResponseEntity.ok().body(boardService.getBoardDetail(boardId).getViews());
     }
 
-    // 좋아요수 조회
     @GetMapping("/api/v1/boards/{boardId}/likes")
     public ResponseEntity<Long> getLikes(@PathVariable("boardId") Long boardId) {
         return ResponseEntity.ok().body(boardService.getBoardDetail(boardId).getLikes());

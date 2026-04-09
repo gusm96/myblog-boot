@@ -23,7 +23,6 @@ public class CommentQuerydslRepositoryImpl implements CommentQuerydslRepository 
         List<Comment> comments = queryFactory.selectDistinct(comment1)
                 .from(comment1)
                 .leftJoin(comment1.child).fetchJoin()
-                .leftJoin(comment1.member).fetchJoin()
                 .where(comment1.board.id.eq(boardId))
                 .where(comment1.parent.isNull())
                 .orderBy(comment1.write_date.desc())
@@ -36,7 +35,6 @@ public class CommentQuerydslRepositoryImpl implements CommentQuerydslRepository 
         List<Comment> comments = queryFactory.selectDistinct(comment1)
                 .from(comment1)
                 .leftJoin(comment1.parent).fetchJoin()
-                .leftJoin(comment1.member).fetchJoin()
                 .where(comment1.parent.id.eq(parentId))
                 .orderBy(comment1.write_date.asc())
                 .fetch();
