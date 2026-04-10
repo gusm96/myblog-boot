@@ -1,21 +1,12 @@
 import axios from "axios";
 import apiClient from "./apiClient";
 import {
-  MEMBER_JOIN,
   MEMBER_LOGIN,
   MEMBER_LOGOUT,
   REISSUING_TOKEN,
   TOKEN_ROLE,
   TOKEN_VALIDATION,
 } from "../apiConfig";
-
-export const join = (formData) => {
-  return axios.post(`${MEMBER_JOIN}`, {
-    username: formData.username,
-    password: formData.password1,
-    nickname: formData.nickname,
-  });
-};
 
 export const login = (formData) => {
   return axios

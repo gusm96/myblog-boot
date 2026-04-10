@@ -1,3 +1,4 @@
+import axios from "axios";
 import apiClient from "./apiClient";
 import {
   BOARD_CRUD,
@@ -66,19 +67,19 @@ export const deleteBoard = (boardId) => {
 };
 
 export const addBoardLike = (boardId) => {
-  return apiClient
-    .post(`${BOARD_LIKE_CRUD(boardId)}`, {})
+  return axios
+    .post(`${BOARD_LIKE_CRUD(boardId)}`, {}, { withCredentials: true })
     .then((res) => res.data);
 };
 
 export const cancelBoardLike = (boardId) => {
-  return apiClient
-    .delete(`${BOARD_LIKE_CRUD(boardId)}`)
+  return axios
+    .delete(`${BOARD_LIKE_CRUD(boardId)}`, { withCredentials: true })
     .then((res) => res.data);
 };
 
 export const getBoardLikes = (page) => {
-  return apiClient.get(`${BOARD_LIKE_CRUD}?${page}`).then((res) => res.data);
+  return apiClient.get(`${BOARD_LIKE_CRUD}?p=${page}`).then((res) => res.data);
 };
 
 export const getComments = (boardId) => {
@@ -91,14 +92,29 @@ export const getChildComments = (parentId) => {
 
 export const addComment = (boardId, commentData) => {
   return apiClient.post(`${COMMENT_CRUD}/${boardId}`, {
-    comment: commentData.comment,
-    parentId: commentData.parentId,
+    comment:  commentData.comment,
+    parentId: commentData.parentId || null,
+    nickname: commentData.nickname || null,
+    password: commentData.password || null,
+  });
+};
+
+export const editComment = (commentId, reqDto) => {
+  return apiClient.put(`${COMMENT_CRUD}/${commentId}`, {
+    comment:  reqDto.comment,
+    password: reqDto.password || null,
+  });
+};
+
+export const deleteComment = (commentId, reqDto) => {
+  return apiClient.delete(`${COMMENT_CRUD}/${commentId}`, {
+    data: { password: reqDto?.password || null },
   });
 };
 
 export const getBoardLikeStatus = (boardId) => {
-  return apiClient
-    .get(`${BOARD_LIKE_CRUD(boardId)}`)
+  return axios
+    .get(`${BOARD_LIKE_CRUD(boardId)}`, { withCredentials: true })
     .then((res) => res.data);
 };
 
@@ -118,7 +134,7 @@ export const uploadImageFile = (formData) => {
 
 export const getDeletedBoards = (page) => {
   return apiClient
-    .get(`${DELETED_BOARDS}?${page}`)
+    .get(`${DELETED_BOARDS}?p=${page}`)
     .then((res) => res.data);
 };
 

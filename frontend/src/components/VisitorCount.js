@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import apiClient from "../services/apiClient";
 import { Spinner } from "react-bootstrap";
-import { BASE_URL } from "../apiConfig";
 import "./Styles/css/visitorCount.css";
 
 const VisitorCount = () => {
@@ -15,10 +14,7 @@ const VisitorCount = () => {
   useEffect(() => {
     const fetchVisitorData = async () => {
       try {
-        const response = await axios.get(
-          `${BASE_URL}/api/v2/visitor-count`,
-          { withCredentials: true }
-        );
+        const response = await apiClient.get("/api/v2/visitor-count");
         const { total, today, yesterday } = response.data;
         setVisitor({ total, today, yesterday });
       } catch (error) {
