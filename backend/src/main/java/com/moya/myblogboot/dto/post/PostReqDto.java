@@ -1,5 +1,6 @@
 package com.moya.myblogboot.dto.post;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.file.ImageFileDto;
@@ -14,6 +15,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostReqDto {
     @NotBlank(message = "제목을 입력하세요.")
     @Size(min = 2, max = 45, message = "제목은 2글자 이상 45글자 이하로 작성해야합니다.")

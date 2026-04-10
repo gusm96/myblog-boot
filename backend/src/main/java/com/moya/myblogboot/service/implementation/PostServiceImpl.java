@@ -148,6 +148,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public Long getPostIdBySlug(String slug) {
+        return postRepository.findIdBySlug(slug)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.POST_NOT_FOUND));
+    }
+
+    @Override
     public Post findById(Long postId) {
         return postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.POST_NOT_FOUND));

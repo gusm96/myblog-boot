@@ -17,6 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
 
 import java.security.Principal;
 
@@ -51,14 +54,15 @@ public class PostController {
         return ResponseEntity.ok().body(postService.retrieveAllBySearched(searchType, searchContents, getPage(page)));
     }
 
-    // HMAC 서명 쿠키로 중복 조회를 Stateless하게 방지 — 미조회 시 조회수 증가
-    @GetMapping("/api/v8/posts/{postId}")
-    public ResponseEntity<PostDetailResDto> getPostDetailV8(@PathVariable("postId") Long postId,
-                                                            HttpServletRequest request,
-                                                            HttpServletResponse response) {
+    // slug 또는 숫자 ID 모두 처리 — HMAC 쿠키로 중복 조회 방지
+    @GetMapping("/api/v1/posts/{identifier}")
+    public ResponseEntity<PostDetailResDto> getPostDetail(@PathVariable("identifier") String identifier,
+                                                          HttpServletRequest request,
+                                                          HttpServletResponse response) {
+        Long postId = resolvePostId(identifier);
+
         Cookie cookie = CookieUtil.findCookie(request, VIEWED_POSTS);
         String cookieValue = (cookie != null) ? cookie.getValue() : null;
-
         boolean valid = postViewCookieService.isValid(cookieValue);
 
         if (!valid || !postViewCookieService.isViewed(cookieValue, postId)) {
@@ -69,6 +73,15 @@ public class PostController {
         }
 
         return ResponseEntity.ok(postService.getPostDetail(postId));
+    }
+
+    // v8 → v1 301 redirect (하위 호환)
+    @GetMapping("/api/v8/posts/{postId}")
+    public ResponseEntity<Void> getPostDetailV8Redirect(@PathVariable("postId") Long postId) {
+        URI redirectUri = UriComponentsBuilder.fromPath("/api/v1/posts/{postId}")
+                .buildAndExpand(postId)
+                .toUri();
+        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).location(redirectUri).build();
     }
 
     @GetMapping("/api/v1/management/posts/{postId}")
@@ -100,6 +113,14 @@ public class PostController {
         Long memberId = PrincipalUtil.getMemberId(principal);
         postService.delete(postId, memberId);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private Long resolvePostId(String identifier) {
+        try {
+            return Long.parseLong(identifier);
+        } catch (NumberFormatException e) {
+            return postService.getPostIdBySlug(identifier);
+        }
     }
 
     private int getPage(int page) {

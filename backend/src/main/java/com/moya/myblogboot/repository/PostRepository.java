@@ -16,6 +16,9 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostQuerydslR
     Optional<Post> findBySlug(String slug);
     boolean existsBySlug(String slug);
 
+    @Query("select p.id from Post p where p.slug = :slug")
+    Optional<Long> findIdBySlug(@Param("slug") String slug);
+
     @Query("select p from Post p " +
             "join fetch p.admin " +
             "join fetch p.category where p.id = :postId")

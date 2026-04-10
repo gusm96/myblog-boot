@@ -22,6 +22,8 @@ public interface PostService {
 
     PostDetailResDto getPostDetailAndIncrementViews(Long postId);
 
+    Long getPostIdBySlug(String slug);
+
     PostListResDto retrieveAllDeleted(int page);
 
     Long write(PostReqDto postReqDto, Long memberId);

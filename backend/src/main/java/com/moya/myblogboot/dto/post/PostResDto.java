@@ -1,5 +1,6 @@
 package com.moya.myblogboot.dto.post;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.post.PostStatus;
 import lombok.*;
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostResDto {
     private Long id;
     private String title;

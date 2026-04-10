@@ -42,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.restdocs.headers.HeaderDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
+import static org.springframework.restdocs.payload.JsonFieldType.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -72,6 +73,7 @@ class PostControllerTest extends AbstractContainerBaseTest {
     private ObjectMapper objectMapper;
 
     private Long postId;
+    private String postSlug;
     private Long categoryId;
     private String accessToken;
 
@@ -101,9 +103,11 @@ class PostControllerTest extends AbstractContainerBaseTest {
                     .category(saveCategory)
                     .title("title")
                     .content("content")
+                    .slug("test-title-" + i)
                     .build();
             Post result = postRepository.save(newPost);
             postId = result.getId();
+            postSlug = "test-title-" + i;
         }
 
         MemberLoginReqDto loginReqDto = MemberLoginReqDto.builder()
@@ -134,9 +138,10 @@ class PostControllerTest extends AbstractContainerBaseTest {
                                 fieldWithPath("list[].id").description("게시글 ID"),
                                 fieldWithPath("list[].title").description("게시글 제목"),
                                 fieldWithPath("list[].content").description("게시글 내용"),
+                                fieldWithPath("list[].slug").description("게시글 슬러그"),
                                 fieldWithPath("list[].createDate").description("작성일"),
-                                fieldWithPath("list[].updateDate").description("수정일").optional(),
-                                fieldWithPath("list[].deleteDate").description("삭제 예정일").optional(),
+                                fieldWithPath("list[].updateDate").description("수정일").optional().type(STRING),
+                                fieldWithPath("list[].deleteDate").description("삭제 예정일").optional().type(STRING),
                                 fieldWithPath("list[].postStatus").description("게시글 상태 (VIEW / HIDE)"),
                                 fieldWithPath("totalPage").description("전체 페이지 수")
                         )
@@ -166,9 +171,10 @@ class PostControllerTest extends AbstractContainerBaseTest {
                                 fieldWithPath("list[].id").description("게시글 ID"),
                                 fieldWithPath("list[].title").description("게시글 제목"),
                                 fieldWithPath("list[].content").description("게시글 내용"),
+                                fieldWithPath("list[].slug").description("게시글 슬러그"),
                                 fieldWithPath("list[].createDate").description("작성일"),
-                                fieldWithPath("list[].updateDate").description("수정일").optional(),
-                                fieldWithPath("list[].deleteDate").description("삭제 예정일").optional(),
+                                fieldWithPath("list[].updateDate").description("수정일").optional().type(STRING),
+                                fieldWithPath("list[].deleteDate").description("삭제 예정일").optional().type(STRING),
                                 fieldWithPath("list[].postStatus").description("게시글 상태"),
                                 fieldWithPath("totalPage").description("전체 페이지 수")
                         )
@@ -201,9 +207,10 @@ class PostControllerTest extends AbstractContainerBaseTest {
                                 fieldWithPath("list[].id").description("게시글 ID"),
                                 fieldWithPath("list[].title").description("게시글 제목"),
                                 fieldWithPath("list[].content").description("게시글 내용"),
+                                fieldWithPath("list[].slug").description("게시글 슬러그"),
                                 fieldWithPath("list[].createDate").description("작성일"),
-                                fieldWithPath("list[].updateDate").description("수정일").optional(),
-                                fieldWithPath("list[].deleteDate").description("삭제 예정일").optional(),
+                                fieldWithPath("list[].updateDate").description("수정일").optional().type(STRING),
+                                fieldWithPath("list[].deleteDate").description("삭제 예정일").optional().type(STRING),
                                 fieldWithPath("list[].postStatus").description("게시글 상태"),
                                 fieldWithPath("totalPage").description("전체 페이지 수")
                         )
@@ -211,17 +218,18 @@ class PostControllerTest extends AbstractContainerBaseTest {
     }
 
     @Test
-    @DisplayName("게시글 상세 조회 V8 — 최초 조회: 조회수 증가 + viewed_posts 쿠키 발급")
-    void getPostDetailV8_최초조회() throws Exception {
-        ResultActions resultActions = mockMvc.perform(get("/api/v8/posts/{postId}", postId));
+    @DisplayName("게시글 상세 조회 V1 (slug) — 최초 조회: 조회수 증가 + viewed_posts 쿠키 발급")
+    void getPostDetailV1BySlug_최초조회() throws Exception {
+        ResultActions resultActions = mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(postId))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.slug").value(postSlug))
                 .andExpect(MockMvcResultMatchers.cookie().exists("viewed_posts"))
                 .andDo(restDocs.document(
                         pathParameters(
-                                parameterWithName("postId").description("게시글 ID")
+                                parameterWithName("identifier").description("게시글 슬러그 또는 숫자 ID")
                         ),
                         responseFields(
                                 fieldWithPath("id").description("게시글 ID"),
@@ -230,18 +238,20 @@ class PostControllerTest extends AbstractContainerBaseTest {
                                 fieldWithPath("views").description("조회수"),
                                 fieldWithPath("likes").description("좋아요 수"),
                                 fieldWithPath("createDate").description("작성일"),
-                                fieldWithPath("updateDate").description("수정일").optional(),
-                                fieldWithPath("deleteDate").description("삭제 예정일").optional(),
-                                fieldWithPath("postStatus").description("게시글 상태")
+                                fieldWithPath("updateDate").description("수정일").optional().type(STRING),
+                                fieldWithPath("deleteDate").description("삭제 예정일").optional().type(STRING),
+                                fieldWithPath("postStatus").description("게시글 상태"),
+                                fieldWithPath("slug").description("게시글 슬러그"),
+                                fieldWithPath("categoryName").description("카테고리명")
                         )
                 ));
     }
 
     @Test
-    @DisplayName("게시글 상세 조회 V8 — 중복 조회: viewed_posts 쿠키 포함 시 조회수 증가 없음")
-    void getPostDetailV8_중복조회() throws Exception {
+    @DisplayName("게시글 상세 조회 V1 (slug) — 중복 조회: viewed_posts 쿠키 포함 시 조회수 증가 없음")
+    void getPostDetailV1BySlug_중복조회() throws Exception {
         // 1차 조회로 쿠키 발급
-        MvcResult firstResult = mockMvc.perform(get("/api/v8/posts/{postId}", postId))
+        MvcResult firstResult = mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
 
@@ -253,7 +263,7 @@ class PostControllerTest extends AbstractContainerBaseTest {
                 .get("views").numberValue()).longValue();
 
         // 2차 조회 (동일 쿠키 포함)
-        MvcResult secondResult = mockMvc.perform(get("/api/v8/posts/{postId}", postId)
+        MvcResult secondResult = mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug)
                         .cookie(viewedCookie))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
@@ -263,6 +273,40 @@ class PostControllerTest extends AbstractContainerBaseTest {
                 .get("views").numberValue()).longValue();
 
         assertThat(viewsAfterSecond).isEqualTo(viewsAfterFirst);
+    }
+
+    @Test
+    @DisplayName("게시글 상세 조회 V1 (ID) — 최초 조회: 조회수 증가 + viewed_posts 쿠키 발급")
+    void getPostDetailV1ById_최초조회() throws Exception {
+        ResultActions resultActions = mockMvc.perform(get("/api/v1/posts/{identifier}", postId));
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(postId))
+                .andExpect(MockMvcResultMatchers.cookie().exists("viewed_posts"));
+    }
+
+    @Test
+    @DisplayName("게시글 상세 조회 V8 → V1 301 redirect")
+    void getPostDetailV8Redirect() throws Exception {
+        mockMvc.perform(get("/api/v8/posts/{postId}", postId))
+                .andExpect(MockMvcResultMatchers.status().isMovedPermanently())
+                .andExpect(MockMvcResultMatchers.header().string(HttpHeaders.LOCATION, "/api/v1/posts/" + postId))
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("postId").description("게시글 ID (v1으로 영구 이전됨)")
+                        ),
+                        responseHeaders(
+                                headerWithName(HttpHeaders.LOCATION).description("이전된 엔드포인트 URI")
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("게시글 상세 조회 V1 실패 - 존재하지 않는 슬러그")
+    void getPostDetailV1NotFound() throws Exception {
+        mockMvc.perform(get("/api/v1/posts/{identifier}", "nonexistent-slug"))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
@@ -287,9 +331,11 @@ class PostControllerTest extends AbstractContainerBaseTest {
                                 fieldWithPath("views").description("조회수"),
                                 fieldWithPath("likes").description("좋아요 수"),
                                 fieldWithPath("createDate").description("작성일"),
-                                fieldWithPath("updateDate").description("수정일").optional(),
-                                fieldWithPath("deleteDate").description("삭제 예정일").optional(),
-                                fieldWithPath("postStatus").description("게시글 상태")
+                                fieldWithPath("updateDate").description("수정일").optional().type(STRING),
+                                fieldWithPath("deleteDate").description("삭제 예정일").optional().type(STRING),
+                                fieldWithPath("postStatus").description("게시글 상태"),
+                                fieldWithPath("slug").description("게시글 슬러그"),
+                                fieldWithPath("categoryName").description("카테고리명")
                         )
                 ));
     }
@@ -319,7 +365,11 @@ class PostControllerTest extends AbstractContainerBaseTest {
                                 fieldWithPath("title").description("게시글 제목 (2~45자)"),
                                 fieldWithPath("content").description("게시글 내용"),
                                 fieldWithPath("category").description("카테고리 ID"),
-                                fieldWithPath("images").description("첨부 이미지 목록").optional()
+                                fieldWithPath("images").description("첨부 이미지 목록").optional().type(STRING),
+                                fieldWithPath("slug").description("슬러그 (미입력 시 제목에서 자동 생성)").optional().type(STRING),
+                                fieldWithPath("metaDescription").description("메타 설명 (최대 160자)").optional().type(STRING),
+                                fieldWithPath("metaKeywords").description("메타 키워드").optional().type(STRING),
+                                fieldWithPath("thumbnailUrl").description("대표 이미지 URL").optional().type(STRING)
                         ),
                         responseBody()
                 ));
@@ -352,7 +402,11 @@ class PostControllerTest extends AbstractContainerBaseTest {
                                 fieldWithPath("title").description("수정할 제목 (2~45자)"),
                                 fieldWithPath("content").description("수정할 내용"),
                                 fieldWithPath("category").description("카테고리 ID"),
-                                fieldWithPath("images").description("첨부 이미지 목록").optional()
+                                fieldWithPath("images").description("첨부 이미지 목록").optional().type(STRING),
+                                fieldWithPath("slug").description("수정할 슬러그 (미입력 시 기존 슬러그 유지)").optional().type(STRING),
+                                fieldWithPath("metaDescription").description("수정할 메타 설명").optional().type(STRING),
+                                fieldWithPath("metaKeywords").description("수정할 메타 키워드").optional().type(STRING),
+                                fieldWithPath("thumbnailUrl").description("수정할 대표 이미지 URL").optional().type(STRING)
                         ),
                         responseBody()
                 ));
@@ -481,13 +535,6 @@ class PostControllerTest extends AbstractContainerBaseTest {
                         ),
                         responseBody()
                 ));
-    }
-
-    @Test
-    @DisplayName("게시글 상세 조회 V8 실패 - 존재하지 않는 게시글")
-    void getPostDetailV8NotFound() throws Exception {
-        mockMvc.perform(get("/api/v8/posts/{postId}", Long.MAX_VALUE))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
