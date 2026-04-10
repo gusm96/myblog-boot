@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.admin.Admin;
-import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.domain.comment.CommentDeleteReqDto;
@@ -12,7 +12,7 @@ import com.moya.myblogboot.domain.comment.CommentReqDto;
 import com.moya.myblogboot.domain.comment.CommentUpdateReqDto;
 import com.moya.myblogboot.domain.member.MemberLoginReqDto;
 import com.moya.myblogboot.repository.AdminRepository;
-import com.moya.myblogboot.repository.BoardRepository;
+import com.moya.myblogboot.repository.PostRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
 import com.moya.myblogboot.repository.CommentRepository;
 import com.moya.myblogboot.service.AuthService;
@@ -59,13 +59,13 @@ class CommentControllerTest extends AbstractContainerBaseTest {
     @Autowired private AuthService authService;
     @Autowired private CommentRepository commentRepository;
     @Autowired private CategoryRepository categoryRepository;
-    @Autowired private BoardRepository boardRepository;
+    @Autowired private PostRepository postRepository;
     @Autowired private RestDocumentationResultHandler restDocs;
     @Autowired private ObjectMapper objectMapper;
 
     private String accessToken;
     private Long parentId;
-    private Long boardId;
+    private Long postId;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext, RestDocumentationContextProvider restDocumentationContextProvider) {
@@ -94,18 +94,18 @@ class CommentControllerTest extends AbstractContainerBaseTest {
         Category category = Category.builder().name("category").build();
         Category saveCategory = categoryRepository.save(category);
 
-        Board board = Board.builder()
+        Post post = Post.builder()
                 .admin(saveAdmin)
                 .category(saveCategory)
                 .title("title")
                 .content("content")
                 .build();
-        Board saveBoard = boardRepository.save(board);
-        boardId = saveBoard.getId();
+        Post savePost = postRepository.save(post);
+        postId = savePost.getId();
 
         for (int i = 0; i < 5; i++) {
             Comment newComment = Comment.builder()
-                    .board(saveBoard)
+                    .post(savePost)
                     .nickname("tester")
                     .discriminator("100" + i)
                     .password(passwordEncoder.encode("testPw"))
@@ -116,7 +116,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
             parentId = saveComment.getId();
             for (int j = 0; j < 5; j++) {
                 Comment childComment = Comment.builder()
-                        .board(saveBoard)
+                        .post(savePost)
                         .nickname("child")
                         .discriminator("200" + j)
                         .password(passwordEncoder.encode("testPw"))
@@ -133,20 +133,20 @@ class CommentControllerTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("댓글 리스트 조회")
     void getComments() throws Exception {
-        ResultActions resultActions = mockMvc.perform(get("/api/v1/comments/{boardId}", boardId));
+        ResultActions resultActions = mockMvc.perform(get("/api/v1/comments/{postId}", postId));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andDo(restDocs.document(
                         pathParameters(
-                                parameterWithName("boardId").description("게시글 ID")
+                                parameterWithName("postId").description("게시글 ID")
                         ),
                         responseFields(
                                 fieldWithPath("[].id").description("댓글 ID"),
                                 fieldWithPath("[].writer").description("작성자 (닉네임#구분자 또는 [관리자])"),
                                 fieldWithPath("[].isAdmin").description("관리자 댓글 여부"),
                                 fieldWithPath("[].comment").description("댓글 내용"),
-                                fieldWithPath("[].write_date").description("작성일"),
+                                fieldWithPath("[].createDate").description("작성일"),
                                 fieldWithPath("[].modificationStatus").description("수정 여부 (ORIGINAL / MODIFIED)"),
                                 fieldWithPath("[].childCount").description("대댓글 수")
                         )
@@ -169,7 +169,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
                                 fieldWithPath("[].writer").description("작성자 (닉네임#구분자 또는 [관리자])"),
                                 fieldWithPath("[].isAdmin").description("관리자 댓글 여부"),
                                 fieldWithPath("[].comment").description("댓글 내용"),
-                                fieldWithPath("[].write_date").description("작성일"),
+                                fieldWithPath("[].createDate").description("작성일"),
                                 fieldWithPath("[].modificationStatus").description("수정 여부 (ORIGINAL / MODIFIED)"),
                                 fieldWithPath("[].childCount").description("대댓글 수")
                         )
@@ -182,7 +182,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
         CommentReqDto comment = new CommentReqDto();
         comment.setComment("어드민 댓글입니다.");
 
-        ResultActions resultActions = mockMvc.perform(post("/api/v1/comments/{boardId}", boardId)
+        ResultActions resultActions = mockMvc.perform(post("/api/v1/comments/{postId}", postId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(comment)));
@@ -191,7 +191,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andDo(restDocs.document(
                         pathParameters(
-                                parameterWithName("boardId").description("게시글 ID")
+                                parameterWithName("postId").description("게시글 ID")
                         ),
                         requestHeaders(
                                 headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (어드민)")
@@ -217,7 +217,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
         comment.setNickname("visitor");
         comment.setPassword("visitPw1!");
 
-        ResultActions resultActions = mockMvc.perform(post("/api/v1/comments/{boardId}", boardId)
+        ResultActions resultActions = mockMvc.perform(post("/api/v1/comments/{postId}", postId)
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(comment)));
 
@@ -266,7 +266,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
 
     @Test
     @DisplayName("댓글 작성 실패 - 존재하지 않는 게시글")
-    void writeCommentWithNonExistentBoard() throws Exception {
+    void writeCommentWithNonExistentPost() throws Exception {
         CommentReqDto comment = new CommentReqDto();
         comment.setComment("test comment");
 

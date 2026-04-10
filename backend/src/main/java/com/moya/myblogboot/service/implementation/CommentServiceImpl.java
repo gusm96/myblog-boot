@@ -1,14 +1,14 @@
 package com.moya.myblogboot.service.implementation;
 
-import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.comment.*;
+import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.exception.custom.UnauthorizedException;
 import com.moya.myblogboot.repository.CommentRepository;
-import com.moya.myblogboot.service.BoardService;
 import com.moya.myblogboot.service.CommentService;
+import com.moya.myblogboot.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,12 +25,12 @@ import java.util.concurrent.ThreadLocalRandom;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
-    private final BoardService boardService;
+    private final PostService postService;
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public List<CommentResDto> retrieveAll(Long boardId) {
-        return commentRepository.findAllByBoardId(boardId);
+    public List<CommentResDto> retrieveAll(Long postId) {
+        return commentRepository.findAllByPostId(postId);
     }
 
     @Override
@@ -40,8 +40,8 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public CommentWriteResDto write(CommentReqDto reqDto, Long boardId, boolean isAdmin) {
-        Board board = boardService.findById(boardId);
+    public CommentWriteResDto write(CommentReqDto reqDto, Long postId, boolean isAdmin) {
+        Post post = postService.findById(postId);
 
         String nickname;
         String discriminator;
@@ -57,7 +57,7 @@ public class CommentServiceImpl implements CommentService {
             if (reqDto.getPassword() == null || reqDto.getPassword().isBlank())
                 throw new UnauthorizedException(ErrorCode.INVALID_INPUT);
             nickname = reqDto.getNickname();
-            discriminator = generateDiscriminator(boardId, nickname);
+            discriminator = generateDiscriminator(postId, nickname);
             password = passwordEncoder.encode(reqDto.getPassword());
         }
 
@@ -67,7 +67,7 @@ public class CommentServiceImpl implements CommentService {
                 .discriminator(discriminator)
                 .password(password)
                 .isAdmin(isAdmin)
-                .board(board)
+                .post(post)
                 .build();
 
         if (reqDto.getParentId() != null) {
@@ -77,7 +77,7 @@ public class CommentServiceImpl implements CommentService {
         }
 
         Comment result = commentRepository.save(comment);
-        board.addComment(result);
+        post.addComment(result);
 
         return CommentWriteResDto.builder()
                 .nickname(nickname)
@@ -118,12 +118,12 @@ public class CommentServiceImpl implements CommentService {
     }
 
     /** 게시글 범위 내에서 nickname+discriminator 중복 방지 */
-    private String generateDiscriminator(Long boardId, String nickname) {
+    private String generateDiscriminator(Long postId, String nickname) {
         for (int i = 0; i < 10; i++) {
             String discriminator = String.format("%04d",
                     ThreadLocalRandom.current().nextInt(1000, 10000));
-            if (!commentRepository.existsByBoard_IdAndNicknameAndDiscriminator(
-                    boardId, nickname, discriminator)) {
+            if (!commentRepository.existsByPost_IdAndNicknameAndDiscriminator(
+                    postId, nickname, discriminator)) {
                 return discriminator;
             }
         }

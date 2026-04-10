@@ -1,6 +1,6 @@
 package com.moya.myblogboot.domain.comment;
 
-import com.moya.myblogboot.domain.board.ModificationStatus;
+import com.moya.myblogboot.domain.post.ModificationStatus;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -12,7 +12,7 @@ public class CommentResDto {
     private String writer;    // "nickname#discriminator" 또는 "[관리자]"
     private Boolean isAdmin;
     private String comment;
-    private LocalDateTime write_date;
+    private LocalDateTime createDate;
     private ModificationStatus modificationStatus;
     private Long childCount = 0L;
 
@@ -24,7 +24,7 @@ public class CommentResDto {
                 : comment.getNickname() + "#" + comment.getDiscriminator();
         this.isAdmin = comment.getIsAdmin();
         this.comment = comment.getComment();
-        this.write_date = comment.getWrite_date();
+        this.createDate = comment.getCreateDate();
         this.modificationStatus = comment.getModificationStatus();
         this.childCount = (long) comment.getChild().size();
     }

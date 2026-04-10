@@ -1,0 +1,51 @@
+graph LR
+    subgraph Presentation["Presentation Layer"]
+        AC[AuthController]
+        BC[BoardController]
+        BLC[BoardLikeController]
+        DBC[DeletedBoardController]
+        CC[CategoryController]
+        CMC[CommentController]
+        FUC[FileUploadController]
+    end
+
+    subgraph Service["Service Layer"]
+        AS[AuthService]
+        BS[BoardService]
+        BCS[BoardCacheService]
+        BLS[BoardLikeService]
+        BVCS[BoardViewCookieService]
+        CS[CategoryService]
+        CMS[CommentService]
+        FUS[FileUploadService]
+        VCS[VisitorCountService]
+        VHS[VisitorHmacService]
+    end
+
+    subgraph Repository["Repository Layer"]
+        subgraph JPA["Spring Data JPA"]
+            BR[BoardRepository]
+            MR[MemberRepository]
+            CR[CategoryRepository]
+            CMR[CommentRepository]
+            BLR[BoardLikeRepository]
+            IFR[ImageFileRepository]
+        end
+        subgraph QueryDSL["QueryDSL"]
+            BQR[BoardQuerydslRepository]
+            CQR[CategoryQuerydslRepository]
+            CMQR[CommentQuerydslRepository]
+        end
+        subgraph RedisRepo["Redis"]
+            BRR[BoardRedisRepository]
+            VCRR[VisitorCountRedisRepository]
+        end
+    end
+
+    subgraph Domain["Domain / Entity"]
+        Board & Member & Category & Comment & ImageFile & BoardLike & Visitor
+    end
+
+    Presentation --> Service
+    Service --> Repository
+    Repository --> Domain

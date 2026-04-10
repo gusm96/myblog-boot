@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant Client
+    participant JwtFilter
+    participant SecurityContext
+    participant Controller
+    participant AuthService
+
+    Client->>Controller: POST /api/v1/login {username, password}
+    Controller->>AuthService: login(dto)
+    AuthService-->>Controller: {access_token, refresh_token}
+    Controller-->>Client: access_token (body) + Set-Cookie: refresh_token
+
+    Note over Client: Redux에 accessToken 저장
+
+    Client->>JwtFilter: GET /api/v1/boards Authorization: Bearer accessToken
+    JwtFilter->>JwtFilter: JwtUtil.validateToken() + extractClaims()
+    JwtFilter->>SecurityContext: memberId + ROLE 설정
+    JwtFilter->>Controller: 요청 통과
+
+    Client->>Controller: GET /api/v1/reissuing-token (Cookie: refresh_token)
+    Controller->>AuthService: reissueAccessToken()
+    AuthService-->>Controller: new accessToken
+    Controller-->>Client: new access_token (body)

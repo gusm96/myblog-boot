@@ -2,17 +2,17 @@ package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.admin.Admin;
-import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.domain.comment.CommentDeleteReqDto;
 import com.moya.myblogboot.domain.comment.CommentReqDto;
 import com.moya.myblogboot.domain.comment.CommentResDto;
 import com.moya.myblogboot.domain.comment.CommentUpdateReqDto;
-import com.moya.myblogboot.domain.board.ModificationStatus;
+import com.moya.myblogboot.domain.post.ModificationStatus;
 import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.AdminRepository;
-import com.moya.myblogboot.repository.BoardRepository;
+import com.moya.myblogboot.repository.PostRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
 import com.moya.myblogboot.repository.CommentRepository;
 import com.moya.myblogboot.service.CommentService;
@@ -39,11 +39,11 @@ class CommentServiceImplTest extends AbstractContainerBaseTest {
     @Autowired private CommentService commentService;
     @Autowired private AdminRepository adminRepository;
     @Autowired private CategoryRepository categoryRepository;
-    @Autowired private BoardRepository boardRepository;
+    @Autowired private PostRepository postRepository;
     @Autowired private CommentRepository commentRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
-    private Board testBoard;
+    private Post testPost;
     private Comment testComment;
     private static final String COMMENT_PASSWORD = "testPw1234";
 
@@ -58,7 +58,7 @@ class CommentServiceImplTest extends AbstractContainerBaseTest {
                 .name("댓글테스트카테고리")
                 .build());
 
-        testBoard = boardRepository.save(Board.builder()
+        testPost = postRepository.save(Post.builder()
                 .title("댓글테스트게시글")
                 .content("내용")
                 .category(category)
@@ -71,7 +71,7 @@ class CommentServiceImplTest extends AbstractContainerBaseTest {
                 .discriminator("1234")
                 .password(passwordEncoder.encode(COMMENT_PASSWORD))
                 .isAdmin(false)
-                .board(testBoard)
+                .post(testPost)
                 .build());
     }
 
@@ -81,7 +81,7 @@ class CommentServiceImplTest extends AbstractContainerBaseTest {
         CommentReqDto reqDto = new CommentReqDto();
         reqDto.setComment("어드민 댓글");
 
-        assertThat(commentService.write(reqDto, testBoard.getId(), true)).isNotNull();
+        assertThat(commentService.write(reqDto, testPost.getId(), true)).isNotNull();
     }
 
     @Test
@@ -92,7 +92,7 @@ class CommentServiceImplTest extends AbstractContainerBaseTest {
         reqDto.setNickname("guest");
         reqDto.setPassword("guestPw!1");
 
-        assertThat(commentService.write(reqDto, testBoard.getId(), false)).isNotNull();
+        assertThat(commentService.write(reqDto, testPost.getId(), false)).isNotNull();
     }
 
     @Test
@@ -104,7 +104,7 @@ class CommentServiceImplTest extends AbstractContainerBaseTest {
         reqDto.setPassword("childPw!1");
         reqDto.setParentId(testComment.getId());
 
-        commentService.write(reqDto, testBoard.getId(), false);
+        commentService.write(reqDto, testPost.getId(), false);
 
         assertThat(testComment.getChild()).hasSize(1);
     }
@@ -178,7 +178,7 @@ class CommentServiceImplTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("게시글의 댓글 목록 조회")
     void retrieveAll() {
-        List<CommentResDto> result = commentService.retrieveAll(testBoard.getId());
+        List<CommentResDto> result = commentService.retrieveAll(testPost.getId());
 
         assertThat(result).isNotEmpty();
         assertThat(result.get(0).getComment()).isEqualTo("기존 댓글");

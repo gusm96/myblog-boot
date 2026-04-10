@@ -16,9 +16,9 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    @GetMapping("/api/v1/comments/{boardId}")
-    public ResponseEntity<List<CommentResDto>> getComments(@PathVariable("boardId") Long boardId) {
-        return ResponseEntity.ok(commentService.retrieveAll(boardId));
+    @GetMapping("/api/v1/comments/{postId}")
+    public ResponseEntity<List<CommentResDto>> getComments(@PathVariable("postId") Long postId) {
+        return ResponseEntity.ok(commentService.retrieveAll(postId));
     }
 
     @GetMapping("/api/v1/comments/child/{parentId}")
@@ -27,13 +27,13 @@ public class CommentController {
     }
 
     // JWT가 없으면 비회원, JWT가 있으면 어드민으로 처리
-    @PostMapping("/api/v1/comments/{boardId}")
+    @PostMapping("/api/v1/comments/{postId}")
     public ResponseEntity<CommentWriteResDto> writeComment(
-            @PathVariable("boardId") Long boardId,
+            @PathVariable("postId") Long postId,
             @RequestBody @Valid CommentReqDto commentReqDto,
             Principal principal) {
         boolean isAdmin = principal != null;
-        return ResponseEntity.ok(commentService.write(commentReqDto, boardId, isAdmin));
+        return ResponseEntity.ok(commentService.write(commentReqDto, postId, isAdmin));
     }
 
     @PutMapping("/api/v1/comments/{commentId}")

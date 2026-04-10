@@ -1,11 +1,11 @@
 package com.moya.myblogboot.domain.comment;
 
-import com.moya.myblogboot.domain.board.Board;
-import com.moya.myblogboot.domain.board.ModificationStatus;
+import com.moya.myblogboot.domain.base.BaseTimeEntity;
+import com.moya.myblogboot.domain.post.ModificationStatus;
+import com.moya.myblogboot.domain.post.Post;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +15,7 @@ import static jakarta.persistence.FetchType.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class Comment {
+public class Comment extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "comment_id")
@@ -23,8 +23,6 @@ public class Comment {
 
     @Column(nullable = false)
     private String comment;
-
-    private LocalDateTime write_date;
 
     @Enumerated(EnumType.STRING)
     private ModificationStatus modificationStatus;
@@ -42,8 +40,8 @@ public class Comment {
     private Boolean isAdmin;       // 어드민 작성 여부
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "board_id")
-    private Board board;
+    @JoinColumn(name = "post_id")
+    private Post post;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "parent_id")
@@ -54,15 +52,14 @@ public class Comment {
 
     @Builder
     public Comment(String comment, String nickname, String discriminator,
-                   String password, Boolean isAdmin, Board board) {
+                   String password, Boolean isAdmin, Post post) {
         this.comment = comment;
         this.nickname = nickname;
         this.discriminator = discriminator;
         this.password = password;
         this.isAdmin = isAdmin;
-        this.write_date = LocalDateTime.now();
         this.modificationStatus = ModificationStatus.NOT_MODIFIED;
-        this.board = board;
+        this.post = post;
     }
 
     public void addParentComment(Comment parent) {

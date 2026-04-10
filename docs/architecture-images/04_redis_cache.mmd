@@ -1,0 +1,28 @@
+sequenceDiagram
+    participant Client
+    participant BoardController
+    participant BoardCacheService
+    participant Redis
+    participant DB as MariaDB
+    participant Scheduler
+
+    Client->>BoardController: GET /api/v8/boards/{id}
+    BoardController->>BoardCacheService: getBoardFromCache(id)
+    BoardCacheService->>Redis: GET board:{id}
+
+    alt 캐시 HIT
+        Redis-->>BoardCacheService: BoardForRedis
+    else 캐시 MISS
+        BoardCacheService->>DB: findById(id)
+        DB-->>BoardCacheService: Board entity
+        BoardCacheService->>Redis: SET board:{id}
+    end
+
+    BoardController->>BoardCacheService: incrementViews(id)
+    BoardCacheService->>Redis: INCR views (단일 스레드)
+    BoardController-->>Client: BoardDetailResDto
+
+    Note over Scheduler: 매 10분마다
+    Scheduler->>Redis: 모든 board:* 키 조회
+    Scheduler->>DB: views/likes 동기화 (Write-Behind)
+    Scheduler->>Redis: 키 삭제 (eviction)

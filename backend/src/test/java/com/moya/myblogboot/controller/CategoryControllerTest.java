@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.admin.Admin;
-import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.category.CategoryReqDto;
 import com.moya.myblogboot.domain.member.MemberLoginReqDto;
 import com.moya.myblogboot.repository.AdminRepository;
-import com.moya.myblogboot.repository.BoardRepository;
+import com.moya.myblogboot.repository.PostRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
 import com.moya.myblogboot.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +60,7 @@ class CategoryControllerTest extends AbstractContainerBaseTest {
     @Autowired
     private CategoryRepository categoryRepository;
     @Autowired
-    private BoardRepository boardRepository;
+    private PostRepository postRepository;
     @Autowired
     private RestDocumentationResultHandler restDocs;
     @Autowired
@@ -99,13 +99,13 @@ class CategoryControllerTest extends AbstractContainerBaseTest {
             categoryId = saveCategory.getId();
 
             // getCategoryListV2는 VIEW 게시글이 있는 카테고리만 반환하므로 게시글 생성
-            Board board = Board.builder()
+            Post post = Post.builder()
                     .admin(saveAdmin)
                     .category(saveCategory)
                     .title("title" + i)
                     .content("content" + i)
                     .build();
-            boardRepository.save(board);
+            postRepository.save(post);
         }
     }
 
@@ -139,7 +139,7 @@ class CategoryControllerTest extends AbstractContainerBaseTest {
                         responseFields(
                                 fieldWithPath("[].id").description("카테고리 ID"),
                                 fieldWithPath("[].name").description("카테고리명"),
-                                fieldWithPath("[].boardsCount").description("카테고리 내 게시글 수")
+                                fieldWithPath("[].postsCount").description("카테고리 내 게시글 수")
                         )
                 ));
     }
@@ -161,7 +161,7 @@ class CategoryControllerTest extends AbstractContainerBaseTest {
                         responseFields(
                                 fieldWithPath("[].id").description("카테고리 ID"),
                                 fieldWithPath("[].name").description("카테고리명"),
-                                fieldWithPath("[].boardsCount").description("카테고리 내 게시글 수")
+                                fieldWithPath("[].postsCount").description("카테고리 내 게시글 수")
                         )
                 ));
     }

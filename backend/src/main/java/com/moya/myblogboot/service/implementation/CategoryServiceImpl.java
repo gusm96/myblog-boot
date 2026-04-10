@@ -39,8 +39,8 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<CategoriesResDto> retrieveAllWithViewBoards() {
-        return categoryRepository.findCategoriesWithViewBoards();
+    public List<CategoriesResDto> retrieveAllWithViewPosts() {
+        return categoryRepository.findCategoriesWithViewPosts();
     }
 
     @Override
@@ -62,8 +62,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void delete(Long categoryId) {
         Category category = retrieve(categoryId);
-        if (!category.getBoards().isEmpty()) {
-            throw new BusinessException(ErrorCode.CATEGORY_HAS_BOARDS);
+        if (!category.getPosts().isEmpty()) {
+            throw new BusinessException(ErrorCode.CATEGORY_HAS_POSTS);
         }
         categoryRepository.delete(category);
     }

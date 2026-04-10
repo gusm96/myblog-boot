@@ -8,9 +8,9 @@ public class ShouldNotFilterPath {
             "/api/v1/login",
             "/api/v1/logout",
             "/api/v1/reissuing-token",
-            "/api/v1/boards/search",
+            "/api/v1/posts/search",
             "/api/v2/categories",
-            "/api/v8/boards",
+            "/api/v8/posts",
             "/api/v2/visitor-count"
     );
 }

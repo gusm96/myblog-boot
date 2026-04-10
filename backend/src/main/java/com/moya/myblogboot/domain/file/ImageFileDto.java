@@ -1,6 +1,6 @@
 package com.moya.myblogboot.domain.file;
 
-import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.post.Post;
 import lombok.*;
 
 @Getter
@@ -11,11 +11,11 @@ public class ImageFileDto {
     private String fileName;
     private String filePath;
 
-    public ImageFile toEntity(Board board){
+    public ImageFile toEntity(Post post){
         return ImageFile.builder()
                 .fileName(this.fileName)
                 .filePath(this.filePath)
-                .board(board)
+                .post(post)
                 .build();
     }
 }

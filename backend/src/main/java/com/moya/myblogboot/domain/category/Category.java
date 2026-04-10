@@ -1,6 +1,6 @@
 package com.moya.myblogboot.domain.category;
 
-import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.post.Post;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,7 +22,7 @@ public class Category {
     @Column(unique = true)
     private String name;
     @OneToMany(mappedBy = "category")
-    private List<Board> boards = new ArrayList<>();
+    private List<Post> posts = new ArrayList<>();
 
     @Builder
     public Category(String name) {
@@ -32,14 +32,14 @@ public class Category {
     public void editCategory(String name){
         this.name = name;
     }
-    // Category 삭제 시에 Board의 Category 정보를 null로 설정
+    // Category 삭제 시에 Post의 Category 정보를 null로 설정
     @PreRemove
-    private void removeBoards() {
-        for (Board board : boards) {
-            board.removeCategory();
+    private void removePosts() {
+        for (Post post : posts) {
+            post.removeCategory();
         }
     }
-    public void addBoard(Board board) {
-        this.boards.add(board);
+    public void addPost(Post post) {
+        this.posts.add(post);
     }
 }

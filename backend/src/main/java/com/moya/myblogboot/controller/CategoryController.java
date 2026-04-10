@@ -24,7 +24,7 @@ public class CategoryController {
 
     @GetMapping("/api/v2/categories")
     public ResponseEntity<List<CategoriesResDto>> getCategoryListV2() {
-        return ResponseEntity.ok().body(categoryService.retrieveAllWithViewBoards());
+        return ResponseEntity.ok().body(categoryService.retrieveAllWithViewPosts());
     }
 
     @GetMapping("/api/v1/categories-management")

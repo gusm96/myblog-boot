@@ -1,0 +1,16 @@
+graph LR
+    subgraph BoardScheduledTask
+        S1["deleteExpiredBoards()\n@Cron: 0 0 0 (자정)"]
+        S2["updateFromRedisStoreToDB()\n@FixedRate: 600000ms (10분)"]
+    end
+
+    subgraph VisitorCountScheduledTask
+        S3["resetDailyVisitorCount()\n@Cron: 자정 리셋"]
+        S4["onContextClose()\nApplicationListener\n(Graceful Shutdown)"]
+    end
+
+    S1 -->|ReentrantLock| DB1[("MariaDB\n만료 게시글 영구 삭제")]
+    S2 -->|ReentrantLock| Redis1[("Redis\nviews/likes 읽기")]
+    Redis1 -->|Write-Behind| DB2[("MariaDB\n동기화")]
+    S3 --> Redis2[("Redis\n방문자 카운트 초기화")]
+    S4 --> Redis3[("Redis\n방문자 데이터 플러시")]

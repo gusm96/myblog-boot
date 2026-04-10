@@ -17,7 +17,7 @@ public interface CategoryService {
 
     Category retrieve(Long categoryId);
 
-    List<CategoriesResDto> retrieveAllWithViewBoards();
+    List<CategoriesResDto> retrieveAllWithViewPosts();
 
     List<CategoriesResDto> retrieveDto();
 }

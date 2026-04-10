@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CommentRepository extends JpaRepository<Comment, Long>, CommentQuerydslRepository {
 
-    boolean existsByBoard_IdAndNicknameAndDiscriminator(Long boardId, String nickname, String discriminator);
+    boolean existsByPost_IdAndNicknameAndDiscriminator(Long postId, String nickname, String discriminator);
 }

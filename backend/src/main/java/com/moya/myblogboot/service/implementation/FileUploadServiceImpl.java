@@ -1,7 +1,6 @@
 package com.moya.myblogboot.service.implementation;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.moya.myblogboot.domain.file.ImageFile;
@@ -17,12 +16,22 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FileUploadServiceImpl implements FileUploadService {
+
+    private static final Map<String, String> ALLOWED_MIME_TYPES = Map.of(
+            "jpg",  "image/jpeg",
+            "jpeg", "image/jpeg",
+            "png",  "image/png",
+            "gif",  "image/gif",
+            "webp", "image/webp"
+    );
+
     private final AmazonS3 amazonS3;
 
     @Value("${cloud.aws.s3.bucketName}")
@@ -30,21 +39,33 @@ public class FileUploadServiceImpl implements FileUploadService {
 
     @Override
     public ImageFileDto upload(MultipartFile file) {
-        try {
-            String fileName = file.getOriginalFilename();
-            String ext = fileName.substring(fileName.lastIndexOf("."));
-            String randomFileName = randomImageName(fileName);
+        String originalName = file.getOriginalFilename();
+        if (originalName == null || originalName.isBlank()) {
+            throw new ImageUploadFailException();
+        }
 
+        int dotIndex = originalName.lastIndexOf(".");
+        if (dotIndex < 0) {
+            throw new ImageUploadFailException();
+        }
+        String ext = originalName.substring(dotIndex + 1).toLowerCase();
+        String mimeType = ALLOWED_MIME_TYPES.get(ext);
+        if (mimeType == null) {
+            throw new ImageUploadFailException();
+        }
+
+        String storedName = UUID.randomUUID() + "." + ext;
+
+        try {
             ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType("image/" + ext);
+            metadata.setContentType(mimeType);
             metadata.setContentLength(file.getSize());
             amazonS3.putObject(new PutObjectRequest(
-                    bucketName, randomFileName, file.getInputStream(), metadata
-            ).withCannedAcl(CannedAccessControlList.PublicRead));
-            log.info("AWS S3 이미지 업로드 {}", randomFileName);
+                    bucketName, storedName, file.getInputStream(), metadata));
+            log.info("AWS S3 이미지 업로드 {}", storedName);
             return ImageFileDto.builder()
-                    .fileName(randomFileName)
-                    .filePath(amazonS3.getUrl(bucketName, randomFileName).toString())
+                    .fileName(storedName)
+                    .filePath(amazonS3.getUrl(bucketName, storedName).toString())
                     .build();
         } catch (IOException e) {
             log.error("이미지 업로드 실패, {}", e.getMessage());
@@ -66,16 +87,11 @@ public class FileUploadServiceImpl implements FileUploadService {
     @Override
     public void deleteFiles(List<ImageFile> imageFiles) {
         try {
-            imageFiles.stream().forEach(imageFile ->
+            imageFiles.forEach(imageFile ->
                     amazonS3.deleteObject(bucketName, imageFile.getFileName()));
         } catch (Exception e) {
             log.error("이미지 삭제 실패 {}", e.getMessage());
             throw new ImageDeleteFailException();
         }
-    }
-
-    private String randomImageName(String originImageName) {
-        String random = UUID.randomUUID().toString();
-        return random + originImageName;
     }
 }
