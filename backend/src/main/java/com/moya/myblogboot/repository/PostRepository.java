@@ -13,6 +13,9 @@ import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long>, PostQuerydslRepository {
 
+    Optional<Post> findBySlug(String slug);
+    boolean existsBySlug(String slug);
+
     @Query("select p from Post p " +
             "join fetch p.admin " +
             "join fetch p.category where p.id = :postId")

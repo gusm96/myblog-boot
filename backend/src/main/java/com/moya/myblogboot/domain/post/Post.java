@@ -35,6 +35,18 @@ public class Post extends BaseTimeEntity {
     @Column(name = "post_status")
     private PostStatus postStatus = PostStatus.VIEW;
 
+    @Column(unique = true, length = 255)
+    private String slug;
+
+    @Column(name = "meta_description", length = 160)
+    private String metaDescription;
+
+    @Column(name = "meta_keywords", length = 255)
+    private String metaKeywords;
+
+    @Column(name = "thumbnail_url", length = 500)
+    private String thumbnailUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_id", nullable = false)
     private Admin admin;
@@ -47,17 +59,27 @@ public class Post extends BaseTimeEntity {
     private List<Comment> comments = new ArrayList<>();
 
     @Builder
-    public Post(String title, String content, Category category, Admin admin) {
+    public Post(String title, String content, Category category, Admin admin,
+                String slug, String metaDescription, String metaKeywords, String thumbnailUrl) {
         this.title = title;
         this.content = content;
         this.category = category;
         this.admin = admin;
+        this.slug = slug;
+        this.metaDescription = metaDescription;
+        this.metaKeywords = metaKeywords;
+        this.thumbnailUrl = thumbnailUrl;
     }
 
-    public void updatePost(Category category, String title, String content) {
+    public void updatePost(Category category, String title, String content,
+                           String slug, String metaDescription, String metaKeywords, String thumbnailUrl) {
         this.category = category;
         this.title = title;
         this.content = content;
+        this.slug = slug;
+        this.metaDescription = metaDescription;
+        this.metaKeywords = metaKeywords;
+        this.thumbnailUrl = thumbnailUrl;
     }
 
     public void updatePostStatus(PostStatus postStatus) {

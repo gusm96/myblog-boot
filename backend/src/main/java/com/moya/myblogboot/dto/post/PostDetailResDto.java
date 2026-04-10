@@ -19,6 +19,10 @@ public class PostDetailResDto {
     private LocalDateTime updateDate;
     private LocalDateTime deleteDate;
     private PostStatus postStatus;
+    private String slug;
+    private String metaDescription;
+    private String thumbnailUrl;
+    private String categoryName;
 
     @Builder
     public PostDetailResDto(PostForRedis postForRedis) {
@@ -31,5 +35,9 @@ public class PostDetailResDto {
         this.updateDate = postForRedis.getUpdateDate();
         this.deleteDate = postForRedis.getDeleteDate();
         this.postStatus = postForRedis.getPostStatus();
+        this.slug = postForRedis.getSlug();
+        this.metaDescription = postForRedis.getMetaDescription();
+        this.thumbnailUrl = postForRedis.getThumbnailUrl();
+        this.categoryName = postForRedis.getCategoryName();
     }
 }

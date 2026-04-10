@@ -24,6 +24,10 @@ public class PostForRedis {
     private LocalDateTime updateDate;
     private LocalDateTime deleteDate;
     private PostStatus postStatus;
+    private String slug;
+    private String metaDescription;
+    private String thumbnailUrl;
+    private String categoryName;
 
     @Builder
     public PostForRedis(Post post) {
@@ -38,6 +42,10 @@ public class PostForRedis {
         this.updateDate = post.getUpdateDate();
         this.deleteDate = post.getDeleteDate();
         this.postStatus = post.getPostStatus();
+        this.slug = post.getSlug();
+        this.metaDescription = post.getMetaDescription();
+        this.thumbnailUrl = post.getThumbnailUrl();
+        this.categoryName = post.getCategory() != null ? post.getCategory().getName() : null;
     }
 
     public void incrementViews() {
@@ -66,5 +74,9 @@ public class PostForRedis {
         this.updateDate = post.getUpdateDate();
         this.deleteDate = post.getDeleteDate();
         this.postStatus = post.getPostStatus();
+        this.slug = post.getSlug();
+        this.metaDescription = post.getMetaDescription();
+        this.thumbnailUrl = post.getThumbnailUrl();
+        this.categoryName = post.getCategory() != null ? post.getCategory().getName() : null;
     }
 }

@@ -12,6 +12,8 @@ public class PostResDto {
     private Long id;
     private String title;
     private String content;
+    private String slug;
+    private String thumbnailUrl;
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
     private LocalDateTime deleteDate;
@@ -22,6 +24,8 @@ public class PostResDto {
         this.id = post.getId();
         this.title = post.getTitle();
         this.content = post.getContent();
+        this.slug = post.getSlug();
+        this.thumbnailUrl = post.getThumbnailUrl();
         this.createDate = post.getCreateDate();
         this.updateDate = post.getUpdateDate();
         this.deleteDate = post.getDeleteDate();

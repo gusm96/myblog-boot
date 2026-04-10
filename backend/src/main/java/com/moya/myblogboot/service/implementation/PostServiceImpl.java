@@ -19,6 +19,7 @@ import com.moya.myblogboot.service.CategoryService;
 import com.moya.myblogboot.service.FileUploadService;
 import com.moya.myblogboot.service.PostCacheService;
 import com.moya.myblogboot.service.PostService;
+import com.moya.myblogboot.utils.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -92,7 +94,8 @@ public class PostServiceImpl implements PostService {
         Admin admin = adminRepository.findById(adminId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         Category category = categoryService.retrieve(postReqDto.getCategory());
-        Post newPost = postReqDto.toEntity(category, admin);
+        String slug = resolveSlug(postReqDto.getSlug(), postReqDto.getTitle(), null);
+        Post newPost = postReqDto.toEntity(category, admin, slug);
         if (postReqDto.getImages() != null && !postReqDto.getImages().isEmpty()) {
             saveImageFile(postReqDto.getImages(), newPost);
         }
@@ -107,7 +110,9 @@ public class PostServiceImpl implements PostService {
         Post post = findById(postId);
         verifyPostAccessAuthorization(post.getAdmin().getId(), adminId);
         Category modifiedCategory = categoryService.retrieve(modifiedDto.getCategory());
-        post.updatePost(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent());
+        String slug = resolveSlug(modifiedDto.getSlug(), modifiedDto.getTitle(), post.getSlug());
+        post.updatePost(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent(),
+                slug, modifiedDto.getMetaDescription(), modifiedDto.getMetaKeywords(), modifiedDto.getThumbnailUrl());
         postCacheService.updatePost(postCacheService.getPostFromCache(post.getId()), post);
         return postId;
     }
@@ -175,5 +180,30 @@ public class PostServiceImpl implements PostService {
                 .map(image -> imageFileRepository.save(image.toEntity(post)))
                 .collect(Collectors.toList());
         imageFiles.forEach(post::addImageFile);
+    }
+
+    /**
+     * slug 결정 로직:
+     * 1. 요청에 slug가 있으면 사용 (기존 slug와 동일하면 중복 체크 생략)
+     * 2. 기존 slug가 있으면 유지 (수정 시)
+     * 3. 없으면 title에서 자동 생성
+     */
+    private String resolveSlug(String requestedSlug, String title, String existingSlug) {
+        if (requestedSlug != null && !requestedSlug.isBlank()) {
+            if (requestedSlug.equals(existingSlug)) return existingSlug;
+            if (!postRepository.existsBySlug(requestedSlug)) return requestedSlug;
+        }
+        if (existingSlug != null) return existingSlug;
+        return generateUniqueSlug(title);
+    }
+
+    private String generateUniqueSlug(String title) {
+        String base = SlugUtil.generate(title);
+        if (!postRepository.existsBySlug(base)) return base;
+        for (int i = 2; i <= 10; i++) {
+            String candidate = SlugUtil.withSuffix(base, i);
+            if (!postRepository.existsBySlug(candidate)) return candidate;
+        }
+        return base + "-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
     }
 }

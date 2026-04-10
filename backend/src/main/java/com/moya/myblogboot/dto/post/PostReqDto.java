@@ -22,13 +22,21 @@ public class PostReqDto {
     private String content;
     private Long category;
     private List<ImageFileDto> images;
+    private String slug;
+    private String metaDescription;
+    private String metaKeywords;
+    private String thumbnailUrl;
 
-    public Post toEntity(Category category, Admin admin) {
+    public Post toEntity(Category category, Admin admin, String resolvedSlug) {
         return Post.builder()
                 .admin(admin)
                 .category(category)
                 .title(this.title)
                 .content(this.content)
+                .slug(resolvedSlug)
+                .metaDescription(this.metaDescription)
+                .metaKeywords(this.metaKeywords)
+                .thumbnailUrl(this.thumbnailUrl)
                 .build();
     }
 }
