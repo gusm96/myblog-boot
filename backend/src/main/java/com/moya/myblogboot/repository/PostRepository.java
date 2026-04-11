@@ -2,6 +2,7 @@ package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.post.PostStatus;
+import com.moya.myblogboot.dto.post.PostSlugDto;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long>, PostQuerydslRepository {
@@ -37,4 +39,19 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostQuerydslR
             "where p.deleteDate is not null",
             countQuery = "select count(p) from Post p where p.deleteDate is not null")
     Page<Post> findByDeletionStatus(PageRequest pageRequest);
+
+    // Next.js sitemap/generateStaticParams 전용: slug + updateDate만 조회 (content 제외)
+    @Query("select new com.moya.myblogboot.dto.post.PostSlugDto(p.slug, p.updateDate) " +
+            "from Post p " +
+            "where p.postStatus = 'VIEW' and p.slug is not null " +
+            "order by p.updateDate desc")
+    List<PostSlugDto> findAllSlugs();
+
+    // RSS 피드 전용: 최근 VIEW 게시글 (category fetch join)
+    @Query(value = "select p from Post p " +
+            "join fetch p.category " +
+            "where p.postStatus = 'VIEW' and p.slug is not null " +
+            "order by p.createDate desc",
+            countQuery = "select count(p) from Post p where p.postStatus = 'VIEW'")
+    Page<Post> findRecentForRss(Pageable pageable);
 }

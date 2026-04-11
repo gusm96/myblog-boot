@@ -154,6 +154,11 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public List<PostSlugDto> getAllSlugs() {
+        return postRepository.findAllSlugs();
+    }
+
+    @Override
     public Post findById(Long postId) {
         return postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.POST_NOT_FOUND));

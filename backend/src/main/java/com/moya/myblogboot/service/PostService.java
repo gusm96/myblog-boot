@@ -5,8 +5,10 @@ import com.moya.myblogboot.domain.post.SearchType;
 import com.moya.myblogboot.dto.post.PostDetailResDto;
 import com.moya.myblogboot.dto.post.PostListResDto;
 import com.moya.myblogboot.dto.post.PostReqDto;
+import com.moya.myblogboot.dto.post.PostSlugDto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface PostService {
 
@@ -23,6 +25,8 @@ public interface PostService {
     PostDetailResDto getPostDetailAndIncrementViews(Long postId);
 
     Long getPostIdBySlug(String slug);
+
+    List<PostSlugDto> getAllSlugs();
 
     PostListResDto retrieveAllDeleted(int page);
 

@@ -44,6 +44,12 @@ post:
     hmac:
       secret: ${POST_LIKE_HMAC_SECRET}
 
+# Blog metadata (RSS feed)
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+  blog-title: ${BLOG_TITLE:MyBlog}
+  blog-description: ${BLOG_DESCRIPTION:개발 블로그}
+
 cloud:
   aws:
     credentials:

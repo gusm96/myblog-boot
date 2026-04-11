@@ -4,6 +4,7 @@ import com.moya.myblogboot.domain.post.SearchType;
 import com.moya.myblogboot.dto.post.PostDetailResDto;
 import com.moya.myblogboot.dto.post.PostListResDto;
 import com.moya.myblogboot.dto.post.PostReqDto;
+import com.moya.myblogboot.dto.post.PostSlugDto;
 import com.moya.myblogboot.service.PostService;
 import com.moya.myblogboot.service.PostViewCookieService;
 import com.moya.myblogboot.utils.CookieUtil;
@@ -20,8 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-
 import java.security.Principal;
+import java.util.List;
 
 import static com.moya.myblogboot.constants.CookieName.*;
 
@@ -33,9 +34,19 @@ public class PostController {
     private final PostService postService;
     private final PostViewCookieService postViewCookieService;
 
+    // Next.js sitemap.ts + generateStaticParams() 전용 (content 제외 경량 응답)
+    @GetMapping("/api/v1/posts/slugs")
+    public ResponseEntity<List<PostSlugDto>> getAllSlugs() {
+        return ResponseEntity.ok()
+                .header("Cache-Control", "public, max-age=3600")
+                .body(postService.getAllSlugs());
+    }
+
     @GetMapping("/api/v1/posts")
     public ResponseEntity<PostListResDto> getAllPosts(@RequestParam(name = "p", defaultValue = "1") int page) {
-        return ResponseEntity.ok().body(postService.retrieveAll(getPage(page)));
+        return ResponseEntity.ok()
+                .header("Cache-Control", "public, max-age=60")
+                .body(postService.retrieveAll(getPage(page)));
     }
 
     @GetMapping("/api/v1/posts/category")
@@ -43,7 +54,9 @@ public class PostController {
             @RequestParam("c") String category,
             @RequestParam(name = "p", defaultValue = "1") int page
     ) {
-        return ResponseEntity.ok().body(postService.retrieveAllByCategory(category, getPage(page)));
+        return ResponseEntity.ok()
+                .header("Cache-Control", "public, max-age=60")
+                .body(postService.retrieveAllByCategory(category, getPage(page)));
     }
 
     @GetMapping("/api/v1/posts/search")
@@ -72,7 +85,10 @@ public class PostController {
             return ResponseEntity.ok(dto);
         }
 
-        return ResponseEntity.ok(postService.getPostDetail(postId));
+        PostDetailResDto dto = postService.getPostDetail(postId);
+        return ResponseEntity.ok()
+                .header("Cache-Control", "public, max-age=60")
+                .body(dto);
     }
 
     // v8 → v1 301 redirect (하위 호환)

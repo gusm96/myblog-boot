@@ -569,6 +569,39 @@ class PostControllerTest extends AbstractContainerBaseTest {
     }
 
     @Test
+    @DisplayName("전체 Slug 목록 조회 — VIEW 상태 게시글만 반환")
+    void getAllSlugs() throws Exception {
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/slugs"));
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].slug").exists())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].updateDate").exists())
+                .andExpect(MockMvcResultMatchers.header().string("Cache-Control", "public, max-age=3600"))
+                .andDo(restDocs.document(
+                        responseFields(
+                                fieldWithPath("[].slug").description("게시글 슬러그"),
+                                fieldWithPath("[].updateDate").description("최종 수정일")
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("전체 Slug 목록 조회 — HIDE 상태 게시글 제외 확인")
+    void getAllSlugs_excludesHiddenPosts() throws Exception {
+        // 게시글 하나를 HIDE로 변경
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/" + postId)
+                .header(HttpHeaders.AUTHORIZATION, accessToken));
+
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/slugs"));
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(4));
+    }
+
+    @Test
     @DisplayName("게시글 좋아요 취소")
     void cancelPostLike() throws Exception {
         // 좋아요 추가 후 발급된 쿠키 획득
