@@ -1,6 +1,6 @@
 package com.moya.myblogboot.repository;
 
-import com.moya.myblogboot.domain.comment.CommentResDto;
+import com.moya.myblogboot.dto.comment.CommentResDto;
 
 import java.util.List;
 

@@ -2,7 +2,7 @@ package com.moya.myblogboot.repository;
 
 
 import com.moya.myblogboot.AbstractContainerBaseTest;
-import com.moya.myblogboot.domain.category.CategoriesResDto;
+import com.moya.myblogboot.dto.category.CategoriesResDto;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;

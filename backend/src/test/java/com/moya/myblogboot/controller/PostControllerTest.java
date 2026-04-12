@@ -9,7 +9,7 @@ import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.dto.post.PostReqDto;
 import com.moya.myblogboot.domain.post.SearchType;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.member.MemberLoginReqDto;
+import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.PostRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
@@ -110,7 +110,7 @@ class PostControllerTest extends AbstractContainerBaseTest {
             postSlug = "test-title-" + i;
         }
 
-        MemberLoginReqDto loginReqDto = MemberLoginReqDto.builder()
+        LoginReqDto loginReqDto = LoginReqDto.builder()
                 .username("testMember")
                 .password("testPassword")
                 .build();

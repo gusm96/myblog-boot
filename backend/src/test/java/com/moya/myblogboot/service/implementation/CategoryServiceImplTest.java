@@ -4,7 +4,7 @@ import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.category.CategoryResDto;
+import com.moya.myblogboot.dto.category.CategoryResDto;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.PostRepository;
 import com.moya.myblogboot.repository.CategoryRepository;

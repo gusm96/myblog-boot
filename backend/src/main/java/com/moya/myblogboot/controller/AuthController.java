@@ -1,6 +1,6 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.member.MemberLoginReqDto;
+import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
@@ -24,7 +24,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/api/v1/login")
-    public ResponseEntity<String> login(@RequestBody @Valid MemberLoginReqDto loginReqDto,
+    public ResponseEntity<String> login(@RequestBody @Valid LoginReqDto loginReqDto,
                                         HttpServletResponse response) {
         Token newToken = authService.adminLogin(loginReqDto);
         response.addCookie(CookieUtil.addCookie(REFRESH_TOKEN_COOKIE, newToken.getRefresh_token()));

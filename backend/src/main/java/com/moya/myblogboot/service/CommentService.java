@@ -1,6 +1,11 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.comment.*;
+import com.moya.myblogboot.domain.comment.Comment;
+import com.moya.myblogboot.dto.comment.CommentDeleteReqDto;
+import com.moya.myblogboot.dto.comment.CommentReqDto;
+import com.moya.myblogboot.dto.comment.CommentResDto;
+import com.moya.myblogboot.dto.comment.CommentUpdateReqDto;
+import com.moya.myblogboot.dto.comment.CommentWriteResDto;
 
 import java.util.List;
 

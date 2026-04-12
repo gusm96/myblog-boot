@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.admin.Admin;
-import com.moya.myblogboot.domain.member.MemberLoginReqDto;
+import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.service.AuthService;
@@ -83,7 +83,7 @@ class AuthControllerTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("로그인 테스트")
     void login() throws Exception {
-        MemberLoginReqDto requestBody = getTestAdminDto();
+        LoginReqDto requestBody = getTestAdminDto();
 
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/login")
                 .contentType("application/json")
@@ -169,7 +169,7 @@ class AuthControllerTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("로그인 실패 - 잘못된 비밀번호")
     void loginWithWrongPassword() throws Exception {
-        MemberLoginReqDto requestBody = MemberLoginReqDto.builder()
+        LoginReqDto requestBody = LoginReqDto.builder()
                 .username("testuser")
                 .password("wrongPassword")
                 .build();
@@ -187,8 +187,8 @@ class AuthControllerTest extends AbstractContainerBaseTest {
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
     }
 
-    private static MemberLoginReqDto getTestAdminDto() {
-        return MemberLoginReqDto.builder()
+    private static LoginReqDto getTestAdminDto() {
+        return LoginReqDto.builder()
                 .username("testuser")
                 .password("testPassword")
                 .build();

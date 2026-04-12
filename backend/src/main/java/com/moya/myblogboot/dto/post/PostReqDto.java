@@ -3,7 +3,7 @@ package com.moya.myblogboot.dto.post;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.file.ImageFileDto;
+import com.moya.myblogboot.dto.file.ImageFileDto;
 import com.moya.myblogboot.domain.post.Post;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

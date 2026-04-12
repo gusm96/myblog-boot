@@ -1,4 +1,4 @@
-package com.moya.myblogboot.domain.comment;
+package com.moya.myblogboot.dto.comment;
 
 import lombok.*;
 

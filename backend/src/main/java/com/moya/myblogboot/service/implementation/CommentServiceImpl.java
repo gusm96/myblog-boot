@@ -1,6 +1,11 @@
 package com.moya.myblogboot.service.implementation;
 
-import com.moya.myblogboot.domain.comment.*;
+import com.moya.myblogboot.domain.comment.Comment;
+import com.moya.myblogboot.dto.comment.CommentDeleteReqDto;
+import com.moya.myblogboot.dto.comment.CommentReqDto;
+import com.moya.myblogboot.dto.comment.CommentResDto;
+import com.moya.myblogboot.dto.comment.CommentUpdateReqDto;
+import com.moya.myblogboot.dto.comment.CommentWriteResDto;
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.EntityNotFoundException;
@@ -121,7 +126,7 @@ public class CommentServiceImpl implements CommentService {
     private String generateDiscriminator(Long postId, String nickname) {
         for (int i = 0; i < 10; i++) {
             String discriminator = String.format("%04d",
-                    ThreadLocalRandom.current().nextInt(1000, 10000));
+                    ThreadLocalRandom.current().nextInt(0, 10000));
             if (!commentRepository.existsByPost_IdAndNicknameAndDiscriminator(
                     postId, nickname, discriminator)) {
                 return discriminator;

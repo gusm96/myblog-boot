@@ -1,8 +1,8 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.category.CategoriesResDto;
-import com.moya.myblogboot.domain.category.CategoryReqDto;
-import com.moya.myblogboot.domain.category.CategoryResDto;
+import com.moya.myblogboot.dto.category.CategoriesResDto;
+import com.moya.myblogboot.dto.category.CategoryReqDto;
+import com.moya.myblogboot.dto.category.CategoryResDto;
 import com.moya.myblogboot.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

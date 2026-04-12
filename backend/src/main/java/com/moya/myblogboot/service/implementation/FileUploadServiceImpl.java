@@ -4,7 +4,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.moya.myblogboot.domain.file.ImageFile;
-import com.moya.myblogboot.domain.file.ImageFileDto;
+import com.moya.myblogboot.dto.file.ImageFileDto;
 import com.moya.myblogboot.exception.custom.ImageDeleteFailException;
 import com.moya.myblogboot.exception.custom.ImageUploadFailException;
 import com.moya.myblogboot.service.FileUploadService;

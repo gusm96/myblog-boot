@@ -1,7 +1,7 @@
 package com.moya.myblogboot.repository.implementation;
 
 import com.moya.myblogboot.domain.comment.Comment;
-import com.moya.myblogboot.domain.comment.CommentResDto;
+import com.moya.myblogboot.dto.comment.CommentResDto;
 import com.moya.myblogboot.repository.CommentQuerydslRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;

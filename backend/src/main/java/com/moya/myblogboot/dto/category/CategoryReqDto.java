@@ -1,4 +1,4 @@
-package com.moya.myblogboot.domain.category;
+package com.moya.myblogboot.dto.category;
 
 import lombok.*;
 

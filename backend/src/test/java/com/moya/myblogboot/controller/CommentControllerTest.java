@@ -7,10 +7,10 @@ import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.comment.Comment;
-import com.moya.myblogboot.domain.comment.CommentDeleteReqDto;
-import com.moya.myblogboot.domain.comment.CommentReqDto;
-import com.moya.myblogboot.domain.comment.CommentUpdateReqDto;
-import com.moya.myblogboot.domain.member.MemberLoginReqDto;
+import com.moya.myblogboot.dto.comment.CommentDeleteReqDto;
+import com.moya.myblogboot.dto.comment.CommentReqDto;
+import com.moya.myblogboot.dto.comment.CommentUpdateReqDto;
+import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.PostRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
@@ -84,7 +84,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
                 .build();
         Admin saveAdmin = adminRepository.save(admin);
 
-        MemberLoginReqDto loginReqDto = MemberLoginReqDto.builder()
+        LoginReqDto loginReqDto = LoginReqDto.builder()
                 .username("testAdmin")
                 .password("testPassword")
                 .build();

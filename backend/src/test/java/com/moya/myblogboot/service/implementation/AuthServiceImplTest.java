@@ -2,7 +2,7 @@ package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.admin.Admin;
-import com.moya.myblogboot.domain.member.MemberLoginReqDto;
+import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.exception.custom.UnauthorizedException;
@@ -54,15 +54,15 @@ class AuthServiceImplTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("관리자 로그인 테스트")
     void adminLogin() {
-        MemberLoginReqDto notExistsUsername = MemberLoginReqDto.builder()
+        LoginReqDto notExistsUsername = LoginReqDto.builder()
                 .username("notExists")
                 .password("test1234")
                 .build();
-        MemberLoginReqDto wrongPassword = MemberLoginReqDto.builder()
+        LoginReqDto wrongPassword = LoginReqDto.builder()
                 .username("testMember")
                 .password("wrongPw")
                 .build();
-        MemberLoginReqDto validLogin = MemberLoginReqDto.builder()
+        LoginReqDto validLogin = LoginReqDto.builder()
                 .username("testMember")
                 .password("testPassword")
                 .build();
@@ -76,7 +76,7 @@ class AuthServiceImplTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("Access Token 재발급 테스트")
     void reissuingAccessToken() {
-        MemberLoginReqDto loginReqDto = MemberLoginReqDto.builder()
+        LoginReqDto loginReqDto = LoginReqDto.builder()
                 .username("testMember")
                 .password("testPassword")
                 .build();

@@ -1,7 +1,7 @@
 package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.domain.admin.Admin;
-import com.moya.myblogboot.domain.member.MemberLoginReqDto;
+import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.exception.ErrorCode;
@@ -36,7 +36,7 @@ public class AuthServiceImpl implements AuthService {
     private Long refreshTokenExpiration;
 
     @Override
-    public Token adminLogin(MemberLoginReqDto loginReqDto) {
+    public Token adminLogin(LoginReqDto loginReqDto) {
         Admin admin = adminRepository.findByUsername(loginReqDto.getUsername())
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         if (!passwordEncoder.matches(loginReqDto.getPassword(), admin.getPassword()))

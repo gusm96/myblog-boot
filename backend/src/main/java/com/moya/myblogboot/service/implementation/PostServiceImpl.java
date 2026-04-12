@@ -3,7 +3,7 @@ package com.moya.myblogboot.service.implementation;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.file.ImageFile;
-import com.moya.myblogboot.domain.file.ImageFileDto;
+import com.moya.myblogboot.dto.file.ImageFileDto;
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.post.PostStatus;
 import com.moya.myblogboot.domain.post.SearchType;

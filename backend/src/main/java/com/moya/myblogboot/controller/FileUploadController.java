@@ -1,6 +1,6 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.file.ImageFileDto;
+import com.moya.myblogboot.dto.file.ImageFileDto;
 import com.moya.myblogboot.service.FileUploadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

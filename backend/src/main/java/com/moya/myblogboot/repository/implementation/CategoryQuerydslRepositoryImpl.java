@@ -2,7 +2,7 @@ package com.moya.myblogboot.repository.implementation;
 
 
 import com.moya.myblogboot.domain.post.PostStatus;
-import com.moya.myblogboot.domain.category.CategoriesResDto;
+import com.moya.myblogboot.dto.category.CategoriesResDto;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.repository.CategoryQuerydslRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;

@@ -7,8 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.admin.Admin;
-import com.moya.myblogboot.domain.file.ImageFileDto;
-import com.moya.myblogboot.domain.member.MemberLoginReqDto;
+import com.moya.myblogboot.dto.file.ImageFileDto;
+import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,7 +91,7 @@ class FileUploadControllerTest extends AbstractContainerBaseTest {
                 .build();
         adminRepository.save(admin);
 
-        MemberLoginReqDto loginReqDto = MemberLoginReqDto.builder()
+        LoginReqDto loginReqDto = LoginReqDto.builder()
                 .username("adminUser")
                 .password("adminPassword")
                 .build();

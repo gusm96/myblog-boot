@@ -6,8 +6,8 @@ import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.category.CategoryReqDto;
-import com.moya.myblogboot.domain.member.MemberLoginReqDto;
+import com.moya.myblogboot.dto.category.CategoryReqDto;
+import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.PostRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
@@ -86,7 +86,7 @@ class CategoryControllerTest extends AbstractContainerBaseTest {
                 .build();
         Admin saveAdmin = adminRepository.save(admin);
 
-        MemberLoginReqDto loginReqDto = MemberLoginReqDto.builder()
+        LoginReqDto loginReqDto = LoginReqDto.builder()
                 .username("testMember")
                 .password("testPassword")
                 .build();

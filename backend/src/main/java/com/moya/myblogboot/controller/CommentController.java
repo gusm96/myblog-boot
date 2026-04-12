@@ -1,6 +1,10 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.comment.*;
+import com.moya.myblogboot.dto.comment.CommentDeleteReqDto;
+import com.moya.myblogboot.dto.comment.CommentReqDto;
+import com.moya.myblogboot.dto.comment.CommentResDto;
+import com.moya.myblogboot.dto.comment.CommentUpdateReqDto;
+import com.moya.myblogboot.dto.comment.CommentWriteResDto;
 import com.moya.myblogboot.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

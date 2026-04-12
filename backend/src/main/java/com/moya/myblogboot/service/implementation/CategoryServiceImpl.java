@@ -1,8 +1,8 @@
 package com.moya.myblogboot.service.implementation;
 
-import com.moya.myblogboot.domain.category.CategoriesResDto;
+import com.moya.myblogboot.dto.category.CategoriesResDto;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.category.CategoryResDto;
+import com.moya.myblogboot.dto.category.CategoryResDto;
 import com.moya.myblogboot.exception.BusinessException;
 import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.DuplicateException;

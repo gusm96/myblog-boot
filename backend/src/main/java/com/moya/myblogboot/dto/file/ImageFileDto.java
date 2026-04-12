@@ -1,4 +1,6 @@
-package com.moya.myblogboot.domain.file;
+package com.moya.myblogboot.dto.file;
+
+import com.moya.myblogboot.domain.file.ImageFile;
 
 import com.moya.myblogboot.domain.post.Post;
 import lombok.*;
