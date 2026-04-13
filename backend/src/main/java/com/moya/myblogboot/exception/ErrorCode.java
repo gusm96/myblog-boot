@@ -22,15 +22,15 @@ public enum ErrorCode {
     EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A005", "리프레시 토큰이 만료되었습니다."),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "A006", "비밀번호가 일치하지 않습니다."),
 
-    // 회원
+    // 어드민
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "회원이 존재하지 않습니다."),
     DUPLICATE_USERNAME(HttpStatus.CONFLICT, "M002", "이미 존재하는 아이디입니다."),
 
     // 게시글
-    BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "해당 게시글이 존재하지 않습니다."),
-    BOARD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "B002", "게시글 수정/삭제 권한이 없습니다."),
-    DUPLICATE_BOARD_LIKE(HttpStatus.CONFLICT, "B003", "이미 좋아요한 게시글입니다."),
-    BOARD_LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "B004", "좋아요하지 않은 게시글입니다."),
+    POST_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "해당 게시글이 존재하지 않습니다."),
+    POST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "B002", "게시글 수정/삭제 권한이 없습니다."),
+    DUPLICATE_POST_LIKE(HttpStatus.CONFLICT, "B003", "이미 좋아요한 게시글입니다."),
+    POST_LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "B004", "좋아요하지 않은 게시글입니다."),
 
     // 댓글
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CM001", "해당 댓글이 존재하지 않습니다."),
@@ -39,7 +39,7 @@ public enum ErrorCode {
     // 카테고리
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CT001", "해당 카테고리를 찾을 수 없습니다."),
     DUPLICATE_CATEGORY(HttpStatus.CONFLICT, "CT002", "이미 존재하는 카테고리입니다."),
-    CATEGORY_HAS_BOARDS(HttpStatus.BAD_REQUEST, "CT003", "등록된 게시글이 존재해 삭제할 수 없습니다."),
+    CATEGORY_HAS_POSTS(HttpStatus.BAD_REQUEST, "CT003", "등록된 게시글이 존재해 삭제할 수 없습니다."),
 
     // 파일
     IMAGE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "F001", "이미지 업로드를 실패했습니다."),

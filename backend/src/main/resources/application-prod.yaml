@@ -19,6 +19,12 @@ spring:
     init:
       mode: never
 
+# Blog metadata (RSS feed) — 운영 환경 값으로 교체 필요
+app:
+  base-url: ${APP_BASE_URL:https://yourdomain.com}
+  blog-title: ${BLOG_TITLE:MyBlog}
+  blog-description: ${BLOG_DESCRIPTION:백엔드 개발 블로그}
+
 logging:
   level:
     root: warn

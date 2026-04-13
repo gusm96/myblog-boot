@@ -1,0 +1,48 @@
+graph TB
+    subgraph App["App.js (Root)"]
+        QP["QueryClientProvider\n(TanStack Query)"]
+        PP["PersistGate\n(redux-persist)"]
+        Router["React Router v7"]
+    end
+
+    subgraph Pages["screens/ (페이지)"]
+        Home & SearchPage & PageByCategory
+        Management & TemporaryStorage
+        LoginForm & JoinForm
+        NotFound
+    end
+
+    subgraph Components["components/ (컴포넌트)"]
+        subgraph Board_C["Board"]
+            BoardList & BoardDetail & BoardEditor & BoardEditForm & BoardLike
+        end
+        subgraph Comment_C["Comment"]
+            CommentList & CommentForm & Comment
+        end
+        subgraph Layout_C["Layout"]
+            ProtectedRoute & UserLayout & Header
+        end
+    end
+
+    subgraph StateManagement["상태 관리"]
+        subgraph Redux_S["Redux (Auth State)"]
+            UserSlice["userSlice\n{isLoggedIn, accessToken}"]
+            localStorage1["localStorage\n(redux-persist)"]
+        end
+        subgraph TQ_S["TanStack Query (Server State)"]
+            QueryCache["QueryCache\n{boards, categories, comments, likes}"]
+            localStorage2["localStorage\n(SyncStoragePersister, 24h)"]
+        end
+    end
+
+    subgraph API["services/ (API Layer)"]
+        apiClient["apiClient.js\n(Axios + Interceptors)"]
+        boardApi & authApi & categoryApi
+        queryKeys["queryKeys.js\n(Key Factory)"]
+    end
+
+    App --> Pages
+    Pages --> Components
+    Components --> StateManagement
+    Components --> API
+    StateManagement --> API

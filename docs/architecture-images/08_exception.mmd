@@ -1,0 +1,29 @@
+graph TD
+    EX["BusinessException\n(RuntimeException)"]
+
+    EX --> E1[ExpiredTokenException]
+    EX --> E2[ExpiredRefreshTokenException]
+    EX --> E3[InvalidateTokenException]
+    EX --> E4[UnauthorizedException]
+    EX --> E5[UnauthorizedAccessException]
+    EX --> E6[EntityNotFoundException]
+    EX --> E7[DuplicateException]
+    EX --> E8[ImageUploadFailException]
+    EX --> E9[ImageDeleteFailException]
+
+    GEH["GlobalExceptionHandler\n(@RestControllerAdvice)"]
+    GEH --> EX
+    GEH --> StdEx["표준 예외\n(MethodArgumentNotValid / TypeMismatch 등)"]
+
+    EC["ErrorCode Enum (22개)"]
+    EC --> C["Common: C001~C004"]
+    EC --> A["Auth: A001~A006"]
+    EC --> M["Member: M001~M002"]
+    EC --> B["Board: B001~B004"]
+    EC --> CM["Comment: CM001~CM002"]
+    EC --> CT["Category: CT001~CT003"]
+    EC --> F["File: F001~F002"]
+
+    ER["ErrorResponse DTO\n{code, message, status}"]
+    GEH -->|생성| ER
+    EC -->|참조| ER

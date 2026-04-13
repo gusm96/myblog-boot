@@ -1,6 +1,6 @@
 package com.moya.myblogboot.domain.file;
 
-import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.post.Post;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,6 +17,6 @@ public class ImageFile {
     private String fileName;
     private String filePath;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "board_id")
-    private Board board;
+    @JoinColumn(name = "post_id")
+    private Post post;
 }

@@ -1,15 +1,15 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.category.CategoryReqDto;
+import com.moya.myblogboot.dto.category.CategoriesResDto;
+import com.moya.myblogboot.dto.category.CategoryReqDto;
+import com.moya.myblogboot.dto.category.CategoryResDto;
 import com.moya.myblogboot.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,39 +17,33 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    // 카테고리 리스트
     @GetMapping("/api/v1/categories")
-    public ResponseEntity<List> getCategoryList() {
+    public ResponseEntity<List<CategoryResDto>> getCategoryList() {
         return ResponseEntity.ok(categoryService.retrieveAll());
     }
 
-    // 카테고리 리스트 V2
     @GetMapping("/api/v2/categories")
-    public ResponseEntity<List> getCategoryListV2() {
-        return ResponseEntity.ok().body(categoryService.retrieveAllWithViewBoards());
+    public ResponseEntity<List<CategoriesResDto>> getCategoryListV2() {
+        return ResponseEntity.ok().body(categoryService.retrieveAllWithViewPosts());
     }
 
-    // 관리자용 카테고리 리스트
     @GetMapping("/api/v1/categories-management")
-    public ResponseEntity<List> getCategoryListForAdmin() {
+    public ResponseEntity<List<CategoriesResDto>> getCategoryListForAdmin() {
         return ResponseEntity.ok().body(categoryService.retrieveDto());
     }
 
-    // 카테고리 작성
     @PostMapping("/api/v1/categories")
     public ResponseEntity<Void> newCategory(@RequestBody @Valid CategoryReqDto categoryReqDto) {
         categoryService.create(categoryReqDto.getCategoryName());
         return ResponseEntity.ok().build();
     }
 
-    // 카테고리 수정
     @PutMapping("/api/v1/categories/{categoryId}")
     public ResponseEntity<Void> editCategory(@PathVariable Long categoryId, @RequestBody @Valid CategoryReqDto categoryReqDto) {
         categoryService.update(categoryId, categoryReqDto.getCategoryName());
         return ResponseEntity.ok().build();
     }
 
-    // 카테고리 삭제
     @DeleteMapping("/api/v1/categories/{categoryId}")
     public ResponseEntity<Void> deleteCategory(@PathVariable Long categoryId) {
         categoryService.delete(categoryId);

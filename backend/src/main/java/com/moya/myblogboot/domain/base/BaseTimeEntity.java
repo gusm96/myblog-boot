@@ -26,14 +26,16 @@ public abstract class BaseTimeEntity {
         updateDate = now;
     }
 
+    @PreUpdate
+    public void preUpdate() {
+        this.updateDate = LocalDateTime.now();
+    }
 
-    public void delete(){
+    public void delete() {
         this.deleteDate = LocalDateTime.now();
-}
+    }
+
     public void undelete() {
         this.deleteDate = null;
-    }
-    public void update() {
-        this.updateDate = LocalDateTime.now();
     }
 }

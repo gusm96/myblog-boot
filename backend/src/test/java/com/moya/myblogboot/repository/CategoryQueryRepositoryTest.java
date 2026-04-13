@@ -2,7 +2,7 @@ package com.moya.myblogboot.repository;
 
 
 import com.moya.myblogboot.AbstractContainerBaseTest;
-import com.moya.myblogboot.domain.category.CategoriesResDto;
+import com.moya.myblogboot.dto.category.CategoriesResDto;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -41,14 +41,14 @@ public class CategoryQueryRepositoryTest extends AbstractContainerBaseTest {
                 jpaQueryFactory.select(Projections.fields(CategoriesResDto.class,
                                 category.id,
                                 category.name,
-                                category.boards.size().as("boardsCount")))
+                                category.posts.size().as("postsCount")))
                         .from(category)
                         .groupBy(category.id)
                         .fetch();
         // when
         for (CategoriesResDto c : categoriesResDtoList) {
             System.out.println(c.getName());
-            System.out.println(c.getBoardsCount());
+            System.out.println(c.getPostsCount());
         }
         // then
     }

@@ -1,12 +1,9 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.member.MemberLoginReqDto;
-import com.moya.myblogboot.domain.member.MemberJoinReqDto;
-import com.moya.myblogboot.domain.member.PwStrengthCheckReqDto;
+import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
-import com.moya.myblogboot.service.PasswordStrengthCheck;
 import com.moya.myblogboot.utils.CookieUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,69 +22,48 @@ import static com.moya.myblogboot.constants.CookieName.*;
 public class AuthController {
 
     private final AuthService authService;
-    private final PasswordStrengthCheck passwordStrengthCheck;
 
-    // 회원 가입
-    @PostMapping("/api/v1/join")
-    public ResponseEntity<Void> join(@RequestBody @Valid MemberJoinReqDto memberJoinReqDto) {
-        authService.memberJoin(memberJoinReqDto);
-        return ResponseEntity.ok().build();
-    }
-
-    // 로그인
     @PostMapping("/api/v1/login")
-    public ResponseEntity<String> login(@RequestBody @Valid MemberLoginReqDto memberLoginReqDto, HttpServletResponse response) {
-        Token newToken = authService.memberLogin(memberLoginReqDto);
-        // Http Only Cookie에 Refersh Token 저장.
-        Cookie refreshTokenCookie = CookieUtil.addCookie(REFRESH_TOKEN_COOKIE, newToken.getRefresh_token());
-        // Cookie Response
-        response.addCookie(refreshTokenCookie);
+    public ResponseEntity<String> login(@RequestBody @Valid LoginReqDto loginReqDto,
+                                        HttpServletResponse response) {
+        Token newToken = authService.adminLogin(loginReqDto);
+        response.addCookie(CookieUtil.addCookie(REFRESH_TOKEN_COOKIE, newToken.getRefresh_token()));
         return ResponseEntity.ok().body(newToken.getAccess_token());
     }
 
-    // 로그아웃
     @GetMapping("/api/v1/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-        // Cookie 에서 Refresh Token 찾는다.
         Cookie refreshTokenCookie = CookieUtil.findCookie(request, REFRESH_TOKEN_COOKIE);
-        if (refreshTokenCookie != null && refreshTokenCookie.getValue() != null && !refreshTokenCookie.getValue().equals(""))
-            CookieUtil.deleteCookie(response, refreshTokenCookie); // Refresh Token 삭제 -> Refresh Token의 정보 소멸
+        if (refreshTokenCookie != null
+                && refreshTokenCookie.getValue() != null
+                && !refreshTokenCookie.getValue().isEmpty()) {
+            CookieUtil.deleteCookie(response, refreshTokenCookie);
+        }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    // 토큰 권한 조회
     @GetMapping("/api/v1/token-role")
     public ResponseEntity<String> getRoleFromToken(HttpServletRequest request) {
         return ResponseEntity.ok().body(authService.getTokenInfo(getToken(request)).getRole());
     }
 
-
-    // Access Token 재발급
     @GetMapping("/api/v1/reissuing-token")
     public ResponseEntity<String> reissuingAccessToken(HttpServletRequest request) {
         Cookie refreshTokenCookie = CookieUtil.findCookie(request, REFRESH_TOKEN_COOKIE);
-        if (refreshTokenCookie == null || refreshTokenCookie.getValue().equals(""))
+        if (refreshTokenCookie == null || refreshTokenCookie.getValue().isEmpty())
             throw new InvalidateTokenException();
         return ResponseEntity.ok().body(authService.reissuingAccessToken(refreshTokenCookie.getValue()));
     }
 
-    // 토큰 검증
     @GetMapping("/api/v1/token-validation")
     public ResponseEntity<Boolean> tokenValidate(HttpServletRequest request) {
         return ResponseEntity.ok().body(authService.tokenIsExpired(getToken(request)));
     }
 
-    // 비밀번호 강도 확인
-    @PostMapping("/api/v1/password-strength-check")
-    public ResponseEntity<String> checkPasswordStrength(@RequestBody @Valid PwStrengthCheckReqDto pwStrengthCheckReqDto) {
-        return ResponseEntity.ok().body(passwordStrengthCheck.strengthCheck(pwStrengthCheckReqDto.getPassword()).getLabel());
-    }
-
     private static String getToken(HttpServletRequest request) {
         String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (authorization == null || !authorization.toLowerCase().startsWith("bearer ")) {
+        if (authorization == null || !authorization.toLowerCase().startsWith("bearer "))
             throw new InvalidateTokenException();
-        }
         return authorization.substring(7);
     }
 }

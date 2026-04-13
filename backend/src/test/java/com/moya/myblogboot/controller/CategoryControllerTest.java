@@ -3,14 +3,14 @@ package com.moya.myblogboot.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
-import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.admin.Admin;
+import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.category.CategoryReqDto;
-import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.domain.member.MemberLoginReqDto;
-import com.moya.myblogboot.repository.BoardRepository;
+import com.moya.myblogboot.dto.category.CategoryReqDto;
+import com.moya.myblogboot.dto.auth.LoginReqDto;
+import com.moya.myblogboot.repository.AdminRepository;
+import com.moya.myblogboot.repository.PostRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
-import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,13 +54,13 @@ class CategoryControllerTest extends AbstractContainerBaseTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
-    private MemberRepository memberRepository;
+    private AdminRepository adminRepository;
     @Autowired
     private AuthService authService;
     @Autowired
     private CategoryRepository categoryRepository;
     @Autowired
-    private BoardRepository boardRepository;
+    private PostRepository postRepository;
     @Autowired
     private RestDocumentationResultHandler restDocs;
     @Autowired
@@ -80,20 +80,18 @@ class CategoryControllerTest extends AbstractContainerBaseTest {
 
     @BeforeEach
     void before() {
-        Member member = Member.builder()
+        Admin admin = Admin.builder()
                 .username("testMember")
                 .password(passwordEncoder.encode("testPassword"))
-                .nickname("testMember")
                 .build();
-        member.addRoleAdmin();
-        Member saveMember = memberRepository.save(member);
+        Admin saveAdmin = adminRepository.save(admin);
 
-        MemberLoginReqDto loginReqDto = MemberLoginReqDto.builder()
+        LoginReqDto loginReqDto = LoginReqDto.builder()
                 .username("testMember")
                 .password("testPassword")
                 .build();
 
-        accessToken = "bearer " + authService.memberLogin(loginReqDto).getAccess_token();
+        accessToken = "bearer " + authService.adminLogin(loginReqDto).getAccess_token();
 
         for (int i = 0; i < 5; i++) {
             Category newCategory = Category.builder().name("test" + i).build();
@@ -101,13 +99,13 @@ class CategoryControllerTest extends AbstractContainerBaseTest {
             categoryId = saveCategory.getId();
 
             // getCategoryListV2는 VIEW 게시글이 있는 카테고리만 반환하므로 게시글 생성
-            Board board = Board.builder()
-                    .member(saveMember)
+            Post post = Post.builder()
+                    .admin(saveAdmin)
                     .category(saveCategory)
                     .title("title" + i)
                     .content("content" + i)
                     .build();
-            boardRepository.save(board);
+            postRepository.save(post);
         }
     }
 
@@ -141,7 +139,7 @@ class CategoryControllerTest extends AbstractContainerBaseTest {
                         responseFields(
                                 fieldWithPath("[].id").description("카테고리 ID"),
                                 fieldWithPath("[].name").description("카테고리명"),
-                                fieldWithPath("[].boardsCount").description("카테고리 내 게시글 수")
+                                fieldWithPath("[].postsCount").description("카테고리 내 게시글 수")
                         )
                 ));
     }
@@ -163,7 +161,7 @@ class CategoryControllerTest extends AbstractContainerBaseTest {
                         responseFields(
                                 fieldWithPath("[].id").description("카테고리 ID"),
                                 fieldWithPath("[].name").description("카테고리명"),
-                                fieldWithPath("[].boardsCount").description("카테고리 내 게시글 수")
+                                fieldWithPath("[].postsCount").description("카테고리 내 게시글 수")
                         )
                 ));
     }

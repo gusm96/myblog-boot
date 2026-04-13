@@ -1,11 +1,12 @@
 package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.AbstractContainerBaseTest;
-import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.domain.member.MemberJoinReqDto;
-import com.moya.myblogboot.domain.member.MemberLoginReqDto;
+import com.moya.myblogboot.domain.admin.Admin;
+import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.domain.token.Token;
-import com.moya.myblogboot.repository.MemberRepository;
+import com.moya.myblogboot.exception.custom.EntityNotFoundException;
+import com.moya.myblogboot.exception.custom.UnauthorizedException;
+import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,9 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import com.moya.myblogboot.exception.custom.DuplicateException;
-import com.moya.myblogboot.exception.custom.EntityNotFoundException;
-import com.moya.myblogboot.exception.custom.UnauthorizedException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -28,104 +26,62 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.assertj.core.api.Assertions.*;
 
 @Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AuthServiceImplTest extends AbstractContainerBaseTest {
+
     @Autowired
     private AuthService authService;
     @Autowired
-    private MemberRepository memberRepository;
-
+    private AdminRepository adminRepository;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void before() {
-        Member member = Member.builder()
+        Admin admin = Admin.builder()
                 .username("testMember")
                 .password(passwordEncoder.encode("testPassword"))
-                .nickname("tester")
                 .build();
-        memberRepository.save(member);
+        adminRepository.save(admin);
     }
 
     @Test
-    @DisplayName("회원 가입 테스트")
-    void memberJoin() {
-        // 중복되지 않은 회원
-        MemberJoinReqDto reqMember1 = MemberJoinReqDto.builder()
-                .username("test1234")
+    @DisplayName("관리자 로그인 테스트")
+    void adminLogin() {
+        LoginReqDto notExistsUsername = LoginReqDto.builder()
+                .username("notExists")
                 .password("test1234")
-                .nickname("test1234")
                 .build();
-
-        // 중복된 회원
-        MemberJoinReqDto reqMember2 = MemberJoinReqDto.builder()
+        LoginReqDto wrongPassword = LoginReqDto.builder()
                 .username("testMember")
-                .password("test1234")
-                .nickname("test1234")
+                .password("wrongPw")
                 .build();
-
-        // 회원이 중복되었을 때
-        assertThrows(DuplicateException.class, () -> authService.memberJoin(reqMember2));
-        // void 반환 — 예외 없이 정상 완료되면 성공
-        assertDoesNotThrow(() -> authService.memberJoin(reqMember1));
-    }
-
-    @Test
-    @DisplayName("회원 로그인 테스트")
-    void memberLogin() {
-        // 존재하지 않는 회원 아이디
-        MemberLoginReqDto notExistsUsername = MemberLoginReqDto.builder()
-                .username("test1234")
-                .password("test1234")
-                .build();
-        // 회원 아이디가 존재하지만 비밀번호가 틀린 경우
-        MemberLoginReqDto notEqualsPassword = MemberLoginReqDto.builder()
-                .username("testMember")
-                .password("notEqualsPw")
-                .build();
-        // 존재하는 회원
-        MemberLoginReqDto memberLoginReqDto = MemberLoginReqDto.builder()
+        LoginReqDto validLogin = LoginReqDto.builder()
                 .username("testMember")
                 .password("testPassword")
                 .build();
-        assertThrows(EntityNotFoundException.class, () -> authService.memberLogin(notExistsUsername));
-        assertThrows(UnauthorizedException.class, () -> authService.memberLogin(notEqualsPassword));
-        Object result = authService.memberLogin(memberLoginReqDto);
+
+        assertThrows(EntityNotFoundException.class, () -> authService.adminLogin(notExistsUsername));
+        assertThrows(UnauthorizedException.class, () -> authService.adminLogin(wrongPassword));
+        Object result = authService.adminLogin(validLogin);
         assertTrue(result instanceof Token);
-    }
-
-    @Test
-    @DisplayName("Id값으로 DB에서 회원 찾기")
-    void retrieveMemberById() {
-        Member newMember = Member.builder()
-                .username("newMember")
-                .password("newMemberPw")
-                .nickname("newMember")
-                .build();
-        Member saveMember = memberRepository.save(newMember);
-
-        Member findMember = authService.retrieve(saveMember.getId());
-        assertThat(findMember).isEqualTo(saveMember);
     }
 
     @Test
     @DisplayName("Access Token 재발급 테스트")
     void reissuingAccessToken() {
-        MemberLoginReqDto memberLoginReqDto = MemberLoginReqDto.builder()
+        LoginReqDto loginReqDto = LoginReqDto.builder()
                 .username("testMember")
                 .password("testPassword")
                 .build();
 
-        Token token = authService.memberLogin(memberLoginReqDto);
+        Token token = authService.adminLogin(loginReqDto);
         String result = authService.reissuingAccessToken(token.getRefresh_token());
 
         assertTrue(result instanceof String);
@@ -134,22 +90,16 @@ class AuthServiceImplTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("임시번호 생성")
     void createTemporaryNumber() {
-        // 1. 임시 번호 생성 - ThreadLocalRandom을 사용해서 난수를 생성
         String temporaryNumber = String.valueOf(ThreadLocalRandom.current().nextLong());
 
-        // 2. 유효성 체크 - RedisStore에서 해당 난수가 있는지 확인.
         while (redisTemplate.opsForValue().get(temporaryNumber) != null) {
-            // 2-1 중복이면 다시 1번 실행.
             temporaryNumber = String.valueOf(ThreadLocalRandom.current().nextLong());
         }
-        // 3. 저장
 
-        // 3-1 현재 시간
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy-MM-dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
         String formattedNow = now.format(formatter);
 
-        // 3-2 TTL 24시간 - 현재시간
         LocalDateTime midnight = now.plusDays(1).truncatedTo(ChronoUnit.DAYS);
         long ttl = ChronoUnit.SECONDS.between(now, midnight);
 

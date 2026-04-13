@@ -1,8 +1,8 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.category.CategoriesResDto;
+import com.moya.myblogboot.dto.category.CategoriesResDto;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.category.CategoryResDto;
+import com.moya.myblogboot.dto.category.CategoryResDto;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ public interface CategoryService {
 
     Category retrieve(Long categoryId);
 
-    List<CategoriesResDto> retrieveAllWithViewBoards();
+    List<CategoriesResDto> retrieveAllWithViewPosts();
 
     List<CategoriesResDto> retrieveDto();
 }

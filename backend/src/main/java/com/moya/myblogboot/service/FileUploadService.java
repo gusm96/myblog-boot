@@ -1,7 +1,7 @@
 package com.moya.myblogboot.service;
 
 import com.moya.myblogboot.domain.file.ImageFile;
-import com.moya.myblogboot.domain.file.ImageFileDto;
+import com.moya.myblogboot.dto.file.ImageFileDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

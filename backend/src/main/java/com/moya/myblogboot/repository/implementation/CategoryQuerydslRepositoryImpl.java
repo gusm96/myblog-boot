@@ -1,8 +1,8 @@
 package com.moya.myblogboot.repository.implementation;
 
 
-import com.moya.myblogboot.domain.board.BoardStatus;
-import com.moya.myblogboot.domain.category.CategoriesResDto;
+import com.moya.myblogboot.domain.post.PostStatus;
+import com.moya.myblogboot.dto.category.CategoriesResDto;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.repository.CategoryQuerydslRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.moya.myblogboot.domain.board.QBoard.*;
+import static com.moya.myblogboot.domain.post.QPost.*;
 import static com.moya.myblogboot.domain.category.QCategory.*;
 
 @Repository
@@ -21,14 +21,14 @@ public class CategoryQuerydslRepositoryImpl implements CategoryQuerydslRepositor
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<CategoriesResDto> findCategoriesWithViewBoards() {
+    public List<CategoriesResDto> findCategoriesWithViewPosts() {
         // fetchJoin + 컬렉션 → 게시글 수만큼 Category 행이 중복 생성됨
         // distinct()로 Hibernate 레벨 중복 제거 (SQL DISTINCT + 인메모리 de-duplication)
         List<Category> categories = queryFactory
                 .selectFrom(category)
                 .distinct()
-                .leftJoin(category.boards, board).fetchJoin()
-                .where(category.boards.size().gt(0).and(board.boardStatus.eq(BoardStatus.VIEW)))
+                .leftJoin(category.posts, post).fetchJoin()
+                .where(category.posts.size().gt(0).and(post.postStatus.eq(PostStatus.VIEW)))
                 .fetch();
         return categories.stream().map(category -> CategoriesResDto.builder().category(category).build()).collect(Collectors.toList());
     }
@@ -38,7 +38,7 @@ public class CategoryQuerydslRepositoryImpl implements CategoryQuerydslRepositor
         List<Category> categories = queryFactory
                 .selectFrom(category)
                 .distinct()
-                .leftJoin(category.boards, board).fetchJoin()
+                .leftJoin(category.posts, post).fetchJoin()
                 .fetch();
         return categories.stream().map(category -> CategoriesResDto.builder().category(category).build()).collect(Collectors.toList());
     }

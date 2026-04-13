@@ -11,7 +11,6 @@ import { useEffect } from "react";
 import { reissuingAccessToken } from "./services/authApi";
 import { updateUserAccessToken, userLogout } from "./redux/authAction";
 import { setAuthToken } from "./services/apiClient";
-import { JoinForm } from "./screens/Member/JoinForm";
 import { NotFound } from "./screens/error/NotFound";
 import { NavigateBack } from "./screens/error/NavigateBack";
 import { CategoryList } from "./components/Category/CategoryList";
@@ -106,10 +105,6 @@ function App() {
             <Route
               path="login"
               element={isLoggedIn ? <NavigateBack /> : <LoginForm />}
-            />
-            <Route
-              path="join"
-              element={isLoggedIn ? <NavigateBack /> : <JoinForm />}
             />
             <Route path="*" element={<NotFound />} />
           </Route>

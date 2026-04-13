@@ -1,7 +1,7 @@
 package com.moya.myblogboot.repository.implementation;
 
 import com.moya.myblogboot.domain.comment.Comment;
-import com.moya.myblogboot.domain.comment.CommentResDto;
+import com.moya.myblogboot.dto.comment.CommentResDto;
 import com.moya.myblogboot.repository.CommentQuerydslRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -19,14 +19,13 @@ public class CommentQuerydslRepositoryImpl implements CommentQuerydslRepository 
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<CommentResDto> findAllByBoardId(Long boardId) {
+    public List<CommentResDto> findAllByPostId(Long postId) {
         List<Comment> comments = queryFactory.selectDistinct(comment1)
                 .from(comment1)
                 .leftJoin(comment1.child).fetchJoin()
-                .leftJoin(comment1.member).fetchJoin()
-                .where(comment1.board.id.eq(boardId))
+                .where(comment1.post.id.eq(postId))
                 .where(comment1.parent.isNull())
-                .orderBy(comment1.write_date.desc())
+                .orderBy(comment1.createDate.desc())
                 .fetch();
         return comments.stream().map(CommentResDto::of).collect(Collectors.toList());
     }
@@ -36,9 +35,8 @@ public class CommentQuerydslRepositoryImpl implements CommentQuerydslRepository 
         List<Comment> comments = queryFactory.selectDistinct(comment1)
                 .from(comment1)
                 .leftJoin(comment1.parent).fetchJoin()
-                .leftJoin(comment1.member).fetchJoin()
                 .where(comment1.parent.id.eq(parentId))
-                .orderBy(comment1.write_date.asc())
+                .orderBy(comment1.createDate.asc())
                 .fetch();
 
         return comments.stream().map(CommentResDto::of).collect(Collectors.toList());

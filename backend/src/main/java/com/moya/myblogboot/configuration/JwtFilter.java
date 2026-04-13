@@ -36,19 +36,17 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        // Token이 없을 시 Block
         if (authorization == null || !authorization.toLowerCase().startsWith("bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
-        // Token 꺼내기
+
         String token = authorization.substring(7);
         if (token.isEmpty()) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 존재하지 않습니다.");
             return;
         }
 
-        // Token 검증
         try {
             JwtUtil.validateToken(token, secret);
         } catch (SecurityException e) {
@@ -62,14 +60,12 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Token에서 인증 정보 추출
         TokenInfo tokenInfo = JwtUtil.getTokenInfo(token, secret);
         Long memberPrimaryKey = tokenInfo.getMemberPrimaryKey();
 
         log.debug("{} {} | member={} role={}", request.getMethod(),
                 request.getRequestURI(), memberPrimaryKey, tokenInfo.getRole());
 
-        // 권한 부여
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(memberPrimaryKey, null, List.of(new SimpleGrantedAuthority(tokenInfo.getRole())));
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

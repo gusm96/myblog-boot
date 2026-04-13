@@ -1,0 +1,65 @@
+erDiagram
+    MEMBER {
+        Long id PK
+        String username UK
+        String password
+        String nickname
+        Role role
+    }
+
+    BOARD {
+        Long id PK
+        String title
+        Text content
+        Long views
+        Long likes
+        BoardStatus status
+        LocalDateTime createDate
+        LocalDateTime modifyDate
+        LocalDateTime deleteDate
+        Long memberId FK
+        Long categoryId FK
+    }
+
+    CATEGORY {
+        Long id PK
+        String name UK
+    }
+
+    COMMENT {
+        Long id PK
+        String comment
+        LocalDateTime writeDate
+        ModificationStatus modStatus
+        Long memberId FK
+        Long boardId FK
+        Long parentId FK
+    }
+
+    BOARD_LIKE {
+        Long id PK
+        Long boardId FK
+        Long memberId FK
+    }
+
+    IMAGE_FILE {
+        Long id PK
+        String imageUrl
+        String keyName
+        Long boardId FK
+    }
+
+    VISITOR {
+        Long id PK
+        LocalDate date
+        Long count
+    }
+
+    MEMBER ||--o{ BOARD : "writes"
+    MEMBER ||--o{ COMMENT : "writes"
+    MEMBER ||--o{ BOARD_LIKE : "likes"
+    CATEGORY ||--o{ BOARD : "contains"
+    BOARD ||--o{ COMMENT : "has"
+    BOARD ||--o{ IMAGE_FILE : "has"
+    BOARD ||--o{ BOARD_LIKE : "liked by"
+    COMMENT ||--o{ COMMENT : "replies"

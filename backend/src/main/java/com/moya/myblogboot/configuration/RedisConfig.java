@@ -36,44 +36,38 @@ public class RedisConfig {
     private int database;
     private static final String REDISSON_HOST_PREFIX = "redis://";
 
-    // Redis 연결
     @Bean
     public LettuceConnectionFactory lettuceConnectionFactory() {
         final SocketOptions socketoptions = SocketOptions.builder()
-                .connectTimeout(Duration.ofSeconds(10)) // 연결 시간제한.
+                .connectTimeout(Duration.ofSeconds(10))
                 .build();
         final ClientOptions clientoptions = ClientOptions.builder()
                 .socketOptions(socketoptions)
                 .build();
         LettuceClientConfiguration lettuceClientConfiguration = LettuceClientConfiguration.builder()
                 .clientOptions(clientoptions)
-                .commandTimeout(Duration.ofMinutes(1)) // 명령 최대시간.
-                .shutdownTimeout(Duration.ZERO) // Redis 연결 종료시 타임아웃 설정. (강제 종료)
+                .commandTimeout(Duration.ofMinutes(1))
+                .shutdownTimeout(Duration.ZERO) // 컨테이너 종료 시 강제 즉시 연결 해제
                 .build();
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(host, port);
         configuration.setDatabase(database);
         return new LettuceConnectionFactory(configuration, lettuceClientConfiguration);
     }
 
-    // RedisConnection에서 넘겨준 byte값 객체 직렬화
     @Bean
     public RedisTemplate<String, Object> redisTemplate() {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-        // ConnectionFactory 설정.
         redisTemplate.setConnectionFactory(lettuceConnectionFactory());
 
         ObjectMapper objectMapper = new ObjectMapper();
-        // ObjectMapper에 JavaTimeModule 등록 (LocalDateTime 타입 직/역직렬화 할 수 있도록 하기 위해 설정)
+        // LocalDateTime 직/역직렬화를 위한 JavaTimeModule 등록
         objectMapper.registerModule(new JavaTimeModule());
-        // 객체를 메모리에 저장할 때 타입 정보를 포함시키도록 설정
+        // Redis에 저장 시 클래스 타입 정보를 포함시켜 역직렬화 때 올바른 타입으로 복원
         objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance,
                 ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
 
-        // key, value 직렬화 설정
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
-
-        // hash key, value 직렬화 설정
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
 

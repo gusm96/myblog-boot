@@ -1,8 +1,8 @@
 package com.moya.myblogboot.service.implementation;
 
-import com.moya.myblogboot.domain.category.CategoriesResDto;
+import com.moya.myblogboot.dto.category.CategoriesResDto;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.category.CategoryResDto;
+import com.moya.myblogboot.dto.category.CategoryResDto;
 import com.moya.myblogboot.exception.BusinessException;
 import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.DuplicateException;
@@ -39,8 +39,8 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<CategoriesResDto> retrieveAllWithViewBoards() {
-        return categoryRepository.findCategoriesWithViewBoards();
+    public List<CategoriesResDto> retrieveAllWithViewPosts() {
+        return categoryRepository.findCategoriesWithViewPosts();
     }
 
     @Override
@@ -58,13 +58,12 @@ public class CategoryServiceImpl implements CategoryService {
         category.editCategory(modifiedCategoryName);
     }
 
-    // 카테고리 삭제
     @Override
     @Transactional
     public void delete(Long categoryId) {
         Category category = retrieve(categoryId);
-        if (!category.getBoards().isEmpty()) {
-            throw new BusinessException(ErrorCode.CATEGORY_HAS_BOARDS);
+        if (!category.getPosts().isEmpty()) {
+            throw new BusinessException(ErrorCode.CATEGORY_HAS_POSTS);
         }
         categoryRepository.delete(category);
     }

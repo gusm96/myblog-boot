@@ -1,10 +1,10 @@
 package com.moya.myblogboot.domain.keys;
 
 public class RedisKey {
-    public static final String BOARD_KEY = "board:";
-    public static final String BOARD_VIEWS_KEY = ":views";
-    public static final String BOARD_LIKES_KEY = ":likes";
-    public static final String USER_VIEWED_BOARD_KEY = "userViewedBoards:";
+    public static final String POST_KEY = "post:";
+    public static final String POST_VIEWS_KEY = ":views";
+    public static final String POST_LIKES_KEY = ":likes";
+    public static final String USER_VIEWED_POST_KEY = "userViewedPosts:";
     public static final String VISITOR_COUNT_KEY = "visitorCount:";
 
     public static final String TODAY_COUNT_KEY = "today";

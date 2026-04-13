@@ -1,92 +1,138 @@
 package com.moya.myblogboot.service.implementation;
 
-import com.moya.myblogboot.domain.board.Board;
 import com.moya.myblogboot.domain.comment.Comment;
-import com.moya.myblogboot.domain.comment.CommentReqDto;
-import com.moya.myblogboot.domain.comment.CommentResDto;
-import com.moya.myblogboot.domain.member.Member;
+import com.moya.myblogboot.dto.comment.CommentDeleteReqDto;
+import com.moya.myblogboot.dto.comment.CommentReqDto;
+import com.moya.myblogboot.dto.comment.CommentResDto;
+import com.moya.myblogboot.dto.comment.CommentUpdateReqDto;
+import com.moya.myblogboot.dto.comment.CommentWriteResDto;
+import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
+import com.moya.myblogboot.exception.custom.UnauthorizedException;
 import com.moya.myblogboot.repository.CommentRepository;
-import com.moya.myblogboot.service.AuthService;
-import com.moya.myblogboot.service.BoardService;
 import com.moya.myblogboot.service.CommentService;
+import com.moya.myblogboot.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
-    private final CommentRepository commentRepository;
-    private final AuthService authService;
-    private final BoardService boardService;
 
-    // 댓글 리스트
+    private final CommentRepository commentRepository;
+    private final PostService postService;
+    private final PasswordEncoder passwordEncoder;
+
     @Override
-    public List<CommentResDto> retrieveAll(Long boardId) {
-        return commentRepository.findAllByBoardId(boardId);
+    public List<CommentResDto> retrieveAll(Long postId) {
+        return commentRepository.findAllByPostId(postId);
     }
 
     @Override
     public List<CommentResDto> retrieveAllChild(Long parentId) {
-        return commentRepository.findChildByParentId( parentId);
+        return commentRepository.findChildByParentId(parentId);
     }
 
     @Override
     @Transactional
-    public void write(CommentReqDto commentReqDto, Long memberId, Long boardId) {
-        Member member = authService.retrieve(memberId);
-        Board board = boardService.findById(boardId);
-        Comment comment = commentReqDto.toEntity(member, board);
-        // 대댓글.
-        if (commentReqDto.getParentId() != null) {
-            Comment parent = retrieve(commentReqDto.getParentId());
-            parent.addChildComment(comment); // 부모 엔터에 자식 등록 => 변경 감지
-            comment.addParentComment(parent); // 자식 엔터티에 부모 등록
+    public CommentWriteResDto write(CommentReqDto reqDto, Long postId, boolean isAdmin) {
+        Post post = postService.findById(postId);
+
+        String nickname;
+        String discriminator;
+        String password;
+
+        if (isAdmin) {
+            nickname = "[관리자]";
+            discriminator = "0000";
+            password = "";
+        } else {
+            if (reqDto.getNickname() == null || reqDto.getNickname().isBlank())
+                throw new UnauthorizedException(ErrorCode.INVALID_INPUT);
+            if (reqDto.getPassword() == null || reqDto.getPassword().isBlank())
+                throw new UnauthorizedException(ErrorCode.INVALID_INPUT);
+            nickname = reqDto.getNickname();
+            discriminator = generateDiscriminator(postId, nickname);
+            password = passwordEncoder.encode(reqDto.getPassword());
         }
+
+        Comment comment = Comment.builder()
+                .comment(reqDto.getComment())
+                .nickname(nickname)
+                .discriminator(discriminator)
+                .password(password)
+                .isAdmin(isAdmin)
+                .post(post)
+                .build();
+
+        if (reqDto.getParentId() != null) {
+            Comment parent = retrieve(reqDto.getParentId());
+            parent.addChildComment(comment);
+            comment.addParentComment(parent);
+        }
+
         Comment result = commentRepository.save(comment);
-        board.addComment(result);
+        post.addComment(result);
+
+        return CommentWriteResDto.builder()
+                .nickname(nickname)
+                .discriminator(discriminator)
+                .build();
     }
 
-    // 댓글 수정
     @Override
     @Transactional
-    public void update(Long commentId, Long memberId, String modifiedComment) {
-        Comment findComment = retrieveWithMember(commentId);
-        if (!findComment.getMember().getId().equals(memberId)) {
-            throw new UnauthorizedAccessException(ErrorCode.COMMENT_ACCESS_DENIED);
+    public void update(Long commentId, CommentUpdateReqDto reqDto, boolean isAdmin) {
+        Comment comment = retrieve(commentId);
+        if (!isAdmin) {
+            if (reqDto.getPassword() == null
+                    || !passwordEncoder.matches(reqDto.getPassword(), comment.getPassword())) {
+                throw new UnauthorizedAccessException(ErrorCode.COMMENT_ACCESS_DENIED);
+            }
         }
-        findComment.updateComment(modifiedComment);
+        comment.updateComment(reqDto.getComment());
     }
 
-    // 댓글 삭제
     @Override
     @Transactional
-    public void delete(Long commentId, Long memberId) {
-        Comment findComment = retrieveWithMember(commentId);
-        if (!findComment.getMember().getId().equals(memberId)) {
-            throw new UnauthorizedAccessException(ErrorCode.COMMENT_ACCESS_DENIED);
+    public void delete(Long commentId, CommentDeleteReqDto reqDto, boolean isAdmin) {
+        Comment comment = retrieve(commentId);
+        if (!isAdmin) {
+            if (reqDto.getPassword() == null
+                    || !passwordEncoder.matches(reqDto.getPassword(), comment.getPassword())) {
+                throw new UnauthorizedAccessException(ErrorCode.COMMENT_ACCESS_DENIED);
+            }
         }
-        commentRepository.delete(findComment);
+        commentRepository.delete(comment);
     }
 
-    // 댓글 찾기
     @Override
     public Comment retrieve(Long commentId) {
-        return commentRepository.findById(commentId).orElseThrow(()
-                -> new EntityNotFoundException(ErrorCode.COMMENT_NOT_FOUND));
+        return commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.COMMENT_NOT_FOUND));
     }
 
-    private Comment retrieveWithMember(Long commentId) {
-        return commentRepository.findByIdWithMember(commentId).orElseThrow(()
-                -> new EntityNotFoundException(ErrorCode.COMMENT_NOT_FOUND));
+    /** 게시글 범위 내에서 nickname+discriminator 중복 방지 */
+    private String generateDiscriminator(Long postId, String nickname) {
+        for (int i = 0; i < 10; i++) {
+            String discriminator = String.format("%04d",
+                    ThreadLocalRandom.current().nextInt(0, 10000));
+            if (!commentRepository.existsByPost_IdAndNicknameAndDiscriminator(
+                    postId, nickname, discriminator)) {
+                return discriminator;
+            }
+        }
+        // 매우 드문 경우: 시도 초과 시 밀리초 기반 fallback
+        return String.valueOf(System.currentTimeMillis() % 9000 + 1000);
     }
-
 }

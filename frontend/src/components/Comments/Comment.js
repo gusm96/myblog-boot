@@ -41,7 +41,7 @@ export const Comment = ({ boardId, comment }) => {
     <div className="comment-inner">
       <div className="comment-header">
         <span className="writer">{comment.writer}</span>
-        <span className="upload-date">{formatTimeAgo(comment.write_date)}</span>
+        <span className="upload-date">{formatTimeAgo(comment.createDate)}</span>
       </div>
       <p className="comment-content">{comment.comment}</p>
 
@@ -70,7 +70,7 @@ export const Comment = ({ boardId, comment }) => {
             <li key={child.id} className="comment-item reply-item">
               <div className="comment-header">
                 <span className="writer">{child.writer}</span>
-                <span className="upload-date">{formatTimeAgo(child.write_date)}</span>
+                <span className="upload-date">{formatTimeAgo(child.createDate)}</span>
               </div>
               <p className="comment-content">{child.comment}</p>
             </li>

@@ -1,18 +1,14 @@
 package com.moya.myblogboot.controller;
 
-import com.moya.myblogboot.domain.board.Board;
-import com.moya.myblogboot.domain.comment.CommentReqDto;
-import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.domain.token.TokenInfo;
-import com.moya.myblogboot.service.AuthService;
-import com.moya.myblogboot.service.BoardService;
+import com.moya.myblogboot.dto.comment.CommentDeleteReqDto;
+import com.moya.myblogboot.dto.comment.CommentReqDto;
+import com.moya.myblogboot.dto.comment.CommentResDto;
+import com.moya.myblogboot.dto.comment.CommentUpdateReqDto;
+import com.moya.myblogboot.dto.comment.CommentWriteResDto;
 import com.moya.myblogboot.service.CommentService;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -24,53 +20,43 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    // 댓글 리스트
-    @GetMapping("/api/v1/comments/{boardId}")
-    public ResponseEntity<List> getComments(@PathVariable("boardId") Long boardId) {
-        return ResponseEntity.ok().body(commentService.retrieveAll(boardId));
+    @GetMapping("/api/v1/comments/{postId}")
+    public ResponseEntity<List<CommentResDto>> getComments(@PathVariable("postId") Long postId) {
+        return ResponseEntity.ok(commentService.retrieveAll(postId));
     }
 
-    // 자식 댓글 리스트
     @GetMapping("/api/v1/comments/child/{parentId}")
-    public ResponseEntity<List> getChildComments(@PathVariable("parentId") Long parentId) {
-        return ResponseEntity.ok().body(commentService.retrieveAllChild(parentId));
+    public ResponseEntity<List<CommentResDto>> getChildComments(@PathVariable("parentId") Long parentId) {
+        return ResponseEntity.ok(commentService.retrieveAllChild(parentId));
     }
 
-    // 댓글 작성
-    @PostMapping("/api/v1/comments/{boardId}")
-    public ResponseEntity<Void> writeComment(Principal principal,
-                                             @PathVariable("boardId") Long boardId,
-                                             @RequestBody CommentReqDto commentReqDto) {
-        Long memberId = getMemberId(principal);
-        commentService.write(commentReqDto, memberId, boardId);
-        return ResponseEntity.ok().build();
+    // JWT가 없으면 비회원, JWT가 있으면 어드민으로 처리
+    @PostMapping("/api/v1/comments/{postId}")
+    public ResponseEntity<CommentWriteResDto> writeComment(
+            @PathVariable("postId") Long postId,
+            @RequestBody @Valid CommentReqDto commentReqDto,
+            Principal principal) {
+        boolean isAdmin = principal != null;
+        return ResponseEntity.ok(commentService.write(commentReqDto, postId, isAdmin));
     }
 
-    // 댓글 수정
     @PutMapping("/api/v1/comments/{commentId}")
-    public ResponseEntity<Void> editComment(Principal principal,
-                                            @PathVariable("commentId") Long commentId,
-                                            @RequestBody CommentReqDto commentReqDto) {
-        Long memberId = getMemberId(principal);
-        commentService.update(commentId, memberId, commentReqDto.getComment());
+    public ResponseEntity<Void> editComment(
+            @PathVariable("commentId") Long commentId,
+            @RequestBody @Valid CommentUpdateReqDto reqDto,
+            Principal principal) {
+        boolean isAdmin = principal != null;
+        commentService.update(commentId, reqDto, isAdmin);
         return ResponseEntity.ok().build();
     }
 
-    // 댓글 삭제
     @DeleteMapping("/api/v1/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
-            Principal principal,
-            @PathVariable("commentId") Long commentId) {
-        Long memberId = getMemberId(principal);
-        commentService.delete(commentId, memberId);
+            @PathVariable("commentId") Long commentId,
+            @RequestBody CommentDeleteReqDto reqDto,
+            Principal principal) {
+        boolean isAdmin = principal != null;
+        commentService.delete(commentId, reqDto, isAdmin);
         return ResponseEntity.ok().build();
-    }
-
-    private Long getMemberId(Principal principal) {
-        Long memberId = -1L;
-        if (principal instanceof UsernamePasswordAuthenticationToken) {
-            memberId = (Long) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
-        }
-        return memberId;
     }
 }

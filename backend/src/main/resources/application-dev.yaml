@@ -9,7 +9,7 @@ spring:
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     defer-datasource-initialization: true
     properties:
       hibernate:
@@ -19,12 +19,6 @@ spring:
     init:
       mode: always
       platform: mariadb
-
-# Board View HMAC
-board:
-  view:
-    hmac:
-      secret: ${BOARD_VIEW_HMAC_SECRET}
 
 logging:
   level:

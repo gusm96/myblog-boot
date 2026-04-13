@@ -1,13 +1,13 @@
 package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.AbstractContainerBaseTest;
-import com.moya.myblogboot.domain.board.Board;
+import com.moya.myblogboot.domain.admin.Admin;
+import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.category.Category;
-import com.moya.myblogboot.domain.category.CategoryResDto;
-import com.moya.myblogboot.domain.member.Member;
-import com.moya.myblogboot.repository.BoardRepository;
+import com.moya.myblogboot.dto.category.CategoryResDto;
+import com.moya.myblogboot.repository.AdminRepository;
+import com.moya.myblogboot.repository.PostRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
-import com.moya.myblogboot.repository.MemberRepository;
 import com.moya.myblogboot.service.CategoryService;
 import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,19 +32,18 @@ class CategoryServiceImplTest extends AbstractContainerBaseTest {
 
     @Autowired private CategoryService categoryService;
     @Autowired private CategoryRepository categoryRepository;
-    @Autowired private MemberRepository memberRepository;
-    @Autowired private BoardRepository boardRepository;
+    @Autowired private AdminRepository adminRepository;
+    @Autowired private PostRepository postRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
-    private Member testMember;
+    private Admin testAdmin;
     private Category testCategory;
 
     @BeforeEach
     void before() {
-        testMember = memberRepository.save(Member.builder()
-                .username("categoryTestUser")
+        testAdmin = adminRepository.save(Admin.builder()
+                .username("categoryTestAdmin")
                 .password(passwordEncoder.encode("testPw"))
-                .nickname("categoryTester")
                 .build());
 
         testCategory = categoryRepository.save(Category.builder()
@@ -105,14 +104,14 @@ class CategoryServiceImplTest extends AbstractContainerBaseTest {
 
     @Test
     @DisplayName("카테고리 삭제 실패 - 등록된 게시글 존재")
-    void delete_withBoards() {
-        Board board = boardRepository.save(Board.builder()
+    void delete_withPosts() {
+        Post post = postRepository.save(Post.builder()
                 .title("테스트게시글")
                 .content("테스트내용")
                 .category(testCategory)
-                .member(testMember)
+                .admin(testAdmin)
                 .build());
-        testCategory.addBoard(board);
+        testCategory.addPost(post);
 
         assertThrows(com.moya.myblogboot.exception.BusinessException.class,
                 () -> categoryService.delete(testCategory.getId()));

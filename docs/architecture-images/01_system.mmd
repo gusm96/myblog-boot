@@ -1,0 +1,49 @@
+graph TB
+    subgraph Client["클라이언트 (Browser)"]
+        UI[React 18 + Vite]
+        Redux["Redux Toolkit\n(Auth State)"]
+        TQ["TanStack Query v5\n(Server State Cache)"]
+        Axios["Axios\n(HTTP Client)"]
+    end
+
+    subgraph CI_CD["CI/CD (Jenkins)"]
+        Jenkins[Jenkinsfile]
+        DockerHub["Docker Hub\nseongmogu/myblog-boot"]
+    end
+
+    subgraph Server["서버 (EC2 / Docker Compose)"]
+        subgraph Backend["Spring Boot 3.0.4 (Port 8080)"]
+            Filter["JwtFilter\n(OncePerRequestFilter)"]
+            Controllers["Controllers\n(Auth/Board/Comment/Category...)"]
+            Services["Services\n(Business Logic)"]
+            Scheduler["Scheduler\n(@EnableScheduling)"]
+            Repos["Repositories\n(JPA + QueryDSL + Redis)"]
+        end
+
+        subgraph DB["MariaDB (Port 3306)"]
+            Tables["Board / Member / Category\nComment / ImageFile / BoardLike\nVisitor"]
+        end
+
+        subgraph Cache["Redis 7 (Port 6379)"]
+            ViewCache["Board Views/Likes Cache"]
+            VisitorCache["Visitor Count"]
+        end
+
+        subgraph Frontend_Static["Frontend (Nginx Port 80)"]
+            Static["React Build (dist/)"]
+        end
+    end
+
+    UI -->|"HTTP Requests\nBearer Token"| Axios
+    Axios -->|"API calls\n/api/v1/..."| Filter
+    Filter --> Controllers
+    Controllers --> Services
+    Services --> Repos
+    Repos -->|JPA / QueryDSL| DB
+    Repos -->|Lettuce| Cache
+    Scheduler -->|"Every 10min\nRedis to DB sync"| Repos
+    Scheduler -->|"Midnight\nDelete expired boards"| Repos
+
+    Static -->|SPA routing| UI
+    Jenkins -->|Build + Push| DockerHub
+    DockerHub -->|Pull + Deploy| Server
