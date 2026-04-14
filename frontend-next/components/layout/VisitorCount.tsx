@@ -19,18 +19,26 @@ export function VisitorCount() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchVisitorData = async () => {
       try {
-        const response = await apiClient.get("/api/v2/visitor-count");
+        const response = await apiClient.get("/api/v2/visitor-count", {
+          signal: controller.signal,
+        });
         const { total, today, yesterday } = response.data;
         setVisitor({ total, today, yesterday });
-      } catch {
-        // silent fail
-      } finally {
+        setLoading(false);
+      } catch (error: unknown) {
+        // StrictMode 이중 호출로 인한 요청 취소(ERR_CANCELED)는 무시
+        if ((error as { code?: string })?.code === "ERR_CANCELED") return;
         setLoading(false);
       }
     };
+
     fetchVisitorData();
+
+    return () => controller.abort();
   }, []);
 
   if (loading) {
