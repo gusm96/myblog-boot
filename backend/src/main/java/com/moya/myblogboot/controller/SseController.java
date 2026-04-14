@@ -1,0 +1,23 @@
+package com.moya.myblogboot.controller;
+
+import com.moya.myblogboot.service.SseEmitterService;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+@RestController
+@RequiredArgsConstructor
+public class SseController {
+
+    private final SseEmitterService sseEmitterService;
+
+    @GetMapping(value = "/api/v1/sse/posts", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter subscribe(HttpServletResponse response) {
+        response.setHeader("X-Accel-Buffering", "no");
+        response.setHeader("Cache-Control", "no-cache");
+        return sseEmitterService.subscribe();
+    }
+}

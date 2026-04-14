@@ -11,6 +11,7 @@ public class ShouldNotFilterPath {
             "/api/v1/posts/search",
             "/api/v2/categories",
             "/api/v8/posts",
-            "/api/v2/visitor-count"
+            "/api/v2/visitor-count",
+            "/api/v1/sse"
     );
 }

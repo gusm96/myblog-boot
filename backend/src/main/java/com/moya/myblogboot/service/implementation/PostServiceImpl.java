@@ -19,9 +19,11 @@ import com.moya.myblogboot.service.CategoryService;
 import com.moya.myblogboot.service.FileUploadService;
 import com.moya.myblogboot.service.PostCacheService;
 import com.moya.myblogboot.service.PostService;
+import com.moya.myblogboot.domain.event.PostChangeEvent;
 import com.moya.myblogboot.utils.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -46,6 +48,7 @@ public class PostServiceImpl implements PostService {
     private final PostRedisRepository postRedisRepository;
     private final FileUploadService fileUploadService;
     private final PostCacheService postCacheService;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final int LIMIT = 8;
 
@@ -101,6 +104,7 @@ public class PostServiceImpl implements PostService {
         }
         Post result = postRepository.save(newPost);
         category.addPost(result);
+        eventPublisher.publishEvent(new PostChangeEvent(this, "CREATED", result.getId()));
         return result.getId();
     }
 
@@ -114,6 +118,7 @@ public class PostServiceImpl implements PostService {
         post.updatePost(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent(),
                 slug, modifiedDto.getMetaDescription(), modifiedDto.getMetaKeywords(), modifiedDto.getThumbnailUrl());
         postCacheService.updatePost(postCacheService.getPostFromCache(post.getId()), post);
+        eventPublisher.publishEvent(new PostChangeEvent(this, "UPDATED", postId));
         return postId;
     }
 
@@ -124,6 +129,7 @@ public class PostServiceImpl implements PostService {
         verifyPostAccessAuthorization(post.getAdmin().getId(), adminId);
         post.deletePost();
         postCacheService.updatePost(postCacheService.getPostFromCache(post.getId()), post);
+        eventPublisher.publishEvent(new PostChangeEvent(this, "DELETED", postId));
     }
 
     @Override
