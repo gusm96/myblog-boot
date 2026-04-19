@@ -1,68 +1,39 @@
 {
-  "name": "frontend",
+  "name": "frontend-next",
   "version": "0.1.0",
   "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
     "@stomp/stompjs": "^7.3.0",
-    "@tanstack/query-sync-storage-persister": "^5.95.0",
-    "@tanstack/react-query": "^5.90.21",
-    "@tanstack/react-query-devtools": "^5.91.3",
-    "@tanstack/react-query-persist-client": "^5.95.0",
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@tiptap/extension-image": "^3.20.1",
-    "@tiptap/react": "^3.20.1",
-    "@tiptap/starter-kit": "^3.20.1",
-    "axios": "^1.13.6",
+    "@tanstack/react-query": "^5.99.0",
+    "@tanstack/react-query-devtools": "^5.99.0",
+    "@tiptap/extension-image": "^3.22.3",
+    "@tiptap/react": "^3.22.3",
+    "@tiptap/starter-kit": "^3.22.3",
+    "axios": "^1.15.0",
     "bootstrap": "^5.3.8",
     "dayjs": "^1.11.20",
     "dompurify": "^3.3.3",
-    "html-react-parser": "^5.2.17",
-    "marked": "^17.0.4",
-    "prop-types": "^15.8.1",
-    "react": "^18.2.0",
+    "html-react-parser": "^6.0.1",
+    "marked": "^18.0.0",
+    "next": "16.2.3",
+    "react": "19.2.4",
     "react-bootstrap": "^2.10.10",
-    "react-cookie": "^8.0.1",
-    "react-dom": "^18.2.0",
+    "react-cookie": "^8.1.0",
+    "react-dom": "19.2.4",
     "react-redux": "^9.2.0",
-    "react-router": "^7.13.1",
-    "react-session-api": "^1.1.0",
-    "redux": "^5.0.1",
-    "redux-logger": "^3.0.6",
-    "redux-persist": "^6.0.0",
-    "styled-components": "^6.3.11",
-    "web-vitals": "^2.1.4",
-    "ws": "^8.19.0"
-  },
-  "scripts": {
-    "start": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest"
+    "redux-persist": "^6.0.0"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@tanstack/eslint-plugin-query": "^5.91.5",
-    "@vitejs/plugin-react": "^4.7.0",
-    "eslint": "^10.0.3",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "jsdom": "^29.0.1",
-    "vite": "^6.4.1",
-    "vitest": "^4.1.0"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "@types/dompurify": "^3.0.5",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
   }
 }
