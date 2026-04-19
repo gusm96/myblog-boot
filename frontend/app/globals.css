@@ -1559,3 +1559,34 @@ hr {
     flex: 1;
   }
 }
+
+/* ============================================================
+   Skeleton / Loading
+   ============================================================ */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-card) 0%,
+    var(--bg-hover) 50%,
+    var(--bg-card) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-title      { height: 28px; width: 70%; margin-bottom: 12px; }
+.skeleton-meta       { height: 14px; width: 40%; margin-bottom: 20px; }
+.skeleton-block      { height: 200px; width: 100%; margin-bottom: 16px; }
+.skeleton-line       { height: 14px; width: 100%; margin-bottom: 8px; }
+.skeleton-line-short { width: 60%; }
+.post-skeleton       { padding: 1rem 0; }
+.post-list-skeleton  { display: flex; flex-direction: column; gap: 1rem; }
+.post-card-skeleton  {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}

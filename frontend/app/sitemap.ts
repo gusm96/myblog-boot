@@ -1,6 +1,9 @@
 import { MetadataRoute } from "next";
 import { getAllSlugs } from "@/lib/api";
 
+// sitemap 자체를 1시간 단위로 재생성. 신규 글 즉시 반영은 on-demand (revalidatePath("/sitemap.xml")) 가 담당.
+export const revalidate = 3600;
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myblog.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
