@@ -10,10 +10,10 @@ import lombok.*;
 @AllArgsConstructor
 public class CommentReqDto {
 
-    @Size(min = 1, max = 10)
+    @Size(min = 1, max = 6)
     private String nickname;   // 비회원 필수, 어드민 불필요
 
-    @Size(min = 4, max = 20)
+    @Size(min = 4, max = 4)
     private String password;   // 비회원 필수, 어드민 불필요
 
     @NotBlank(message = "댓글은 2글자 이상 500글자 이하로 작성하여야 합니다.")
