@@ -60,9 +60,10 @@ services:
     build:
       context: ./frontend
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
+        # Docker 내부 통신: backend 서비스명으로 직접 호출
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:8080}
     ports:
-      - "80:80"
+      - "3000:3000"
     depends_on:
       - backend
     networks:

@@ -24,7 +24,7 @@ public class VisitorCountScheduledTask implements ApplicationListener<ContextClo
     private final VisitorCountService visitorCountService;
     private final Lock lock = new ReentrantLock();
 
-    /*
+    /**
      * 데이터 정합성을 보장하기 위해 10분마다 캐시에 저장된 방문자 수를 DB에 동기화 하고, 최종적으로 자정에 방문자 수를 DB에 한번 더 동기화한다.
      * 트랜잭션은 서비스 레이어(syncVisitorCountToDb)에서 완전히 관리되므로, 락 해제 전에 커밋이 완료된다.
      * 10분마다 동기화 하는 메서드는 중복 실행되지 않도록 Lock을 사용해 제어한다.
