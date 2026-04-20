@@ -40,6 +40,8 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       // 구 카테고리 URL /:name → /category/:name (예약어 제외)
+      // 주의: /about, /tags 같은 신규 최상위 정적 경로 추가 시
+      // 부정 lookahead 목록에 반드시 해당 이름을 추가할 것.
       {
         source:
           "/:name((?!category|posts|search|login|management|boards|api|_next|favicon\\.ico|robots\\.txt|sitemap\\.xml).+)",
