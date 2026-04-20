@@ -1,25 +1,30 @@
 import { MetadataRoute } from "next";
-import { getAllSlugs } from "@/lib/api";
+import { getAllSlugs, getCategoriesV2 } from "@/lib/api";
 
 // sitemap 자체를 1시간 단위로 재생성. 신규 글 즉시 반영은 on-demand (revalidatePath("/sitemap.xml")) 가 담당.
 export const revalidate = 3600;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myblog.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  let postEntries: MetadataRoute.Sitemap = [];
+  const [posts, categories] = await Promise.all([
+    getAllSlugs().catch(() => []),
+    getCategoriesV2().catch(() => []),
+  ]);
 
-  try {
-    const posts = await getAllSlugs();
-    postEntries = posts.map((post) => ({
-      url: `${SITE_URL}/posts/${post.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    }));
-  } catch {
-    // 백엔드 미실행 시 게시글 항목 없이 기본 항목만 반환
-  }
+  const postEntries: MetadataRoute.Sitemap = posts.map((post) => ({
+    url: `${SITE_URL}/posts/${post.slug}`,
+    lastModified: new Date(post.updateDate),
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  }));
+
+  const categoryEntries: MetadataRoute.Sitemap = categories.map((c) => ({
+    url: `${SITE_URL}/category/${encodeURIComponent(c.name)}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
 
   return [
     {
@@ -29,5 +34,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     ...postEntries,
+    ...categoryEntries,
   ];
 }

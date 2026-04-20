@@ -24,9 +24,17 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { name } = await params;
   const decoded = decodeURIComponent(name);
+  const canonical = `/category/${encodeURIComponent(decoded)}`;
   return {
     title: `${decoded} 게시글`,
     description: `${decoded} 카테고리의 게시글 목록입니다.`,
+    alternates: { canonical },
+    openGraph: {
+      type: "website",
+      title: `${decoded} 게시글`,
+      description: `${decoded} 카테고리의 게시글 목록입니다.`,
+      url: canonical,
+    },
   };
 }
 

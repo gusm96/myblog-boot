@@ -4,6 +4,7 @@ import { SearchContent } from "@/components/posts/SearchContent";
 export const metadata = {
   title: "검색",
   description: "게시글 검색 결과",
+  robots: { index: false, follow: true },
 };
 
 export default function SearchPage() {

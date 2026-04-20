@@ -1,16 +1,31 @@
-/**
- * 게시글 본문 렌더러 — Server Component
- * 백엔드에서 온 신뢰된 HTML을 그대로 렌더링 (Tiptap 에디터 출력)
- */
+import parse, { type DOMNode, Element } from "html-react-parser";
+import Image from "next/image";
+
 interface PostContentProps {
   content: string;
 }
 
 export default function PostContent({ content }: PostContentProps) {
   return (
-    <div
-      className="post-content"
-      dangerouslySetInnerHTML={{ __html: content }}
-    />
+    <div className="post-content">
+      {parse(content, {
+        replace: (node: DOMNode) => {
+          if (node instanceof Element && node.name === "img") {
+            const { src, alt = "" } = node.attribs;
+            if (!src) return;
+            return (
+              <Image
+                src={src}
+                alt={alt}
+                width={1200}
+                height={675}
+                sizes="(max-width: 768px) 100vw, 768px"
+                style={{ width: "100%", height: "auto" }}
+              />
+            );
+          }
+        },
+      })}
+    </div>
   );
 }

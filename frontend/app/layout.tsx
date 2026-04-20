@@ -1,10 +1,27 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Noto_Sans_KR, JetBrains_Mono } from "next/font/google";
 import { Providers } from "@/providers/Providers";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { buildOrganizationSchema } from "@/lib/seo";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000/";
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+
+const sans = Noto_Sans_KR({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-sans",
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+  variable: "--font-mono",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -35,9 +52,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={`${sans.variable} ${mono.variable}`}>
       <body>
         <Providers>{children}</Providers>
+        <JsonLd data={buildOrganizationSchema(SITE_URL)} />
         {/* Font Awesome kit */}
         <Script
           src="https://kit.fontawesome.com/9cdfdf3db8.js"

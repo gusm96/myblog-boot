@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import dayjs from "dayjs";
 import { getPostBySlug, getAllSlugs } from "@/lib/api";
+import { buildArticleSchema, buildBreadcrumbSchema } from "@/lib/seo";
 import PostContent from "@/components/posts/PostContent";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { PostLike } from "@/components/posts/PostLike";
 import { CommentSection } from "@/components/comments/CommentSection";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 // ISR: 60초마다 캐시 갱신
 export const revalidate = 60;
@@ -30,15 +34,27 @@ export async function generateMetadata({
 
   try {
     const post = await getPostBySlug(slug);
+    const ogImages = post.thumbnailUrl
+      ? [{ url: post.thumbnailUrl, width: 1200, height: 630 }]
+      : [{ url: "/og-default.png", width: 1200, height: 630 }];
     return {
       title: post.title,
       description: post.metaDescription,
+      alternates: { canonical: `/posts/${post.slug}` },
       openGraph: {
         title: post.title,
         description: post.metaDescription ?? "",
         type: "article",
+        url: `/posts/${post.slug}`,
         publishedTime: post.createDate,
-        ...(post.thumbnailUrl ? { images: [{ url: post.thumbnailUrl }] } : {}),
+        modifiedTime: post.updateDate ?? post.createDate,
+        images: ogImages,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: post.title,
+        description: post.metaDescription ?? "",
+        images: ogImages.map((img) => img.url),
       },
       robots: {
         index: true,
@@ -73,6 +89,8 @@ export default async function PostPage({
 
   return (
     <article>
+      <JsonLd data={buildArticleSchema(post, SITE_URL)} />
+      <JsonLd data={buildBreadcrumbSchema(post, SITE_URL)} />
       <h1
         style={{
           fontSize: "1.5rem",
