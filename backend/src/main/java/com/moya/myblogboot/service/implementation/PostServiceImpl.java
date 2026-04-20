@@ -104,7 +104,7 @@ public class PostServiceImpl implements PostService {
         }
         Post result = postRepository.save(newPost);
         category.addPost(result);
-        eventPublisher.publishEvent(new PostChangeEvent(this, "CREATED", result.getId()));
+        eventPublisher.publishEvent(new PostChangeEvent(this, "CREATED", result.getId(), result.getSlug()));
         return result.getId();
     }
 
@@ -118,7 +118,7 @@ public class PostServiceImpl implements PostService {
         post.updatePost(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent(),
                 slug, modifiedDto.getMetaDescription(), modifiedDto.getMetaKeywords(), modifiedDto.getThumbnailUrl());
         postCacheService.updatePost(postCacheService.getPostFromCache(post.getId()), post);
-        eventPublisher.publishEvent(new PostChangeEvent(this, "UPDATED", postId));
+        eventPublisher.publishEvent(new PostChangeEvent(this, "UPDATED", postId, post.getSlug()));
         return postId;
     }
 
@@ -129,7 +129,7 @@ public class PostServiceImpl implements PostService {
         verifyPostAccessAuthorization(post.getAdmin().getId(), adminId);
         post.deletePost();
         postCacheService.updatePost(postCacheService.getPostFromCache(post.getId()), post);
-        eventPublisher.publishEvent(new PostChangeEvent(this, "DELETED", postId));
+        eventPublisher.publishEvent(new PostChangeEvent(this, "DELETED", postId, post.getSlug()));
     }
 
     @Override

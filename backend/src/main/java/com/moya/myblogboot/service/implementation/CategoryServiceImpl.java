@@ -1,5 +1,6 @@
 package com.moya.myblogboot.service.implementation;
 
+import com.moya.myblogboot.domain.event.CategoryChangeEvent;
 import com.moya.myblogboot.dto.category.CategoriesResDto;
 import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.dto.category.CategoryResDto;
@@ -11,6 +12,7 @@ import com.moya.myblogboot.repository.CategoryRepository;
 import com.moya.myblogboot.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public List<CategoryResDto> retrieveAll() {
@@ -35,7 +38,8 @@ public class CategoryServiceImpl implements CategoryService {
             throw new DuplicateException(ErrorCode.DUPLICATE_CATEGORY);
         }
         Category category = Category.builder().name(categoryName).build();
-        categoryRepository.save(category);
+        Category saved = categoryRepository.save(category);
+        eventPublisher.publishEvent(new CategoryChangeEvent(this, "CREATED", saved.getId()));
     }
 
     @Override
@@ -56,6 +60,7 @@ public class CategoryServiceImpl implements CategoryService {
             throw new DuplicateException(ErrorCode.DUPLICATE_CATEGORY);
         }
         category.editCategory(modifiedCategoryName);
+        eventPublisher.publishEvent(new CategoryChangeEvent(this, "UPDATED", categoryId));
     }
 
     @Override
@@ -66,6 +71,7 @@ public class CategoryServiceImpl implements CategoryService {
             throw new BusinessException(ErrorCode.CATEGORY_HAS_POSTS);
         }
         categoryRepository.delete(category);
+        eventPublisher.publishEvent(new CategoryChangeEvent(this, "DELETED", categoryId));
     }
 
     @Override

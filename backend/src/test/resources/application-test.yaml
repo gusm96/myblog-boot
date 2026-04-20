@@ -28,6 +28,11 @@ spring:
   scheduler:
     enabled: false
 
+# revalidation webhook — 테스트 환경에서 외부 호출 차단
+revalidate:
+  webhook:
+    enabled: false
+
 ## Logging
 logging:
   level:
