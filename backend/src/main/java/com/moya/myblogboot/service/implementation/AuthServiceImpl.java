@@ -12,6 +12,7 @@ import com.moya.myblogboot.exception.custom.UnauthorizedException;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.JwtUtil;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,16 +57,15 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public TokenInfo getTokenInfo(String token) {
-        tokenIsExpired(token);
         return JwtUtil.getTokenInfo(token, secret);
     }
 
     @Override
-    public boolean tokenIsExpired(String token) {
+    public boolean isTokenValid(String token) {
         try {
             JwtUtil.validateToken(token, secret);
             return true;
-        } catch (Exception e) {
+        } catch (ExpiredTokenException | JwtException | IllegalArgumentException e) {
             return false;
         }
     }
