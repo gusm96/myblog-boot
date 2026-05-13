@@ -3,6 +3,7 @@ package com.moya.myblogboot.configuration;
 import com.moya.myblogboot.constants.ShouldNotFilterPath;
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
+import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.JwtUtil;
 import io.jsonwebtoken.MalformedJwtException;
@@ -48,11 +49,14 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         try {
-            JwtUtil.validateToken(token, secret);
+            JwtUtil.validateAccessToken(token, secret);
         } catch (SecurityException e) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
             return;
         } catch (ExpiredTokenException e) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+            return;
+        } catch (InvalidateTokenException e) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
             return;
         } catch (MalformedJwtException e) {
