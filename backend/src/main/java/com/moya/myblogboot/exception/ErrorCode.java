@@ -21,6 +21,7 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A004", "유효하지 않은 토큰입니다."),
     EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "A005", "리프레시 토큰이 만료되었습니다."),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "A006", "비밀번호가 일치하지 않습니다."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A007", "아이디 또는 비밀번호가 일치하지 않습니다."),
 
     // 어드민
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "회원이 존재하지 않습니다."),

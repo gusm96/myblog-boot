@@ -177,7 +177,7 @@ class AuthControllerTest extends AbstractContainerBaseTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/login")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(requestBody)))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.constants.ShouldNotFilterPath;
 import com.moya.myblogboot.domain.token.TokenInfo;
+import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
@@ -44,23 +45,23 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = authorization.substring(7);
         if (token.isEmpty()) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 존재하지 않습니다.");
+            SecurityErrorResponseWriter.write(response, ErrorCode.INVALID_TOKEN);
             return;
         }
 
         try {
             JwtUtil.validateAccessToken(token, secret);
         } catch (SecurityException e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+            SecurityErrorResponseWriter.write(response, ErrorCode.INVALID_TOKEN);
             return;
         } catch (ExpiredTokenException e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+            SecurityErrorResponseWriter.write(response, ErrorCode.EXPIRED_TOKEN);
             return;
         } catch (InvalidateTokenException e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+            SecurityErrorResponseWriter.write(response, e.getErrorCode());
             return;
         } catch (MalformedJwtException e) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+            SecurityErrorResponseWriter.write(response, ErrorCode.INVALID_TOKEN);
             return;
         }
 

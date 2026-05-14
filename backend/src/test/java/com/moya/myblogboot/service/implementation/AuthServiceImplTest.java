@@ -4,7 +4,6 @@ import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.domain.token.Token;
-import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.exception.custom.UnauthorizedException;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.service.AuthService;
@@ -67,7 +66,7 @@ class AuthServiceImplTest extends AbstractContainerBaseTest {
                 .password("testPassword")
                 .build();
 
-        assertThrows(EntityNotFoundException.class, () -> authService.adminLogin(notExistsUsername));
+        assertThrows(UnauthorizedException.class, () -> authService.adminLogin(notExistsUsername));
         assertThrows(UnauthorizedException.class, () -> authService.adminLogin(wrongPassword));
         Object result = authService.adminLogin(validLogin);
         assertTrue(result instanceof Token);

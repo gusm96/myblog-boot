@@ -5,7 +5,6 @@ import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.exception.ErrorCode;
-import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
@@ -40,9 +39,14 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Token adminLogin(LoginReqDto loginReqDto) {
         Admin admin = adminRepository.findByUsername(loginReqDto.getUsername())
-                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-        if (!passwordEncoder.matches(loginReqDto.getPassword(), admin.getPassword()))
-            throw new UnauthorizedException(ErrorCode.INVALID_PASSWORD);
+                .orElseThrow(() -> {
+                    log.warn("Admin login failed: username not found");
+                    return new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS);
+                });
+        if (!passwordEncoder.matches(loginReqDto.getPassword(), admin.getPassword())) {
+            log.warn("Admin login failed: invalid password");
+            throw new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS);
+        }
         return JwtUtil.createToken(admin, accessTokenExpiration, refreshTokenExpiration, secret);
     }
 
