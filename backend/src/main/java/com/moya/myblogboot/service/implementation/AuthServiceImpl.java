@@ -8,10 +8,12 @@ import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
+import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.exception.custom.UnauthorizedException;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.JwtUtil;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,25 +49,25 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String reissuingAccessToken(String refreshToken) {
         try {
-            JwtUtil.validateToken(refreshToken, secret);
+            JwtUtil.validateRefreshToken(refreshToken, secret);
         } catch (ExpiredTokenException e) {
             throw new ExpiredRefreshTokenException();
         }
-        return JwtUtil.reissuingToken(getTokenInfo(refreshToken), accessTokenExpiration, secret);
+        return JwtUtil.reissuingToken(JwtUtil.getTokenInfo(refreshToken, secret), accessTokenExpiration, secret);
     }
 
     @Override
     public TokenInfo getTokenInfo(String token) {
-        tokenIsExpired(token);
+        JwtUtil.validateAccessToken(token, secret);
         return JwtUtil.getTokenInfo(token, secret);
     }
 
     @Override
-    public boolean tokenIsExpired(String token) {
+    public boolean isTokenValid(String token) {
         try {
-            JwtUtil.validateToken(token, secret);
+            JwtUtil.validateAccessToken(token, secret);
             return true;
-        } catch (Exception e) {
+        } catch (ExpiredTokenException | InvalidateTokenException | JwtException | IllegalArgumentException e) {
             return false;
         }
     }

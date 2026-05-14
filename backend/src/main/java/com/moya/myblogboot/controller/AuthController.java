@@ -57,7 +57,7 @@ public class AuthController {
 
     @GetMapping("/api/v1/token-validation")
     public ResponseEntity<Boolean> tokenValidate(HttpServletRequest request) {
-        return ResponseEntity.ok().body(authService.tokenIsExpired(getToken(request)));
+        return ResponseEntity.ok().body(authService.isTokenValid(getToken(request)));
     }
 
     private static String getToken(HttpServletRequest request) {

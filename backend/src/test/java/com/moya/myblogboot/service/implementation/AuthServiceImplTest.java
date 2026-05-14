@@ -88,6 +88,20 @@ class AuthServiceImplTest extends AbstractContainerBaseTest {
     }
 
     @Test
+    @DisplayName("유효한 토큰이면 true, 유효하지 않은 토큰이면 false를 반환한다")
+    void isTokenValid() {
+        LoginReqDto loginReqDto = LoginReqDto.builder()
+                .username("testMember")
+                .password("testPassword")
+                .build();
+
+        Token token = authService.adminLogin(loginReqDto);
+
+        assertTrue(authService.isTokenValid(token.getAccess_token()));
+        assertFalse(authService.isTokenValid("invalid-token"));
+    }
+
+    @Test
     @DisplayName("임시번호 생성")
     void createTemporaryNumber() {
         String temporaryNumber = String.valueOf(ThreadLocalRandom.current().nextLong());

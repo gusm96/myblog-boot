@@ -12,5 +12,5 @@ public interface AuthService {
 
     TokenInfo getTokenInfo(String token);
 
-    boolean tokenIsExpired(String token);
+    boolean isTokenValid(String token);
 }

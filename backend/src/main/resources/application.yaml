@@ -44,6 +44,15 @@ post:
     hmac:
       secret: ${POST_LIKE_HMAC_SECRET}
 
+# Next.js on-demand revalidation webhook
+revalidate:
+  webhook:
+    enabled: ${REVALIDATE_WEBHOOK_ENABLED:true}
+    url: ${REVALIDATE_WEBHOOK_URL:http://localhost:3000/api/revalidate}
+    secret: ${REVALIDATE_SECRET:}
+    connect-timeout-ms: ${REVALIDATE_CONNECT_TIMEOUT:2000}
+    read-timeout-ms: ${REVALIDATE_READ_TIMEOUT:3000}
+
 # Blog metadata (RSS feed)
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}

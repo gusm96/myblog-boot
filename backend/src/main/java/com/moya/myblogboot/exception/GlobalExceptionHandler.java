@@ -17,6 +17,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.util.List;
 
+import static com.moya.myblogboot.constants.CookieName.REFRESH_TOKEN_COOKIE;
+
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -36,7 +38,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleExpiredRefreshTokenException(
             HttpServletRequest request, HttpServletResponse response,
             ExpiredRefreshTokenException e) {
-        Cookie refreshTokenCookie = CookieUtil.findCookie(request, "refresh_token_key");
+        Cookie refreshTokenCookie = CookieUtil.findCookie(request, REFRESH_TOKEN_COOKIE);
         if (refreshTokenCookie != null) {
             CookieUtil.deleteCookie(response, refreshTokenCookie);
         }
