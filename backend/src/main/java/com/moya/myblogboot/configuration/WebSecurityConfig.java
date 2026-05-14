@@ -1,6 +1,7 @@
 package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.service.AuthService;
+import com.moya.myblogboot.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -51,6 +52,12 @@ public class WebSecurityConfig {
                 )
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) ->
+                                SecurityErrorResponseWriter.write(response, ErrorCode.UNAUTHORIZED))
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                SecurityErrorResponseWriter.write(response, ErrorCode.ACCESS_DENIED))
                 )
                 .addFilterBefore(new JwtFilter(authService, secret), UsernamePasswordAuthenticationFilter.class)
                 .build();
