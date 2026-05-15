@@ -10,4 +10,8 @@ public class RedisKey {
     public static final String TODAY_COUNT_KEY = "today";
     public static final String TOTAL_COUNT_KEY = "total";
     public static final String YESTERDAY_COUNT_KEY = "yesterday";
+
+    public static final String REFRESH_FAMILY_KEY = "refresh:{%s}:family";
+    public static final String REFRESH_TOKEN_KEY = "refresh:{%s}:token:%s";
+    public static final String REFRESH_ROTATION_RESPONSE_KEY = "refresh:{%s}:rotation-response:%s";
 }

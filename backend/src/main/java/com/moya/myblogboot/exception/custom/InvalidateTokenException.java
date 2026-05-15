@@ -7,4 +7,8 @@ public class InvalidateTokenException extends BusinessException {
     public InvalidateTokenException() {
         super(ErrorCode.INVALID_TOKEN);
     }
+
+    public InvalidateTokenException(ErrorCode errorCode) {
+        super(errorCode);
+    }
 }

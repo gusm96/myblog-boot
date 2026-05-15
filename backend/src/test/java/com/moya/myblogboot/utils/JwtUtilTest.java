@@ -2,7 +2,7 @@ package com.moya.myblogboot.utils;
 
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.token.Token;
-import com.moya.myblogboot.domain.token.TokenInfo;
+import com.moya.myblogboot.domain.token.RefreshTokenClaims;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,14 +36,27 @@ class JwtUtilTest {
     @DisplayName("Reissued token from refresh token has access token type")
     void reissuingTokenCreatesAccessToken() {
         Token token = createToken();
-        TokenInfo tokenInfo = JwtUtil.getTokenInfo(token.getRefresh_token(), SECRET);
+        RefreshTokenClaims tokenInfo = JwtUtil.parseRefreshToken(token.getRefresh_token(), SECRET);
 
-        String reissuedAccessToken = JwtUtil.reissuingToken(tokenInfo, ACCESS_TOKEN_EXPIRATION, SECRET);
+        String reissuedAccessToken = JwtUtil.buildAccess(tokenInfo.memberPrimaryKey(), tokenInfo.role(),
+                ACCESS_TOKEN_EXPIRATION, SECRET);
 
         assertThatCode(() -> JwtUtil.validateAccessToken(reissuedAccessToken, SECRET))
                 .doesNotThrowAnyException();
         assertThatThrownBy(() -> JwtUtil.validateRefreshToken(reissuedAccessToken, SECRET))
                 .isInstanceOf(InvalidateTokenException.class);
+    }
+
+    @Test
+    @DisplayName("Refresh token has jti and familyId claims")
+    void refreshTokenClaims() {
+        String refreshToken = JwtUtil.buildRefresh(1L, "ROLE_ADMIN", "jti-1", "family-1",
+                REFRESH_TOKEN_EXPIRATION, SECRET);
+
+        RefreshTokenClaims claims = JwtUtil.parseRefreshToken(refreshToken, SECRET);
+
+        org.assertj.core.api.Assertions.assertThat(claims.jti()).isEqualTo("jti-1");
+        org.assertj.core.api.Assertions.assertThat(claims.familyId()).isEqualTo("family-1");
     }
 
     private Token createToken() {

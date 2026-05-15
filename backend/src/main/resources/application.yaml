@@ -29,6 +29,8 @@ jwt:
   secret: ${JWT_SECRET_KEY}
   access-token-expiration: 600000
   refresh-token-expiration: 1209600000
+  absolute-lifetime: ${JWT_ABSOLUTE_LIFETIME:2592000000}
+  grace-window-ms: ${JWT_GRACE_WINDOW_MS:10000}
 
 # Visitor HMAC
 visitor:
