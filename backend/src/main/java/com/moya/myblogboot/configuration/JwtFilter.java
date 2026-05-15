@@ -1,7 +1,7 @@
 package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.constants.ShouldNotFilterPath;
-import com.moya.myblogboot.domain.token.TokenInfo;
+import com.moya.myblogboot.domain.token.AccessTokenClaims;
 import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
@@ -65,14 +65,14 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        TokenInfo tokenInfo = JwtUtil.getTokenInfo(token, secret);
-        Long memberPrimaryKey = tokenInfo.getMemberPrimaryKey();
+        AccessTokenClaims tokenInfo = JwtUtil.parseAccessToken(token, secret);
+        Long memberPrimaryKey = tokenInfo.memberPrimaryKey();
 
         log.debug("{} {} | member={} role={}", request.getMethod(),
-                request.getRequestURI(), memberPrimaryKey, tokenInfo.getRole());
+                request.getRequestURI(), memberPrimaryKey, tokenInfo.role());
 
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(memberPrimaryKey, null, List.of(new SimpleGrantedAuthority(tokenInfo.getRole())));
+                new UsernamePasswordAuthenticationToken(memberPrimaryKey, null, List.of(new SimpleGrantedAuthority(tokenInfo.role())));
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         filterChain.doFilter(request, response);

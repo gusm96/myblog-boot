@@ -3,6 +3,7 @@ package com.moya.myblogboot.service.implementation;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.dto.auth.LoginReqDto;
+import com.moya.myblogboot.domain.token.ReissuedToken;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.exception.custom.UnauthorizedException;
 import com.moya.myblogboot.repository.AdminRepository;
@@ -81,9 +82,10 @@ class AuthServiceImplTest extends AbstractContainerBaseTest {
                 .build();
 
         Token token = authService.adminLogin(loginReqDto);
-        String result = authService.reissuingAccessToken(token.getRefresh_token());
+        ReissuedToken result = authService.reissuingAccessToken(token.getRefresh_token());
 
-        assertTrue(result instanceof String);
+        assertNotNull(result.accessToken());
+        assertNotNull(result.refreshToken());
     }
 
     @Test

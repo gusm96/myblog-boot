@@ -1,16 +1,19 @@
 package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.domain.admin.Admin;
+import com.moya.myblogboot.domain.token.AccessTokenClaims;
+import com.moya.myblogboot.domain.token.IssuedToken;
+import com.moya.myblogboot.domain.token.ReissuedToken;
 import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.domain.token.TokenInfo;
 import com.moya.myblogboot.exception.ErrorCode;
-import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.exception.custom.UnauthorizedException;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.service.AuthService;
+import com.moya.myblogboot.service.RefreshTokenService;
 import com.moya.myblogboot.utils.JwtUtil;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
@@ -28,13 +31,10 @@ public class AuthServiceImpl implements AuthService {
 
     private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     @Value("${jwt.secret}")
     private String secret;
-    @Value("${jwt.access-token-expiration}")
-    private Long accessTokenExpiration;
-    @Value("${jwt.refresh-token-expiration}")
-    private Long refreshTokenExpiration;
 
     @Override
     public Token adminLogin(LoginReqDto loginReqDto) {
@@ -47,23 +47,25 @@ public class AuthServiceImpl implements AuthService {
             log.warn("Admin login failed: invalid password");
             throw new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS);
         }
-        return JwtUtil.createToken(admin, accessTokenExpiration, refreshTokenExpiration, secret);
+        IssuedToken issuedToken = refreshTokenService.issueOnLogin(admin);
+        return Token.builder()
+                .access_token(issuedToken.accessToken())
+                .refresh_token(issuedToken.refreshToken())
+                .build();
     }
 
     @Override
-    public String reissuingAccessToken(String refreshToken) {
-        try {
-            JwtUtil.validateRefreshToken(refreshToken, secret);
-        } catch (ExpiredTokenException e) {
-            throw new ExpiredRefreshTokenException();
-        }
-        return JwtUtil.reissuingToken(JwtUtil.getTokenInfo(refreshToken, secret), accessTokenExpiration, secret);
+    public ReissuedToken reissuingAccessToken(String refreshToken) {
+        return refreshTokenService.rotate(refreshToken);
     }
 
     @Override
     public TokenInfo getTokenInfo(String token) {
-        JwtUtil.validateAccessToken(token, secret);
-        return JwtUtil.getTokenInfo(token, secret);
+        AccessTokenClaims claims = JwtUtil.parseAccessToken(token, secret);
+        return TokenInfo.builder()
+                .memberPrimaryKey(claims.memberPrimaryKey())
+                .role(claims.role())
+                .build();
     }
 
     @Override

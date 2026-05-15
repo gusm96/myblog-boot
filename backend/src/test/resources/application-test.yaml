@@ -53,6 +53,8 @@ jwt:
   secret: ${JWT_SECRET_KEY:test-jwt-secret-key-for-testing-environment-only}
   access-token-expiration: 600000
   refresh-token-expiration: 1209600000
+  absolute-lifetime: 2592000000
+  grace-window-ms: 10000
 
 # Visitor HMAC
 visitor:
