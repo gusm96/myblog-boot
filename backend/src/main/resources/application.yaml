@@ -55,6 +55,22 @@ revalidate:
     connect-timeout-ms: ${REVALIDATE_CONNECT_TIMEOUT:2000}
     read-timeout-ms: ${REVALIDATE_READ_TIMEOUT:3000}
 
+security:
+  login-attempt:
+    window-ms: ${LOGIN_ATTEMPT_WINDOW_MS:600000}
+    base-delay-ms: ${LOGIN_ATTEMPT_BASE_DELAY_MS:200}
+    max-delay-ms: ${LOGIN_ATTEMPT_MAX_DELAY_MS:2000}
+    trusted-proxy: ${LOGIN_ATTEMPT_TRUSTED_PROXY:false}
+    lock-stages:
+      - failure-count: 5
+        lock-ms: ${LOGIN_ATTEMPT_LOCK_5_MS:60000}
+      - failure-count: 10
+        lock-ms: ${LOGIN_ATTEMPT_LOCK_10_MS:300000}
+      - failure-count: 15
+        lock-ms: ${LOGIN_ATTEMPT_LOCK_15_MS:900000}
+      - failure-count: 20
+        lock-ms: ${LOGIN_ATTEMPT_LOCK_20_MS:3600000}
+
 # Blog metadata (RSS feed)
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}

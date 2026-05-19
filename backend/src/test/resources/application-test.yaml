@@ -33,6 +33,11 @@ revalidate:
   webhook:
     enabled: false
 
+security:
+  login-attempt:
+    base-delay-ms: 1
+    max-delay-ms: 2
+
 ## Logging
 logging:
   level:

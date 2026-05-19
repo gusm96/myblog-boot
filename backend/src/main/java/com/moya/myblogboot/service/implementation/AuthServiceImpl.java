@@ -5,48 +5,50 @@ import com.moya.myblogboot.domain.token.AccessTokenClaims;
 import com.moya.myblogboot.domain.token.IssuedToken;
 import com.moya.myblogboot.domain.token.ReissuedToken;
 import com.moya.myblogboot.dto.auth.LoginReqDto;
+import com.moya.myblogboot.domain.login.LoginAttemptResult;
 import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.domain.token.TokenInfo;
-import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
+import com.moya.myblogboot.exception.custom.TooManyLoginAttemptsException;
 import com.moya.myblogboot.exception.custom.UnauthorizedException;
-import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.service.AuthService;
+import com.moya.myblogboot.service.LoginAttemptService;
 import com.moya.myblogboot.service.RefreshTokenService;
 import com.moya.myblogboot.utils.JwtUtil;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
 
-    private final AdminRepository adminRepository;
-    private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
+    private final LoginAttemptService loginAttemptService;
+    private final AuthCredentialVerifier authCredentialVerifier;
 
     @Value("${jwt.secret}")
     private String secret;
 
     @Override
-    public Token adminLogin(LoginReqDto loginReqDto) {
-        Admin admin = adminRepository.findByUsername(loginReqDto.getUsername())
-                .orElseThrow(() -> {
-                    log.warn("Admin login failed: username not found");
-                    return new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS);
-                });
-        if (!passwordEncoder.matches(loginReqDto.getPassword(), admin.getPassword())) {
-            log.warn("Admin login failed: invalid password");
-            throw new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS);
+    public Token adminLogin(LoginReqDto loginReqDto, String clientIp) {
+        loginAttemptService.assertNotLocked(loginReqDto.getUsername(), clientIp);
+        Admin admin;
+        try {
+            admin = authCredentialVerifier.verify(loginReqDto);
+        } catch (UnauthorizedException e) {
+            LoginAttemptResult result = loginAttemptService.onFailure(loginReqDto.getUsername(), clientIp);
+            if (result.locked()) {
+                throw new TooManyLoginAttemptsException(result.retryAfterSeconds());
+            }
+            loginAttemptService.applyProgressiveDelay(result.count());
+            throw e;
         }
+        loginAttemptService.onSuccess(loginReqDto.getUsername(), clientIp);
         IssuedToken issuedToken = refreshTokenService.issueOnLogin(admin);
         return Token.builder()
                 .access_token(issuedToken.accessToken())
