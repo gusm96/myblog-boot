@@ -11,8 +11,8 @@ public class ShouldNotFilterPath {
      */
     private static final List<String> EXCLUDE_ALL_METHODS = Arrays.asList(
             "/api/v1/login",            // POST  — 로그인
-            "/api/v1/logout",           // GET/POST — 로그아웃
-            "/api/v1/reissuing-token",  // GET/POST — RefreshToken 회전 및 AccessToken 재발급
+            "/api/v1/logout",           // POST — 로그아웃
+            "/api/v1/reissuing-token",  // POST — RefreshToken 회전 및 AccessToken 재발급
             "/api/v2/likes",            // GET/POST/DELETE — 쿠키 기반, JWT 불필요
             "/api/v2/visitor-count",    // GET   — 방문자 수 조회
             "/api/v2/categories",       // GET   — 공개 카테고리 목록 (V2)

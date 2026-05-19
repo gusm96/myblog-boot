@@ -56,6 +56,11 @@ revalidate:
     read-timeout-ms: ${REVALIDATE_READ_TIMEOUT:3000}
 
 security:
+  cookie:
+    secure: ${COOKIE_SECURE:true}
+    same-site: ${COOKIE_SAMESITE:Lax}
+    domain: ${COOKIE_DOMAIN:}
+    path: ${COOKIE_PATH:/}
   login-attempt:
     window-ms: ${LOGIN_ATTEMPT_WINDOW_MS:600000}
     base-delay-ms: ${LOGIN_ATTEMPT_BASE_DELAY_MS:200}

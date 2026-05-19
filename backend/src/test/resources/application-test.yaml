@@ -34,6 +34,11 @@ revalidate:
     enabled: false
 
 security:
+  cookie:
+    secure: false
+    same-site: Lax
+    domain:
+    path: /
   login-attempt:
     base-delay-ms: 1
     max-delay-ms: 2

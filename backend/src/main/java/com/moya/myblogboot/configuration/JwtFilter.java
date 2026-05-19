@@ -2,19 +2,18 @@ package com.moya.myblogboot.configuration;
 
 import com.moya.myblogboot.constants.ShouldNotFilterPath;
 import com.moya.myblogboot.domain.token.AccessTokenClaims;
-import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
+import com.moya.myblogboot.utils.CookieFactory;
 import com.moya.myblogboot.utils.JwtUtil;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.SecurityException;
+import com.moya.myblogboot.utils.TokenResolver;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,42 +25,32 @@ import java.util.List;
 
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
-    private String secret;
-    private AuthService authService;
+    private final String secret;
+    private final AuthService authService;
+    private final TokenResolver tokenResolver;
+    private final CookieFactory cookieFactory;
 
-    public JwtFilter(AuthService authService, String secret) {
+    public JwtFilter(AuthService authService, String secret,
+                     TokenResolver tokenResolver, CookieFactory cookieFactory) {
         this.authService = authService;
         this.secret = secret;
+        this.tokenResolver = tokenResolver;
+        this.cookieFactory = cookieFactory;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-        if (authorization == null || !authorization.toLowerCase().startsWith("bearer ")) {
+        String token = tokenResolver.resolve(request);
+        if (token == null) {
             filterChain.doFilter(request, response);
-            return;
-        }
-
-        String token = authorization.substring(7);
-        if (token.isEmpty()) {
-            SecurityErrorResponseWriter.write(response, ErrorCode.INVALID_TOKEN);
             return;
         }
 
         try {
             JwtUtil.validateAccessToken(token, secret);
-        } catch (SecurityException e) {
-            SecurityErrorResponseWriter.write(response, ErrorCode.INVALID_TOKEN);
-            return;
-        } catch (ExpiredTokenException e) {
-            SecurityErrorResponseWriter.write(response, ErrorCode.EXPIRED_TOKEN);
-            return;
-        } catch (InvalidateTokenException e) {
-            SecurityErrorResponseWriter.write(response, e.getErrorCode());
-            return;
-        } catch (MalformedJwtException e) {
-            SecurityErrorResponseWriter.write(response, ErrorCode.INVALID_TOKEN);
+        } catch (ExpiredTokenException | InvalidateTokenException | JwtException | IllegalArgumentException e) {
+            response.addCookie(cookieFactory.expireAccessTokenCookie());
+            filterChain.doFilter(request, response);
             return;
         }
 

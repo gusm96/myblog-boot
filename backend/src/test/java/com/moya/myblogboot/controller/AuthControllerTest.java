@@ -7,6 +7,7 @@ import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.domain.token.Token;
+import com.moya.myblogboot.utils.JwtUtil;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.service.AuthService;
 import jakarta.persistence.EntityManager;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -38,6 +40,8 @@ import static org.springframework.restdocs.headers.HeaderDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static com.moya.myblogboot.constants.CookieName.ACCESS_TOKEN_COOKIE;
+import static com.moya.myblogboot.constants.CookieName.REFRESH_TOKEN_COOKIE;
 
 @Transactional
 @SpringBootTest
@@ -63,6 +67,8 @@ class AuthControllerTest extends AbstractContainerBaseTest {
     private ObjectMapper objectMapper;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+    @Value("${jwt.secret}")
+    private String secret;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext, RestDocumentationContextProvider restDocumentationContextProvider) {
@@ -96,44 +102,52 @@ class AuthControllerTest extends AbstractContainerBaseTest {
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.cookie().exists(ACCESS_TOKEN_COOKIE))
+                .andExpect(MockMvcResultMatchers.cookie().httpOnly(ACCESS_TOKEN_COOKIE, true))
+                .andExpect(MockMvcResultMatchers.cookie().exists(REFRESH_TOKEN_COOKIE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.expiresIn").value(600))
                 .andDo(restDocs.document(
                         requestFields(
                                 fieldWithPath("username").description("관리자 아이디"),
                                 fieldWithPath("password").description("비밀번호")
                         ),
                         responseHeaders(
-                                headerWithName(HttpHeaders.SET_COOKIE).description("Refresh Token (HttpOnly Cookie)")
+                                headerWithName(HttpHeaders.SET_COOKIE).description("Access/Refresh Token (HttpOnly Cookie)")
                         ),
-                        responseBody()
+                        responseFields(
+                                fieldWithPath("tokenType").description("토큰 타입"),
+                                fieldWithPath("expiresIn").description("Access Token 만료까지 남은 초")
+                        )
                 ));
     }
 
     @Test
     @DisplayName("로그아웃 테스트")
     void logout() throws Exception {
-        String refreshToken = getToken().getRefresh_token();
+        Token token = getToken();
 
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/logout")
-                .cookie(new Cookie("refresh_token", refreshToken)));
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/logout")
+                .cookie(new Cookie(REFRESH_TOKEN_COOKIE, token.getRefresh_token()))
+                .cookie(new Cookie(ACCESS_TOKEN_COOKIE, token.getAccess_token())));
 
         resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk());
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.cookie().maxAge(REFRESH_TOKEN_COOKIE, 0))
+                .andExpect(MockMvcResultMatchers.cookie().maxAge(ACCESS_TOKEN_COOKIE, 0));
     }
 
     @Test
     @DisplayName("토큰 권한 확인 테스트")
     void getTokenFromRole() throws Exception {
-        String accessToken = "bearer " + getToken().getAccess_token();
+        String accessToken = getToken().getAccess_token();
 
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-role")
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .cookie(new Cookie(ACCESS_TOKEN_COOKIE, accessToken)));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andDo(restDocs.document(
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token")
-                        ),
                         responseBody()
                 ));
     }
@@ -143,8 +157,30 @@ class AuthControllerTest extends AbstractContainerBaseTest {
     void reissuingAccessToken() throws Exception {
         String refreshToken = getToken().getRefresh_token();
 
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/reissuing-token")
-                .cookie(new Cookie("refresh_token", refreshToken)));
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/reissuing-token")
+                .cookie(new Cookie(REFRESH_TOKEN_COOKIE, refreshToken)));
+
+        resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.cookie().exists(ACCESS_TOKEN_COOKIE))
+                .andExpect(MockMvcResultMatchers.cookie().exists(REFRESH_TOKEN_COOKIE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.expiresIn").value(600))
+                .andDo(restDocs.document(
+                        responseFields(
+                                fieldWithPath("tokenType").description("토큰 타입"),
+                                fieldWithPath("expiresIn").description("Access Token 만료까지 남은 초")
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("토큰 만료 확인 테스트")
+    void tokenValidate() throws Exception {
+        String accessToken = getToken().getAccess_token();
+
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-validation")
+                .cookie(new Cookie(ACCESS_TOKEN_COOKIE, accessToken)));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -154,21 +190,63 @@ class AuthControllerTest extends AbstractContainerBaseTest {
     }
 
     @Test
-    @DisplayName("토큰 만료 확인 테스트")
-    void tokenValidate() throws Exception {
-        String accessToken = "bearer " + getToken().getAccess_token();
-
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-validation")
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
-
-        resultActions
+    @DisplayName("토큰 검증 - 토큰 없음 또는 잘못된 토큰은 false")
+    void tokenValidateWithoutValidCookie() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-validation"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token")
-                        ),
-                        responseBody()
-                ));
+                .andExpect(MockMvcResultMatchers.content().string("false"));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-validation")
+                        .cookie(new Cookie(ACCESS_TOKEN_COOKIE, "invalid-token")))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string("false"));
+    }
+
+    @Test
+    @DisplayName("토큰 권한 확인 - 토큰 없음 또는 잘못된 토큰은 401")
+    void tokenRoleWithoutValidCookie() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-role"))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-role")
+                        .cookie(new Cookie(ACCESS_TOKEN_COOKIE, "invalid-token")))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized())
+                .andExpect(MockMvcResultMatchers.cookie().maxAge(ACCESS_TOKEN_COOKIE, 0));
+    }
+
+    @Test
+    @DisplayName("Authorization 헤더만으로 보호 API를 호출하면 401")
+    void authorizationHeaderOnlyCannotAccessProtectedApi() throws Exception {
+        String accessToken = "Bearer " + getToken().getAccess_token();
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/categories")
+                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .contentType("application/json")
+                        .content("{\"categoryName\":\"new-category\"}"))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("GET 로그아웃과 GET 재발급은 405")
+    void getLogoutAndGetReissuingTokenAreMethodNotAllowed() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/logout"))
+                .andExpect(MockMvcResultMatchers.status().isMethodNotAllowed());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/reissuing-token"))
+                .andExpect(MockMvcResultMatchers.status().isMethodNotAllowed());
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 실패 시 auth 쿠키 전체를 삭제한다")
+    void reissuingTokenFailureDeletesAuthCookies() throws Exception {
+        String expiredRefreshToken = JwtUtil.buildRefresh(1L, "ROLE_ADMIN", "jti", "family", -1000L, secret);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/reissuing-token")
+                        .cookie(new Cookie(REFRESH_TOKEN_COOKIE, expiredRefreshToken))
+                        .cookie(new Cookie(ACCESS_TOKEN_COOKIE, "stale-access-token")))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized())
+                .andExpect(MockMvcResultMatchers.cookie().maxAge(REFRESH_TOKEN_COOKIE, 0))
+                .andExpect(MockMvcResultMatchers.cookie().maxAge(ACCESS_TOKEN_COOKIE, 0));
     }
 
     @Test
@@ -213,8 +291,10 @@ class AuthControllerTest extends AbstractContainerBaseTest {
     @Test
     @DisplayName("토큰 재발급 실패 - 리프레시 토큰 쿠키 없음")
     void reissuingTokenWithNoCookie() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/reissuing-token"))
-                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/reissuing-token"))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized())
+                .andExpect(MockMvcResultMatchers.cookie().maxAge(REFRESH_TOKEN_COOKIE, 0))
+                .andExpect(MockMvcResultMatchers.cookie().maxAge(ACCESS_TOKEN_COOKIE, 0));
     }
 
     private static LoginReqDto getTestAdminDto() {
