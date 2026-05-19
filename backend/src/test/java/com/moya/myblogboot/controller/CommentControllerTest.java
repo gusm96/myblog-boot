@@ -16,15 +16,16 @@ import com.moya.myblogboot.repository.PostRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
 import com.moya.myblogboot.repository.CommentRepository;
 import com.moya.myblogboot.service.AuthService;
+import com.moya.myblogboot.utils.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpHeaders;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler;
@@ -37,13 +38,14 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
+import jakarta.servlet.http.Cookie;
 
-import static org.springframework.restdocs.headers.HeaderDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static com.moya.myblogboot.constants.CookieName.ACCESS_TOKEN_COOKIE;
 
 @Transactional
 @SpringBootTest
@@ -62,6 +64,8 @@ class CommentControllerTest extends AbstractContainerBaseTest {
     @Autowired private PostRepository postRepository;
     @Autowired private RestDocumentationResultHandler restDocs;
     @Autowired private ObjectMapper objectMapper;
+    @Value("${jwt.secret}")
+    private String secret;
 
     private String accessToken;
     private Long parentId;
@@ -89,7 +93,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
                 .password("testPassword")
                 .build();
 
-        accessToken = "bearer " + authService.adminLogin(loginReqDto).getAccess_token();
+        accessToken = authService.adminLogin(loginReqDto).getAccess_token();
 
         Category category = Category.builder().name("category").build();
         Category saveCategory = categoryRepository.save(category);
@@ -183,7 +187,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
         comment.setComment("어드민 댓글입니다.");
 
         ResultActions resultActions = mockMvc.perform(post("/api/v1/comments/{postId}", postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(ACCESS_TOKEN_COOKIE, accessToken))
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(comment)));
 
@@ -192,9 +196,6 @@ class CommentControllerTest extends AbstractContainerBaseTest {
                 .andDo(restDocs.document(
                         pathParameters(
                                 parameterWithName("postId").description("게시글 ID")
-                        ),
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (어드민)")
                         ),
                         requestFields(
                                 fieldWithPath("comment").description("댓글 내용 (2~500자)"),
@@ -214,8 +215,8 @@ class CommentControllerTest extends AbstractContainerBaseTest {
     void writeComment_guest() throws Exception {
         CommentReqDto comment = new CommentReqDto();
         comment.setComment("비회원 댓글입니다.");
-        comment.setNickname("visitor");
-        comment.setPassword("visitPw1!");
+        comment.setNickname("guest");
+        comment.setPassword("1234");
 
         ResultActions resultActions = mockMvc.perform(post("/api/v1/comments/{postId}", postId)
                 .contentType("application/json")
@@ -232,7 +233,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
         updateReqDto.setComment("수정된 댓글입니다.");
 
         ResultActions resultActions = mockMvc.perform(put("/api/v1/comments/{commentId}", parentId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(ACCESS_TOKEN_COOKIE, accessToken))
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(updateReqDto)));
 
@@ -241,9 +242,6 @@ class CommentControllerTest extends AbstractContainerBaseTest {
                 .andDo(restDocs.document(
                         pathParameters(
                                 parameterWithName("commentId").description("수정할 댓글 ID")
-                        ),
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (어드민)")
                         ),
                         requestFields(
                                 fieldWithPath("comment").description("수정할 댓글 내용 (2~500자)"),
@@ -258,7 +256,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
         CommentDeleteReqDto deleteReqDto = new CommentDeleteReqDto();
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/comments/" + Long.MAX_VALUE)
-                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .cookie(new Cookie(ACCESS_TOKEN_COOKIE, accessToken))
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(deleteReqDto)))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -271,7 +269,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
         comment.setComment("test comment");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/comments/" + Long.MAX_VALUE)
-                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .cookie(new Cookie(ACCESS_TOKEN_COOKIE, accessToken))
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(comment)))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -283,7 +281,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
         CommentDeleteReqDto deleteReqDto = new CommentDeleteReqDto();
 
         ResultActions resultActions = mockMvc.perform(delete("/api/v1/comments/{commentId}", parentId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(ACCESS_TOKEN_COOKIE, accessToken))
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(deleteReqDto)));
 
@@ -292,10 +290,24 @@ class CommentControllerTest extends AbstractContainerBaseTest {
                 .andDo(restDocs.document(
                         pathParameters(
                                 parameterWithName("commentId").description("삭제할 댓글 ID")
-                        ),
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (어드민)")
                         )
                 ));
+    }
+
+    @Test
+    @DisplayName("만료된 access_token 쿠키가 있어도 비회원 댓글 작성은 가능하다")
+    void writeCommentWithExpiredAccessCookieAsGuest() throws Exception {
+        CommentReqDto comment = new CommentReqDto();
+        comment.setComment("비회원 댓글입니다.");
+        comment.setNickname("guest");
+        comment.setPassword("1234");
+        String expiredToken = JwtUtil.buildAccess(1L, "ROLE_ADMIN", -1000L, secret);
+
+        mockMvc.perform(post("/api/v1/comments/{postId}", postId)
+                        .cookie(new Cookie(ACCESS_TOKEN_COOKIE, expiredToken))
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(comment)))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.cookie().maxAge(ACCESS_TOKEN_COOKIE, 0));
     }
 }

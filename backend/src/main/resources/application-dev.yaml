@@ -28,3 +28,10 @@ logging:
       hibernate:
         sql: debug
         type: trace
+
+security:
+  cookie:
+    secure: false
+    same-site: Lax
+    domain:
+    path: /

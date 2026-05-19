@@ -1,11 +1,11 @@
 package com.moya.myblogboot.exception;
 
 import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
+import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.exception.custom.TooManyLoginAttemptsException;
-import com.moya.myblogboot.utils.CookieUtil;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
+import com.moya.myblogboot.utils.CookieFactory;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
@@ -15,15 +15,17 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
 
-import static com.moya.myblogboot.constants.CookieName.REFRESH_TOKEN_COOKIE;
-
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final CookieFactory cookieFactory;
 
     // 비즈니스 예외 — 모든 커스텀 예외를 한 번에 처리
     @ExceptionHandler(BusinessException.class)
@@ -48,14 +50,23 @@ public class GlobalExceptionHandler {
     // RefreshToken 만료 — 쿠키 삭제 후 에러 응답
     @ExceptionHandler(ExpiredRefreshTokenException.class)
     public ResponseEntity<ErrorResponse> handleExpiredRefreshTokenException(
-            HttpServletRequest request, HttpServletResponse response,
+            HttpServletResponse response,
             ExpiredRefreshTokenException e) {
-        Cookie refreshTokenCookie = CookieUtil.findCookie(request, REFRESH_TOKEN_COOKIE);
-        if (refreshTokenCookie != null) {
-            CookieUtil.deleteCookie(response, refreshTokenCookie);
-        }
+        cookieFactory.expireAuthCookies(response);
         ErrorCode errorCode = e.getErrorCode();
         log.warn("Refresh token expired: {}", errorCode.getCode());
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode));
+    }
+
+    @ExceptionHandler(InvalidateTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidateTokenException(
+            HttpServletResponse response,
+            InvalidateTokenException e) {
+        cookieFactory.expireAuthCookies(response);
+        ErrorCode errorCode = e.getErrorCode();
+        log.warn("Invalid token: {}", errorCode.getCode());
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ErrorResponse.of(errorCode));
@@ -104,6 +115,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(ErrorCode.INVALID_REQUEST_BODY));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+        log.warn("Method not supported: method={}, supported={}", e.getMethod(), e.getSupportedHttpMethods());
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED));
     }
 
     // 예상치 못한 예외 — 최후의 방어선
