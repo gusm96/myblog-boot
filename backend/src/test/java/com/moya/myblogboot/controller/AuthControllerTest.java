@@ -2,6 +2,7 @@ package com.moya.myblogboot.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moya.myblogboot.AbstractContainerBaseTest;
+import com.moya.myblogboot.RedisTestCleaner;
 import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.dto.auth.LoginReqDto;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
@@ -59,6 +61,8 @@ class AuthControllerTest extends AbstractContainerBaseTest {
     private RestDocumentationResultHandler restDocs;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext, RestDocumentationContextProvider restDocumentationContextProvider) {
@@ -71,6 +75,7 @@ class AuthControllerTest extends AbstractContainerBaseTest {
 
     @BeforeEach
     void before() {
+        RedisTestCleaner.deleteLoginAttemptKeys(stringRedisTemplate);
         Admin admin = Admin.builder()
                 .username("testuser")
                 .password(passwordEncoder.encode("testPassword"))
@@ -178,6 +183,31 @@ class AuthControllerTest extends AbstractContainerBaseTest {
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(requestBody)))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("로그인 실패 5회째부터 429와 Retry-After를 반환한다")
+    void loginBruteForceProtection() throws Exception {
+        LoginReqDto requestBody = LoginReqDto.builder()
+                .username("testuser")
+                .password("wrongPassword")
+                .build();
+
+        for (int i = 0; i < 4; i++) {
+            mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/login")
+                            .contentType("application/json")
+                            .content(objectMapper.writeValueAsString(requestBody)))
+                    .andExpect(MockMvcResultMatchers.status().isUnauthorized())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("A007"))
+                    .andExpect(MockMvcResultMatchers.header().doesNotExist(HttpHeaders.RETRY_AFTER));
+        }
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(requestBody)))
+                .andExpect(MockMvcResultMatchers.status().isTooManyRequests())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("A009"))
+                .andExpect(MockMvcResultMatchers.header().exists(HttpHeaders.RETRY_AFTER));
     }
 
     @Test

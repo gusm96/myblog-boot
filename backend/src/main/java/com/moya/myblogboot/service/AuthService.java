@@ -7,7 +7,11 @@ import com.moya.myblogboot.domain.token.ReissuedToken;
 
 public interface AuthService {
 
-    Token adminLogin(LoginReqDto loginReqDto);
+    default Token adminLogin(LoginReqDto loginReqDto) {
+        return adminLogin(loginReqDto, "unknown");
+    }
+
+    Token adminLogin(LoginReqDto loginReqDto, String clientIp);
 
     ReissuedToken reissuingAccessToken(String refreshToken);
 

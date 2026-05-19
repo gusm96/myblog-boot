@@ -1,12 +1,14 @@
 package com.moya.myblogboot.exception;
 
 import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
+import com.moya.myblogboot.exception.custom.TooManyLoginAttemptsException;
 import com.moya.myblogboot.utils.CookieUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -30,6 +32,16 @@ public class GlobalExceptionHandler {
         log.warn("Business exception: {} - {}", errorCode.getCode(), e.getMessage(), e);
         return ResponseEntity
                 .status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode));
+    }
+
+    @ExceptionHandler(TooManyLoginAttemptsException.class)
+    public ResponseEntity<ErrorResponse> handleTooManyLoginAttempts(TooManyLoginAttemptsException e) {
+        ErrorCode errorCode = e.getErrorCode();
+        log.warn("Too many login attempts: retryAfterSeconds={}", e.getRetryAfterSeconds());
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(e.getRetryAfterSeconds()))
                 .body(ErrorResponse.of(errorCode));
     }
 

@@ -23,6 +23,7 @@ public enum ErrorCode {
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "A006", "비밀번호가 일치하지 않습니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A007", "아이디 또는 비밀번호가 일치하지 않습니다."),
     REFRESH_TOKEN_REUSE_DETECTED(HttpStatus.UNAUTHORIZED, "A008", "리프레시 토큰 재사용이 감지되었습니다."),
+    TOO_MANY_LOGIN_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "A009", "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요."),
 
     // 어드민
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "회원이 존재하지 않습니다."),

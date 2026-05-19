@@ -7,6 +7,7 @@ import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.RefreshTokenService;
+import com.moya.myblogboot.utils.ClientIpResolver;
 import com.moya.myblogboot.utils.CookieUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,14 +28,16 @@ public class AuthController {
 
     private final AuthService authService;
     private final RefreshTokenService refreshTokenService;
+    private final ClientIpResolver clientIpResolver;
 
     @Value("${jwt.refresh-token-expiration}")
     private Long refreshTokenExpiration;
 
     @PostMapping("/api/v1/login")
     public ResponseEntity<String> login(@RequestBody @Valid LoginReqDto loginReqDto,
+                                        HttpServletRequest request,
                                         HttpServletResponse response) {
-        Token newToken = authService.adminLogin(loginReqDto);
+        Token newToken = authService.adminLogin(loginReqDto, clientIpResolver.resolve(request));
         addRefreshTokenCookie(response, newToken.getRefresh_token());
         return ResponseEntity.ok().body(newToken.getAccess_token());
     }

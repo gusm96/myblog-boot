@@ -5,6 +5,7 @@ import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.UnauthorizedException;
 import com.moya.myblogboot.repository.AdminRepository;
+import com.moya.myblogboot.service.LoginAttemptService;
 import com.moya.myblogboot.service.RefreshTokenService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,11 +29,14 @@ class AuthServiceImplUnitTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private RefreshTokenService refreshTokenService;
+    @Mock
+    private LoginAttemptService loginAttemptService;
 
     @Test
     @DisplayName("Login failures use the same error code")
     void adminLoginFailureUsesSameErrorCode() {
-        AuthServiceImpl authService = new AuthServiceImpl(adminRepository, passwordEncoder, refreshTokenService);
+        AuthCredentialVerifier authCredentialVerifier = new AuthCredentialVerifier(adminRepository, passwordEncoder);
+        AuthServiceImpl authService = new AuthServiceImpl(refreshTokenService, loginAttemptService, authCredentialVerifier);
         LoginReqDto notExistsUsername = LoginReqDto.builder()
                 .username("notExists")
                 .password("testPassword")
