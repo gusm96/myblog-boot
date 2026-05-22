@@ -16,13 +16,11 @@ import com.moya.myblogboot.repository.PostRepository;
 import com.moya.myblogboot.repository.CategoryRepository;
 import com.moya.myblogboot.repository.CommentRepository;
 import com.moya.myblogboot.service.AuthService;
-import com.moya.myblogboot.utils.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -46,6 +44,7 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static com.moya.myblogboot.constants.CookieName.ACCESS_TOKEN_COOKIE;
+import static com.moya.myblogboot.support.TokenTestSupport.rawAccessToken;
 
 @Transactional
 @SpringBootTest
@@ -64,8 +63,6 @@ class CommentControllerTest extends AbstractContainerBaseTest {
     @Autowired private PostRepository postRepository;
     @Autowired private RestDocumentationResultHandler restDocs;
     @Autowired private ObjectMapper objectMapper;
-    @Value("${jwt.secret}")
-    private String secret;
 
     private String accessToken;
     private Long parentId;
@@ -93,7 +90,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
                 .password("testPassword")
                 .build();
 
-        accessToken = authService.adminLogin(loginReqDto).getAccess_token();
+        accessToken = authService.adminLogin(loginReqDto).accessToken();
 
         Category category = Category.builder().name("category").build();
         Category saveCategory = categoryRepository.save(category);
@@ -301,7 +298,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
         comment.setComment("비회원 댓글입니다.");
         comment.setNickname("guest");
         comment.setPassword("1234");
-        String expiredToken = JwtUtil.buildAccess(1L, "ROLE_ADMIN", -1000L, secret);
+        String expiredToken = rawAccessToken(-60_000L);
 
         mockMvc.perform(post("/api/v1/comments/{postId}", postId)
                         .cookie(new Cookie(ACCESS_TOKEN_COOKIE, expiredToken))

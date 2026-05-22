@@ -8,11 +8,10 @@ import com.moya.myblogboot.domain.token.ReissuedToken;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.repository.RefreshTokenRedisRepository;
 import com.moya.myblogboot.service.RefreshTokenService;
-import com.moya.myblogboot.utils.JwtUtil;
+import com.moya.myblogboot.utils.JwtTokenProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -28,15 +27,15 @@ class RefreshTokenServiceImplTest extends AbstractContainerBaseTest {
     private RefreshTokenService refreshTokenService;
     @Autowired
     private RefreshTokenRedisRepository refreshTokenRedisRepository;
-    @Value("${jwt.secret}")
-    private String secret;
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
     @Test
     @DisplayName("Login issue creates refresh token with server-side family")
     void issueOnLogin() {
         IssuedToken issuedToken = refreshTokenService.issueOnLogin(admin());
 
-        RefreshTokenClaims claims = JwtUtil.parseRefreshToken(issuedToken.refreshToken(), secret);
+        RefreshTokenClaims claims = jwtTokenProvider.parseRefreshToken(issuedToken.refreshToken());
 
         assertThat(claims.jti()).isNotBlank();
         assertThat(claims.familyId()).isNotBlank();
@@ -52,15 +51,15 @@ class RefreshTokenServiceImplTest extends AbstractContainerBaseTest {
         ReissuedToken grace = refreshTokenService.rotate(issuedToken.refreshToken());
 
         assertThat(first).isEqualTo(grace);
-        assertThat(JwtUtil.parseRefreshToken(first.refreshToken(), secret).jti())
-                .isNotEqualTo(JwtUtil.parseRefreshToken(issuedToken.refreshToken(), secret).jti());
+        assertThat(jwtTokenProvider.parseRefreshToken(first.refreshToken()).jti())
+                .isNotEqualTo(jwtTokenProvider.parseRefreshToken(issuedToken.refreshToken()).jti());
     }
 
     @Test
     @DisplayName("Logout revokes refresh token family")
     void revokeOnLogout() {
         IssuedToken issuedToken = refreshTokenService.issueOnLogin(admin());
-        RefreshTokenClaims claims = JwtUtil.parseRefreshToken(issuedToken.refreshToken(), secret);
+        RefreshTokenClaims claims = jwtTokenProvider.parseRefreshToken(issuedToken.refreshToken());
 
         refreshTokenService.revokeOnLogout(issuedToken.refreshToken());
 

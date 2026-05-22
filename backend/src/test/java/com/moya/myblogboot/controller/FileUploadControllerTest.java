@@ -95,7 +95,7 @@ class FileUploadControllerTest extends AbstractContainerBaseTest {
                 .username("adminUser")
                 .password("adminPassword")
                 .build();
-        accessToken = "bearer " + authService.adminLogin(loginReqDto).getAccess_token();
+        accessToken = "bearer " + authService.adminLogin(loginReqDto).accessToken();
     }
 
     @BeforeEach

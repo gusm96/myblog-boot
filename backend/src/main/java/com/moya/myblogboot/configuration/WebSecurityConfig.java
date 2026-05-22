@@ -3,6 +3,7 @@ package com.moya.myblogboot.configuration;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.utils.CookieFactory;
+import com.moya.myblogboot.utils.JwtTokenProvider;
 import com.moya.myblogboot.utils.TokenResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,11 +28,10 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class WebSecurityConfig {
-    @Value("${jwt.secret}")
-    private String secret;
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
     private final AuthService authService;
+    private final JwtTokenProvider jwtTokenProvider;
     private final TokenResolver tokenResolver;
     private final CookieFactory cookieFactory;
 
@@ -63,7 +63,7 @@ public class WebSecurityConfig {
                         .accessDeniedHandler((request, response, accessDeniedException) ->
                                 SecurityErrorResponseWriter.write(response, ErrorCode.ACCESS_DENIED))
                 )
-                .addFilterBefore(new JwtFilter(authService, secret, tokenResolver, cookieFactory),
+                .addFilterBefore(new JwtFilter(authService, jwtTokenProvider, tokenResolver, cookieFactory),
                         UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

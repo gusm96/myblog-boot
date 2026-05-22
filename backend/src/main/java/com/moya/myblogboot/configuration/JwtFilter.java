@@ -6,7 +6,7 @@ import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.CookieFactory;
-import com.moya.myblogboot.utils.JwtUtil;
+import com.moya.myblogboot.utils.JwtTokenProvider;
 import com.moya.myblogboot.utils.TokenResolver;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -25,15 +25,15 @@ import java.util.List;
 
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
-    private final String secret;
     private final AuthService authService;
+    private final JwtTokenProvider jwtTokenProvider;
     private final TokenResolver tokenResolver;
     private final CookieFactory cookieFactory;
 
-    public JwtFilter(AuthService authService, String secret,
+    public JwtFilter(AuthService authService, JwtTokenProvider jwtTokenProvider,
                      TokenResolver tokenResolver, CookieFactory cookieFactory) {
         this.authService = authService;
-        this.secret = secret;
+        this.jwtTokenProvider = jwtTokenProvider;
         this.tokenResolver = tokenResolver;
         this.cookieFactory = cookieFactory;
     }
@@ -47,14 +47,14 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         try {
-            JwtUtil.validateAccessToken(token, secret);
+            jwtTokenProvider.validateAccessToken(token);
         } catch (ExpiredTokenException | InvalidateTokenException | JwtException | IllegalArgumentException e) {
             response.addCookie(cookieFactory.expireAccessTokenCookie());
             filterChain.doFilter(request, response);
             return;
         }
 
-        AccessTokenClaims tokenInfo = JwtUtil.parseAccessToken(token, secret);
+        AccessTokenClaims tokenInfo = jwtTokenProvider.parseAccessToken(token);
         Long memberPrimaryKey = tokenInfo.memberPrimaryKey();
 
         log.debug("{} {} | member={} role={}", request.getMethod(),

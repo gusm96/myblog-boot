@@ -1,8 +1,9 @@
 package com.moya.myblogboot.controller;
 
+import com.moya.myblogboot.configuration.JwtProperties;
 import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.domain.token.TokenMetaResponse;
-import com.moya.myblogboot.domain.token.Token;
+import com.moya.myblogboot.domain.token.IssuedToken;
 import com.moya.myblogboot.domain.token.ReissuedToken;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
@@ -18,7 +19,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,18 +34,14 @@ public class AuthController {
     private final ClientIpResolver clientIpResolver;
     private final CookieFactory cookieFactory;
     private final TokenResolver tokenResolver;
-
-    @Value("${jwt.access-token-expiration}")
-    private Long accessTokenExpiration;
-    @Value("${jwt.refresh-token-expiration}")
-    private Long refreshTokenExpiration;
+    private final JwtProperties jwtProperties;
 
     @PostMapping("/api/v1/login")
     public ResponseEntity<TokenMetaResponse> login(@RequestBody @Valid LoginReqDto loginReqDto,
                                                    HttpServletRequest request,
                                                    HttpServletResponse response) {
-        Token newToken = authService.adminLogin(loginReqDto, clientIpResolver.resolve(request));
-        addAuthCookies(response, newToken.getAccess_token(), newToken.getRefresh_token());
+        IssuedToken newToken = authService.adminLogin(loginReqDto, clientIpResolver.resolve(request));
+        addAuthCookies(response, newToken.accessToken(), newToken.refreshToken());
         return ResponseEntity.ok().body(tokenMetaResponse());
     }
 
@@ -98,11 +94,13 @@ public class AuthController {
     }
 
     private void addAuthCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-        response.addCookie(cookieFactory.accessTokenCookie(accessToken, Math.toIntExact(accessTokenExpiration / 1000)));
-        response.addCookie(cookieFactory.refreshTokenCookie(refreshToken, Math.toIntExact(refreshTokenExpiration / 1000)));
+        response.addCookie(cookieFactory.accessTokenCookie(accessToken,
+                Math.toIntExact(jwtProperties.accessTokenExpiration() / 1000)));
+        response.addCookie(cookieFactory.refreshTokenCookie(refreshToken,
+                Math.toIntExact(jwtProperties.refreshTokenExpiration() / 1000)));
     }
 
     private TokenMetaResponse tokenMetaResponse() {
-        return new TokenMetaResponse("Bearer", accessTokenExpiration / 1000);
+        return new TokenMetaResponse("Bearer", jwtProperties.accessTokenExpiration() / 1000);
     }
 }

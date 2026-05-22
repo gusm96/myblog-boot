@@ -1,9 +1,8 @@
 package com.moya.myblogboot.configuration;
 
-import com.moya.myblogboot.configuration.CookieProperties;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.utils.CookieFactory;
-import com.moya.myblogboot.utils.JwtUtil;
+import com.moya.myblogboot.utils.JwtTokenProvider;
 import com.moya.myblogboot.utils.TokenResolver;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
@@ -14,16 +13,19 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import static com.moya.myblogboot.constants.CookieName.ACCESS_TOKEN_COOKIE;
+import static com.moya.myblogboot.support.TokenTestSupport.AUDIENCE;
+import static com.moya.myblogboot.support.TokenTestSupport.ISSUER;
+import static com.moya.myblogboot.support.TokenTestSupport.SECRET;
+import static com.moya.myblogboot.support.TokenTestSupport.rawAccessToken;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 class JwtFilterTest {
 
-    private static final String SECRET = "12345678901234567890123456789012";
-
     private final CookieFactory cookieFactory =
             new CookieFactory(new CookieProperties(false, "Lax", "", "/"));
     private final TokenResolver tokenResolver = new TokenResolver();
+    private final JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(jwtProperties());
 
     @Test
     @DisplayName("유효한 access_token 쿠키면 인증 정보를 설정한다")
@@ -32,7 +34,7 @@ class JwtFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain filterChain = new MockFilterChain();
-        String token = JwtUtil.buildAccess(1L, "ROLE_ADMIN", 60000L, SECRET);
+        String token = jwtTokenProvider.createAccessToken(1L, "ROLE_ADMIN");
         request.setCookies(new Cookie(ACCESS_TOKEN_COOKIE, token));
 
         jwtFilter.doFilterInternal(request, response, filterChain);
@@ -62,7 +64,7 @@ class JwtFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain filterChain = new MockFilterChain();
-        String expiredToken = JwtUtil.buildAccess(1L, "ROLE_ADMIN", -1000L, SECRET);
+        String expiredToken = rawAccessToken(-60_000L);
         request.setCookies(new Cookie(ACCESS_TOKEN_COOKIE, expiredToken));
 
         jwtFilter.doFilterInternal(request, response, filterChain);
@@ -75,6 +77,11 @@ class JwtFilterTest {
     }
 
     private JwtFilter newJwtFilter() {
-        return new JwtFilter(mock(AuthService.class), SECRET, tokenResolver, cookieFactory);
+        return new JwtFilter(mock(AuthService.class), jwtTokenProvider, tokenResolver, cookieFactory);
+    }
+
+    private JwtProperties jwtProperties() {
+        return new JwtProperties(SECRET, ISSUER, AUDIENCE, 600_000L, 1_209_600_000L,
+                2_592_000_000L, 10_000L);
     }
 }

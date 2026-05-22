@@ -2,20 +2,21 @@ package com.moya.myblogboot.service.implementation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.moya.myblogboot.configuration.JwtProperties;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.token.IssuedToken;
 import com.moya.myblogboot.domain.token.RefreshTokenClaims;
 import com.moya.myblogboot.domain.token.ReissuedToken;
+import com.moya.myblogboot.domain.token.Role;
 import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.repository.RefreshTokenRedisRepository;
 import com.moya.myblogboot.service.RefreshTokenService;
-import com.moya.myblogboot.utils.JwtUtil;
+import com.moya.myblogboot.utils.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -27,33 +28,24 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 
-    private static final String ROLE_ADMIN = "ROLE_ADMIN";
     private static final String REUSE_DETECTED = "REUSE_DETECTED";
     private static final String LOGOUT = "LOGOUT";
 
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
     private final ObjectMapper objectMapper;
-
-    @Value("${jwt.secret}")
-    private String secret;
-    @Value("${jwt.access-token-expiration}")
-    private Long accessTokenExpiration;
-    @Value("${jwt.refresh-token-expiration}")
-    private Long refreshTokenExpiration;
-    @Value("${jwt.absolute-lifetime}")
-    private Long absoluteLifetime;
-    @Value("${jwt.grace-window-ms}")
-    private Long graceWindowMs;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProperties jwtProperties;
 
     @Override
     public IssuedToken issueOnLogin(Admin admin) {
         Instant now = Instant.now();
-        Instant absoluteExpiry = now.plusMillis(absoluteLifetime);
+        Instant absoluteExpiry = now.plusMillis(jwtProperties.absoluteLifetime());
         String familyId = UUID.randomUUID().toString();
         String jti = UUID.randomUUID().toString();
-        String accessToken = JwtUtil.buildAccess(admin.getId(), ROLE_ADMIN, accessTokenExpiration, secret);
-        String refreshToken = JwtUtil.buildRefresh(admin.getId(), ROLE_ADMIN, jti, familyId,
-                refreshTokenExpiration, secret);
+        String role = Role.ADMIN.getAuthority();
+        String accessToken = jwtTokenProvider.createAccessToken(admin.getId(), role);
+        String refreshToken = jwtTokenProvider.createRefreshToken(admin.getId(), role, jti, familyId,
+                jwtProperties.refreshTokenExpiration());
 
         refreshTokenRedisRepository.saveInitialToken(
                 familyId,
@@ -61,8 +53,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 admin.getId(),
                 now,
                 absoluteExpiry,
-                Duration.ofMillis(absoluteLifetime).plus(Duration.ofDays(30)),
-                Duration.ofMillis(refreshTokenExpiration)
+                Duration.ofMillis(jwtProperties.absoluteLifetime()).plus(Duration.ofDays(30)),
+                Duration.ofMillis(jwtProperties.refreshTokenExpiration())
         );
         log.info("Admin login: id={}, family={}", admin.getId(), familyId);
         return new IssuedToken(accessToken, refreshToken);
@@ -76,10 +68,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 .orElseThrow(InvalidateTokenException::new);
         Duration refreshTtl = remainingRefreshTtl(now, absoluteExpiry);
         String newJti = UUID.randomUUID().toString();
-        String newAccess = JwtUtil.buildAccess(claims.memberPrimaryKey(), claims.role(),
-                accessTokenExpiration, secret);
-        String newRefresh = JwtUtil.buildRefresh(claims.memberPrimaryKey(), claims.role(), newJti,
-                claims.familyId(), refreshTtl.toMillis(), secret);
+        String newAccess = jwtTokenProvider.createAccessToken(claims.memberPrimaryKey(), claims.role());
+        String newRefresh = jwtTokenProvider.createRefreshToken(claims.memberPrimaryKey(), claims.role(), newJti,
+                claims.familyId(), refreshTtl.toMillis());
         ReissuedToken reissuedToken = new ReissuedToken(newAccess, newRefresh);
         String rotationResponseJson = toJson(reissuedToken);
 
@@ -89,7 +80,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 newJti,
                 now,
                 refreshTtl,
-                Duration.ofMillis(graceWindowMs),
+                Duration.ofMillis(jwtProperties.graceWindowMs()),
                 rotationResponseJson
         );
 
@@ -99,7 +90,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Override
     public void revokeOnLogout(String presentedRefreshToken) {
         try {
-            RefreshTokenClaims claims = JwtUtil.parseRefreshToken(presentedRefreshToken, secret);
+            RefreshTokenClaims claims = jwtTokenProvider.parseRefreshToken(presentedRefreshToken);
             refreshTokenRedisRepository.revokeFamily(claims.familyId(), Instant.now(), LOGOUT);
             log.info("Admin logout: family={}", claims.familyId());
         } catch (ExpiredTokenException | InvalidateTokenException e) {
@@ -109,7 +100,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     private RefreshTokenClaims parsePresentedRefreshToken(String presentedRefreshToken) {
         try {
-            return JwtUtil.parseRefreshToken(presentedRefreshToken, secret);
+            return jwtTokenProvider.parseRefreshToken(presentedRefreshToken);
         } catch (ExpiredTokenException e) {
             throw new ExpiredRefreshTokenException();
         }
@@ -120,7 +111,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         if (absoluteRemaining.isZero() || absoluteRemaining.isNegative()) {
             throw new ExpiredRefreshTokenException();
         }
-        Duration refreshLifetime = Duration.ofMillis(refreshTokenExpiration);
+        Duration refreshLifetime = Duration.ofMillis(jwtProperties.refreshTokenExpiration());
         return absoluteRemaining.compareTo(refreshLifetime) < 0 ? absoluteRemaining : refreshLifetime;
     }
 

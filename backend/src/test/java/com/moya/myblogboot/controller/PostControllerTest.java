@@ -115,7 +115,7 @@ class PostControllerTest extends AbstractContainerBaseTest {
                 .password("testPassword")
                 .build();
 
-        accessToken = "bearer " + authService.adminLogin(loginReqDto).getAccess_token();
+        accessToken = "bearer " + authService.adminLogin(loginReqDto).accessToken();
     }
 
     @Test

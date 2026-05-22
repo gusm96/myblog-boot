@@ -91,7 +91,7 @@ class CategoryControllerTest extends AbstractContainerBaseTest {
                 .password("testPassword")
                 .build();
 
-        accessToken = "bearer " + authService.adminLogin(loginReqDto).getAccess_token();
+        accessToken = "bearer " + authService.adminLogin(loginReqDto).accessToken();
 
         for (int i = 0; i < 5; i++) {
             Category newCategory = Category.builder().name("test" + i).build();

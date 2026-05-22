@@ -3,8 +3,8 @@ package com.moya.myblogboot.service.implementation;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.dto.auth.LoginReqDto;
+import com.moya.myblogboot.domain.token.IssuedToken;
 import com.moya.myblogboot.domain.token.ReissuedToken;
-import com.moya.myblogboot.domain.token.Token;
 import com.moya.myblogboot.exception.custom.UnauthorizedException;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.service.AuthService;
@@ -70,7 +70,7 @@ class AuthServiceImplTest extends AbstractContainerBaseTest {
         assertThrows(UnauthorizedException.class, () -> authService.adminLogin(notExistsUsername));
         assertThrows(UnauthorizedException.class, () -> authService.adminLogin(wrongPassword));
         Object result = authService.adminLogin(validLogin);
-        assertTrue(result instanceof Token);
+        assertTrue(result instanceof IssuedToken);
     }
 
     @Test
@@ -81,8 +81,8 @@ class AuthServiceImplTest extends AbstractContainerBaseTest {
                 .password("testPassword")
                 .build();
 
-        Token token = authService.adminLogin(loginReqDto);
-        ReissuedToken result = authService.reissuingAccessToken(token.getRefresh_token());
+        IssuedToken token = authService.adminLogin(loginReqDto);
+        ReissuedToken result = authService.reissuingAccessToken(token.refreshToken());
 
         assertNotNull(result.accessToken());
         assertNotNull(result.refreshToken());
@@ -96,9 +96,9 @@ class AuthServiceImplTest extends AbstractContainerBaseTest {
                 .password("testPassword")
                 .build();
 
-        Token token = authService.adminLogin(loginReqDto);
+        IssuedToken token = authService.adminLogin(loginReqDto);
 
-        assertTrue(authService.isTokenValid(token.getAccess_token()));
+        assertTrue(authService.isTokenValid(token.accessToken()));
         assertFalse(authService.isTokenValid("invalid-token"));
     }
 

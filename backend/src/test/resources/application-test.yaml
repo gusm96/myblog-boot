@@ -61,6 +61,8 @@ cors:
 ## JWT
 jwt:
   secret: ${JWT_SECRET_KEY:test-jwt-secret-key-for-testing-environment-only}
+  issuer: ${JWT_ISSUER:myblog}
+  audience: ${JWT_AUDIENCE:myblog-admin}
   access-token-expiration: 600000
   refresh-token-expiration: 1209600000
   absolute-lifetime: 2592000000
