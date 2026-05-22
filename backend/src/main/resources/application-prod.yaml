@@ -28,3 +28,10 @@ app:
 logging:
   level:
     root: warn
+
+security:
+  cookie:
+    secure: true
+    same-site: Lax
+    domain: ${COOKIE_DOMAIN:}
+    path: ${COOKIE_PATH:/}
