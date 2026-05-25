@@ -23,11 +23,11 @@ public class AuthCredentialVerifier {
     public Admin verify(LoginReqDto loginReqDto) {
         Admin admin = adminRepository.findByUsername(loginReqDto.getUsername())
                 .orElseThrow(() -> {
-                    log.warn("Admin login failed: username not found");
+                    log.debug("Admin login failed: username not found");
                     return new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS);
                 });
         if (!passwordEncoder.matches(loginReqDto.getPassword(), admin.getPassword())) {
-            log.warn("Admin login failed: invalid password");
+            log.debug("Admin login failed: invalid password");
             throw new UnauthorizedException(ErrorCode.INVALID_CREDENTIALS);
         }
         return admin;

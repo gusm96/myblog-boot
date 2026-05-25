@@ -16,6 +16,4 @@ public interface AuthService {
     ReissuedToken reissuingAccessToken(String refreshToken);
 
     TokenInfo getTokenInfo(String token);
-
-    boolean isTokenValid(String token);
 }

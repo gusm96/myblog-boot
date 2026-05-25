@@ -15,6 +15,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,6 +36,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.restdocs.headers.HeaderDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
@@ -45,7 +51,7 @@ import static com.moya.myblogboot.support.TokenTestSupport.rawRefreshToken;
 @Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
-@ExtendWith(RestDocumentationExtension.class)
+@ExtendWith({RestDocumentationExtension.class, OutputCaptureExtension.class})
 @Import(RestDocsConfiguration.class)
 @ActiveProfiles("test")
 class AuthControllerTest extends AbstractContainerBaseTest {
@@ -144,7 +150,7 @@ class AuthControllerTest extends AbstractContainerBaseTest {
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().string("ROLE_ADMIN"))
+                .andExpect(MockMvcResultMatchers.content().string("ADMIN"))
                 .andDo(restDocs.document(
                         responseBody()
                 ));
@@ -170,34 +176,6 @@ class AuthControllerTest extends AbstractContainerBaseTest {
                                 fieldWithPath("expiresIn").description("Access Token 만료까지 남은 초")
                         )
                 ));
-    }
-
-    @Test
-    @DisplayName("토큰 만료 확인 테스트")
-    void tokenValidate() throws Exception {
-        String accessToken = getToken().accessToken();
-
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-validation")
-                .cookie(new Cookie(ACCESS_TOKEN_COOKIE, accessToken)));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        responseBody()
-                ));
-    }
-
-    @Test
-    @DisplayName("토큰 검증 - 토큰 없음 또는 잘못된 토큰은 false")
-    void tokenValidateWithoutValidCookie() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-validation"))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().string("false"));
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/token-validation")
-                        .cookie(new Cookie(ACCESS_TOKEN_COOKIE, "invalid-token")))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().string("false"));
     }
 
     @Test
@@ -249,7 +227,7 @@ class AuthControllerTest extends AbstractContainerBaseTest {
 
     @Test
     @DisplayName("로그인 실패 - 잘못된 비밀번호")
-    void loginWithWrongPassword() throws Exception {
+    void loginWithWrongPassword(CapturedOutput output) throws Exception {
         LoginReqDto requestBody = LoginReqDto.builder()
                 .username("testuser")
                 .password("wrongPassword")
@@ -259,11 +237,19 @@ class AuthControllerTest extends AbstractContainerBaseTest {
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(requestBody)))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+
+        String logs = output.getOut();
+        assertTrue(logs.contains("event=LOGIN_FAILURE"));
+        assertTrue(logs.contains("result=FAILURE"));
+        assertTrue(logs.contains("username=testuser"));
+        assertTrue(logs.contains("ip="));
+        assertTrue(logs.contains("ua="));
+        assertFalse(logs.contains("wrongPassword"));
     }
 
     @Test
     @DisplayName("로그인 실패 5회째부터 429와 Retry-After를 반환한다")
-    void loginBruteForceProtection() throws Exception {
+    void loginBruteForceProtection(CapturedOutput output) throws Exception {
         LoginReqDto requestBody = LoginReqDto.builder()
                 .username("testuser")
                 .password("wrongPassword")
@@ -284,6 +270,30 @@ class AuthControllerTest extends AbstractContainerBaseTest {
                 .andExpect(MockMvcResultMatchers.status().isTooManyRequests())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("A009"))
                 .andExpect(MockMvcResultMatchers.header().exists(HttpHeaders.RETRY_AFTER));
+
+        String logs = output.getOut();
+        assertTrue(logs.contains("event=LOGIN_LOCKED"));
+        assertFalse(logs.contains("event=LOGIN_FAILURE result=FAILURE username=testuser")
+                && logs.lastIndexOf("event=LOGIN_FAILURE result=FAILURE username=testuser")
+                > logs.lastIndexOf("event=LOGIN_LOCKED"));
+        assertFalse(logs.contains("wrongPassword"));
+    }
+
+    @Test
+    @DisplayName("로그인 검증 실패 응답은 민감한 rejectedValue를 마스킹한다")
+    void loginValidationMasksSensitiveRejectedValue() throws Exception {
+        String rawPassword = "too-long-password-value";
+        LoginReqDto requestBody = LoginReqDto.builder()
+                .username("testuser")
+                .password(rawPassword)
+                .build();
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(requestBody)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().string(containsString("[PROTECTED]")))
+                .andExpect(MockMvcResultMatchers.content().string(not(containsString(rawPassword))));
     }
 
     @Test

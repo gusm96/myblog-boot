@@ -3,21 +3,25 @@ package com.moya.myblogboot.exception;
 import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
 import com.moya.myblogboot.configuration.CookieProperties;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
+import com.moya.myblogboot.utils.AuthAuditLogger;
 import com.moya.myblogboot.utils.CookieFactory;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.http.ResponseEntity;
 
 import static com.moya.myblogboot.constants.CookieName.ACCESS_TOKEN_COOKIE;
 import static com.moya.myblogboot.constants.CookieName.REFRESH_TOKEN_COOKIE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler exceptionHandler = new GlobalExceptionHandler(
-            new CookieFactory(new CookieProperties(false, "Lax", "", "/"))
+            new CookieFactory(new CookieProperties(false, "Lax", "", "/")),
+            mock(AuthAuditLogger.class)
     );
 
     @Test
@@ -45,6 +49,7 @@ class GlobalExceptionHandlerTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         ResponseEntity<ErrorResponse> result = exceptionHandler.handleInvalidateTokenException(
+                new MockHttpServletRequest(),
                 response,
                 new InvalidateTokenException()
         );

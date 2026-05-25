@@ -40,7 +40,7 @@ export function RoleGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (role !== "ROLE_ADMIN") {
+  if (role !== "ADMIN" && role !== "ROLE_ADMIN") {
     router.replace("/");
     return null;
   }
