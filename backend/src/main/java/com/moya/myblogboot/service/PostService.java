@@ -24,6 +24,14 @@ public interface PostService {
 
     PostDetailResDto getPostDetailAndIncrementViews(Long postId);
 
+    PostDetailResDto getPublicPostDetail(Long postId);
+
+    PostDetailResDto getPublicPostDetailAndIncrementViews(Long postId);
+
+    Long getPublicPostViews(Long postId);
+
+    Long getPublicPostLikes(Long postId);
+
     Long getPostIdBySlug(String slug);
 
     List<PostSlugDto> getAllSlugs();

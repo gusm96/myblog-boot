@@ -1,6 +1,7 @@
 package com.moya.myblogboot.repository.implementation;
 
 import com.moya.myblogboot.domain.post.Post;
+import com.moya.myblogboot.domain.post.PostStatus;
 import com.moya.myblogboot.domain.post.SearchType;
 import com.moya.myblogboot.repository.PostQuerydslRepository;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -34,6 +35,9 @@ public class PostQuerydslRepositoryImpl implements PostQuerydslRepository {
         BooleanExpression condition = searchType == SearchType.TITLE
                 ? post.title.contains(contents)
                 : post.content.contains(contents);
+        condition = condition
+                .and(post.postStatus.eq(PostStatus.VIEW))
+                .and(post.deleteDate.isNull());
 
         List<Post> posts = queryFactory.selectFrom(post)
                 .join(post.admin).fetchJoin()

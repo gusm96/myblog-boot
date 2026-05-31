@@ -2,6 +2,7 @@ package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.repository.PostRepository;
+import com.moya.myblogboot.utils.HtmlTextUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -64,7 +65,7 @@ public class RssFeedController {
             String link = baseUrl + "/posts/" + post.getSlug();
             String description = post.getMetaDescription() != null
                     ? post.getMetaDescription()
-                    : truncate(stripHtml(post.getContent()), 200);
+                    : HtmlTextUtil.summarize(post.getContent(), 200);
 
             sb.append("    <item>\n");
             sb.append("      <title>").append(escapeXml(post.getTitle())).append("</title>\n");
@@ -92,13 +93,4 @@ public class RssFeedController {
                 .replace("'", "&apos;");
     }
 
-    private String stripHtml(String html) {
-        if (html == null) return "";
-        return html.replaceAll("<[^>]+>", "").trim();
-    }
-
-    private String truncate(String text, int maxLength) {
-        if (text == null || text.length() <= maxLength) return text;
-        return text.substring(0, maxLength) + "...";
-    }
 }

@@ -25,18 +25,23 @@ public class PostReqDto {
     private Long category;
     private List<ImageFileDto> images;
     private String slug;
+    @Size(max = 160, message = "메타 설명은 160자 이하로 작성해야합니다.")
     private String metaDescription;
     private String metaKeywords;
     private String thumbnailUrl;
 
     public Post toEntity(Category category, Admin admin, String resolvedSlug) {
+        return toEntity(category, admin, resolvedSlug, this.metaDescription);
+    }
+
+    public Post toEntity(Category category, Admin admin, String resolvedSlug, String resolvedMetaDescription) {
         return Post.builder()
                 .admin(admin)
                 .category(category)
                 .title(this.title)
                 .content(this.content)
                 .slug(resolvedSlug)
-                .metaDescription(this.metaDescription)
+                .metaDescription(resolvedMetaDescription)
                 .metaKeywords(this.metaKeywords)
                 .thumbnailUrl(this.thumbnailUrl)
                 .build();
