@@ -79,13 +79,13 @@ public class PostController {
         boolean valid = postViewCookieService.isValid(cookieValue);
 
         if (!valid || !postViewCookieService.isViewed(cookieValue, postId)) {
-            PostDetailResDto dto = postService.getPostDetailAndIncrementViews(postId);
+            PostDetailResDto dto = postService.getPublicPostDetailAndIncrementViews(postId);
             String newValue = postViewCookieService.addViewed(valid ? cookieValue : null, postId);
             response.addCookie(CookieUtil.addCookie(VIEWED_POSTS, newValue, postViewCookieService.secondsUntilMidnight()));
             return ResponseEntity.ok(dto);
         }
 
-        PostDetailResDto dto = postService.getPostDetail(postId);
+        PostDetailResDto dto = postService.getPublicPostDetail(postId);
         return ResponseEntity.ok()
                 .header("Cache-Control", "public, max-age=60")
                 .body(dto);

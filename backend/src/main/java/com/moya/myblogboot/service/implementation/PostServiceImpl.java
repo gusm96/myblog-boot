@@ -10,6 +10,7 @@ import com.moya.myblogboot.domain.post.SearchType;
 import com.moya.myblogboot.dto.post.*;
 import com.moya.myblogboot.exception.ErrorCode;
 import com.moya.myblogboot.exception.custom.EntityNotFoundException;
+import com.moya.myblogboot.exception.custom.PostGoneException;
 import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.ImageFileRepository;
@@ -92,13 +93,45 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public PostDetailResDto getPublicPostDetail(Long postId) {
+        PostForRedis postForRedis = postCacheService.getPostFromCache(postId);
+        assertPubliclyViewable(postForRedis);
+        return PostDetailResDto.builder()
+                .postForRedis(postForRedis)
+                .build();
+    }
+
+    @Override
+    public PostDetailResDto getPublicPostDetailAndIncrementViews(Long postId) {
+        PostForRedis postForRedis = postCacheService.getPostFromCache(postId);
+        assertPubliclyViewable(postForRedis);
+        return PostDetailResDto.builder()
+                .postForRedis(postRedisRepository.incrementViews(postForRedis))
+                .build();
+    }
+
+    @Override
+    public Long getPublicPostViews(Long postId) {
+        PostForRedis postForRedis = postCacheService.getPostFromCache(postId);
+        assertPubliclyViewable(postForRedis);
+        return postForRedis.totalViews();
+    }
+
+    @Override
+    public Long getPublicPostLikes(Long postId) {
+        PostForRedis postForRedis = postCacheService.getPostFromCache(postId);
+        assertPubliclyViewable(postForRedis);
+        return postForRedis.totalLikes();
+    }
+
+    @Override
     @Transactional
     public Long write(PostReqDto postReqDto, Long adminId) {
         Admin admin = adminRepository.findById(adminId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         Category category = categoryService.retrieve(postReqDto.getCategory());
         String slug = resolveSlug(postReqDto.getSlug(), postReqDto.getTitle(), null);
-        Post newPost = postReqDto.toEntity(category, admin, slug);
+        Post newPost = postReqDto.toEntity(category, admin, slug, resolveMetaDescription(postReqDto));
         if (postReqDto.getImages() != null && !postReqDto.getImages().isEmpty()) {
             saveImageFile(postReqDto.getImages(), newPost);
         }
@@ -116,7 +149,7 @@ public class PostServiceImpl implements PostService {
         Category modifiedCategory = categoryService.retrieve(modifiedDto.getCategory());
         String slug = resolveSlug(modifiedDto.getSlug(), modifiedDto.getTitle(), post.getSlug());
         post.updatePost(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent(),
-                slug, modifiedDto.getMetaDescription(), modifiedDto.getMetaKeywords(), modifiedDto.getThumbnailUrl());
+                slug, resolveMetaDescription(modifiedDto), modifiedDto.getMetaKeywords(), modifiedDto.getThumbnailUrl());
         postCacheService.updatePost(postCacheService.getPostFromCache(post.getId()), post);
         eventPublisher.publishEvent(new PostChangeEvent(this, "UPDATED", postId, post.getSlug()));
         return postId;
@@ -183,6 +216,22 @@ public class PostServiceImpl implements PostService {
     private void verifyPostAccessAuthorization(Long postAdminId, Long adminId) {
         if (!postAdminId.equals(adminId))
             throw new UnauthorizedAccessException(ErrorCode.POST_ACCESS_DENIED);
+    }
+
+    private void assertPubliclyViewable(PostForRedis postForRedis) {
+        if (postForRedis.getDeleteDate() != null) {
+            throw new PostGoneException(ErrorCode.POST_GONE);
+        }
+        if (postForRedis.getPostStatus() != PostStatus.VIEW) {
+            throw new EntityNotFoundException(ErrorCode.POST_NOT_FOUND);
+        }
+    }
+
+    private String resolveMetaDescription(PostReqDto postReqDto) {
+        if (postReqDto.getMetaDescription() == null || postReqDto.getMetaDescription().isBlank()) {
+            return com.moya.myblogboot.utils.HtmlTextUtil.summarize(postReqDto.getContent(), 155);
+        }
+        return postReqDto.getMetaDescription();
     }
 
     private void deletePosts(Post post) {

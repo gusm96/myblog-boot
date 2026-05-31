@@ -99,6 +99,37 @@ class PostServiceImplTest extends AbstractContainerBaseTest {
     }
 
     @Test
+    @DisplayName("게시글 작성 - metaDescription이 blank면 HTML 본문에서 자동 생성")
+    void write_generatesMetaDescriptionFromContentWhenBlank() {
+        PostReqDto reqDto = PostReqDto.builder()
+                .title("새 게시글")
+                .content("<p>Hello <strong>SEO</strong> &amp; blog</p><script>alert('x')</script>")
+                .category(testCategory.getId())
+                .metaDescription(" ")
+                .build();
+
+        Long postId = postService.write(reqDto, testAdmin.getId());
+
+        Post savedPost = postRepository.findById(postId).orElseThrow();
+        assertThat(savedPost.getMetaDescription()).isEqualTo("Hello SEO & blog");
+    }
+
+    @Test
+    @DisplayName("게시글 수정 - metaDescription이 blank면 HTML 본문에서 자동 생성")
+    void edit_generatesMetaDescriptionFromContentWhenBlank() {
+        PostReqDto modifiedDto = PostReqDto.builder()
+                .title("수정된 제목")
+                .content("<h1>Updated</h1><p>description text</p>")
+                .category(testCategory.getId())
+                .metaDescription("")
+                .build();
+
+        postService.edit(testAdmin.getId(), testPost.getId(), modifiedDto);
+
+        assertThat(testPost.getMetaDescription()).isEqualTo("Updated description text");
+    }
+
+    @Test
     @DisplayName("게시글 작성 실패 - 존재하지 않는 카테고리")
     void write_invalidCategory() {
         PostReqDto reqDto = PostReqDto.builder()

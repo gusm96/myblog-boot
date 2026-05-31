@@ -26,13 +26,14 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostQuerydslR
             "join fetch p.category where p.id = :postId")
     Optional<Post> findById(@Param("postId") Long postId);
 
-    @Query(value = "select p from Post p join fetch p.admin join fetch p.category where p.postStatus = :postStatus",
-            countQuery = "select count(p) from Post p where p.postStatus = :postStatus")
+    @Query(value = "select p from Post p join fetch p.admin join fetch p.category " +
+            "where p.postStatus = :postStatus and p.deleteDate is null",
+            countQuery = "select count(p) from Post p where p.postStatus = :postStatus and p.deleteDate is null")
     Page<Post> findAll(@Param("postStatus") PostStatus postStatus, Pageable pageable);
 
     @Query(value = "select p from Post p join fetch p.admin join fetch p.category " +
-            "where p.category.name = :categoryName and p.postStatus = 'VIEW'",
-            countQuery = "select count(p) from Post p where p.category.name = :categoryName and p.postStatus = 'VIEW'")
+            "where p.category.name = :categoryName and p.postStatus = 'VIEW' and p.deleteDate is null",
+            countQuery = "select count(p) from Post p where p.category.name = :categoryName and p.postStatus = 'VIEW' and p.deleteDate is null")
     Page<Post> findAllByCategoryName(@Param("categoryName") String categoryName, PageRequest pageRequest);
 
     @Query(value = "select p from Post p join fetch p.admin join fetch p.category " +
@@ -43,15 +44,15 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostQuerydslR
     // Next.js sitemap/generateStaticParams 전용: slug + updateDate만 조회 (content 제외)
     @Query("select new com.moya.myblogboot.dto.post.PostSlugDto(p.slug, p.updateDate) " +
             "from Post p " +
-            "where p.postStatus = 'VIEW' and p.slug is not null " +
+            "where p.postStatus = 'VIEW' and p.deleteDate is null and p.slug is not null " +
             "order by p.updateDate desc")
     List<PostSlugDto> findAllSlugs();
 
     // RSS 피드 전용: 최근 VIEW 게시글 (category fetch join)
     @Query(value = "select p from Post p " +
             "join fetch p.category " +
-            "where p.postStatus = 'VIEW' and p.slug is not null " +
+            "where p.postStatus = 'VIEW' and p.deleteDate is null and p.slug is not null " +
             "order by p.createDate desc",
-            countQuery = "select count(p) from Post p where p.postStatus = 'VIEW'")
+            countQuery = "select count(p) from Post p where p.postStatus = 'VIEW' and p.deleteDate is null")
     Page<Post> findRecentForRss(Pageable pageable);
 }

@@ -74,11 +74,11 @@ public class PostLikeController {
 
     @GetMapping("/api/v1/posts/{postId}/views")
     public ResponseEntity<Long> getViews(@PathVariable("postId") Long postId) {
-        return ResponseEntity.ok().body(postService.getPostDetail(postId).getViews());
+        return ResponseEntity.ok().body(postService.getPublicPostViews(postId));
     }
 
     @GetMapping("/api/v1/posts/{postId}/likes")
     public ResponseEntity<Long> getLikes(@PathVariable("postId") Long postId) {
-        return ResponseEntity.ok().body(postService.getPostDetail(postId).getLikes());
+        return ResponseEntity.ok().body(postService.getPublicPostLikes(postId));
     }
 }

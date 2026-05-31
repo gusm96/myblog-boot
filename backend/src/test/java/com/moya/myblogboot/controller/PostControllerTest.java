@@ -6,6 +6,7 @@ import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.constants.CookieName;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.post.Post;
+import com.moya.myblogboot.domain.post.PostStatus;
 import com.moya.myblogboot.dto.post.PostReqDto;
 import com.moya.myblogboot.domain.post.SearchType;
 import com.moya.myblogboot.domain.category.Category;
@@ -115,7 +116,7 @@ class PostControllerTest extends AbstractContainerBaseTest {
                 .password("testPassword")
                 .build();
 
-        accessToken = "bearer " + authService.adminLogin(loginReqDto).accessToken();
+        accessToken = authService.adminLogin(loginReqDto).accessToken();
     }
 
     @Test
@@ -218,6 +219,35 @@ class PostControllerTest extends AbstractContainerBaseTest {
     }
 
     @Test
+    @DisplayName("검색 결과별 게시글 조회 - HIDE 및 삭제 게시글 제외")
+    void getSearchedPosts_excludesHiddenAndDeletedPosts() throws Exception {
+        Post hiddenPost = postRepository.save(Post.builder()
+                .admin(adminRepository.findAll().get(0))
+                .category(categoryRepository.findById(categoryId).orElseThrow())
+                .title("private searchable title")
+                .content("private searchable content")
+                .slug("private-searchable-title")
+                .build());
+        hiddenPost.updatePostStatus(PostStatus.HIDE);
+
+        Post deletedPost = postRepository.save(Post.builder()
+                .admin(adminRepository.findAll().get(0))
+                .category(categoryRepository.findById(categoryId).orElseThrow())
+                .title("deleted searchable title")
+                .content("deleted searchable content")
+                .slug("deleted-searchable-title")
+                .build());
+        deletedPost.delete();
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/search")
+                        .param("p", "1")
+                        .param("type", String.valueOf(SearchType.TITLE))
+                        .param("contents", "searchable"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.list.length()").value(0));
+    }
+
+    @Test
     @DisplayName("게시글 상세 조회 V1 (slug) — 최초 조회: 조회수 증가 + viewed_posts 쿠키 발급")
     void getPostDetailV1BySlug_최초조회() throws Exception {
         ResultActions resultActions = mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug));
@@ -310,10 +340,66 @@ class PostControllerTest extends AbstractContainerBaseTest {
     }
 
     @Test
+    @DisplayName("게시글 상세 조회 V1 - HIDE 게시글은 404")
+    void getPostDetailV1HiddenPostReturns404() throws Exception {
+        Post post = postRepository.findById(postId).orElseThrow();
+        post.updatePostStatus(PostStatus.HIDE);
+
+        mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("게시글 상세 조회 V1 - 삭제 게시글은 410")
+    void getPostDetailV1DeletedPostReturns410() throws Exception {
+        Post post = postRepository.findById(postId).orElseThrow();
+        post.deletePost();
+
+        mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug))
+                .andExpect(MockMvcResultMatchers.status().isGone())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("B005"));
+    }
+
+    @Test
+    @DisplayName("게시글 상세 관리자용 - 삭제 게시글도 조회 가능")
+    void getPostDetailForAdminCanReadDeletedPost() throws Exception {
+        Post post = postRepository.findById(postId).orElseThrow();
+        post.deletePost();
+
+        mockMvc.perform(get("/api/v1/management/posts/{postId}", postId)
+                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(postId));
+    }
+
+    @Test
+    @DisplayName("게시글 조회수 조회 - 삭제 게시글은 410")
+    void getViewsDeletedPostReturns410() throws Exception {
+        Post post = postRepository.findById(postId).orElseThrow();
+        post.deletePost();
+
+        mockMvc.perform(get("/api/v1/posts/{postId}/views", postId))
+                .andExpect(MockMvcResultMatchers.status().isGone())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("B005"));
+    }
+
+    @Test
+    @DisplayName("게시글 좋아요 수 조회 - HIDE 게시글은 404")
+    void getLikesHiddenPostReturns404() throws Exception {
+        Post post = postRepository.findById(postId).orElseThrow();
+        post.updatePostStatus(PostStatus.HIDE);
+
+        mockMvc.perform(get("/api/v1/posts/{postId}/likes", postId))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
     @DisplayName("게시글 상세 관리자용")
     void getPostDetailForAdmin() throws Exception {
         ResultActions resultActions = mockMvc.perform(get("/api/v1/management/posts/{postId}", postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -352,6 +438,7 @@ class PostControllerTest extends AbstractContainerBaseTest {
 
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(path)
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken))
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(postReqDto)));
 
@@ -386,6 +473,7 @@ class PostControllerTest extends AbstractContainerBaseTest {
 
         ResultActions resultActions = mockMvc.perform(put("/api/v1/posts/{postId}", postId)
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken))
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(modifiedPostDto)));
 
@@ -416,7 +504,8 @@ class PostControllerTest extends AbstractContainerBaseTest {
     @DisplayName("게시글 삭제")
     void deletePost() throws Exception {
         ResultActions resultActions = mockMvc.perform(delete("/api/v1/posts/{postId}", postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -434,12 +523,14 @@ class PostControllerTest extends AbstractContainerBaseTest {
     @DisplayName("삭제 예정 게시글 리스트")
     void getDeletedPosts() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/" + postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
         String path = "/api/v1/deleted-posts";
 
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
                 .param("p", "1")
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -458,10 +549,12 @@ class PostControllerTest extends AbstractContainerBaseTest {
     void cancelDeletedPost() throws Exception {
         // 먼저 삭제 요청
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/" + postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
 
         ResultActions resultActions = mockMvc.perform(put("/api/v1/deleted-posts/{postId}", postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -480,10 +573,12 @@ class PostControllerTest extends AbstractContainerBaseTest {
     void deletePostPermanently() throws Exception {
         // 먼저 삭제(soft-delete) 처리 후 영구 삭제
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/" + postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
 
         ResultActions resultActions = mockMvc.perform(delete("/api/v1/deleted-posts/{postId}", postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -549,7 +644,7 @@ class PostControllerTest extends AbstractContainerBaseTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(postReqDto)))
-                .andExpect(MockMvcResultMatchers.status().isForbidden());
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
     }
 
     @Test
@@ -563,6 +658,25 @@ class PostControllerTest extends AbstractContainerBaseTest {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts")
                         .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken))
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(postReqDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("게시글 등록 실패 - metaDescription 160자 초과")
+    void writePostWithTooLongMetaDescription() throws Exception {
+        PostReqDto postReqDto = PostReqDto.builder()
+                .category(categoryId)
+                .title("title")
+                .content("content")
+                .metaDescription("a".repeat(161))
+                .build();
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts")
+                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken))
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(postReqDto)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
@@ -592,11 +706,23 @@ class PostControllerTest extends AbstractContainerBaseTest {
     void getAllSlugs_excludesHiddenPosts() throws Exception {
         // 게시글 하나를 HIDE로 변경
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/" + postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
 
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/slugs"));
 
         resultActions
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(4));
+    }
+
+    @Test
+    @DisplayName("전체 Slug 목록 조회 - VIEW 상태라도 deleteDate가 있으면 제외")
+    void getAllSlugs_excludesDeletedDatePosts() throws Exception {
+        Post post = postRepository.findById(postId).orElseThrow();
+        post.delete();
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/slugs"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(4));
     }
