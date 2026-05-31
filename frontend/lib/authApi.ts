@@ -12,15 +12,12 @@ export const login = (formData: { username: string; password: string }) =>
     .then((res) => res.data);
 
 export const logout = () =>
-  axios.get(`${BASE_URL}/api/v1/logout`, { withCredentials: true });
+  axios.post(`${BASE_URL}/api/v1/logout`, undefined, { withCredentials: true });
 
 export const reissuingAccessToken = () =>
   axios
-    .get(`${BASE_URL}/api/v1/reissuing-token`, { withCredentials: true })
+    .post(`${BASE_URL}/api/v1/reissuing-token`, undefined, { withCredentials: true })
     .then((res) => res.data);
-
-export const validateAccessToken = () =>
-  apiClient.get("/api/v1/token-validation").then((res) => res.data);
 
 export const getRoleFromToken = () =>
   apiClient.get("/api/v1/token-role").then((res) => res.data);

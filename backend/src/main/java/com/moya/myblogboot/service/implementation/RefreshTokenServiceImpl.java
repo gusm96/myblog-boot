@@ -56,7 +56,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                 Duration.ofMillis(jwtProperties.absoluteLifetime()).plus(Duration.ofDays(30)),
                 Duration.ofMillis(jwtProperties.refreshTokenExpiration())
         );
-        log.info("Admin login: id={}, family={}", admin.getId(), familyId);
         return new IssuedToken(accessToken, refreshToken);
     }
 
@@ -92,7 +91,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         try {
             RefreshTokenClaims claims = jwtTokenProvider.parseRefreshToken(presentedRefreshToken);
             refreshTokenRedisRepository.revokeFamily(claims.familyId(), Instant.now(), LOGOUT);
-            log.info("Admin logout: family={}", claims.familyId());
         } catch (ExpiredTokenException | InvalidateTokenException e) {
             return;
         }

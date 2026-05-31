@@ -1,6 +1,7 @@
 package com.moya.myblogboot.controller;
 
 import com.moya.myblogboot.configuration.JwtProperties;
+import com.moya.myblogboot.domain.token.Role;
 import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.domain.token.TokenMetaResponse;
 import com.moya.myblogboot.domain.token.IssuedToken;
@@ -8,8 +9,10 @@ import com.moya.myblogboot.domain.token.ReissuedToken;
 import com.moya.myblogboot.exception.custom.ExpiredTokenException;
 import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
+import com.moya.myblogboot.exception.custom.UnauthorizedException;
 import com.moya.myblogboot.service.AuthService;
 import com.moya.myblogboot.service.RefreshTokenService;
+import com.moya.myblogboot.utils.AuthAuditLogger;
 import com.moya.myblogboot.utils.ClientIpResolver;
 import com.moya.myblogboot.utils.CookieFactory;
 import com.moya.myblogboot.utils.CookieUtil;
@@ -23,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static com.moya.myblogboot.utils.AuthAuditLogger.AuthAuditEvent.*;
 import static com.moya.myblogboot.constants.CookieName.*;
 
 @RestController
@@ -35,13 +39,21 @@ public class AuthController {
     private final CookieFactory cookieFactory;
     private final TokenResolver tokenResolver;
     private final JwtProperties jwtProperties;
+    private final AuthAuditLogger authAuditLogger;
 
     @PostMapping("/api/v1/login")
     public ResponseEntity<TokenMetaResponse> login(@RequestBody @Valid LoginReqDto loginReqDto,
                                                    HttpServletRequest request,
                                                    HttpServletResponse response) {
-        IssuedToken newToken = authService.adminLogin(loginReqDto, clientIpResolver.resolve(request));
+        IssuedToken newToken;
+        try {
+            newToken = authService.adminLogin(loginReqDto, clientIpResolver.resolve(request));
+        } catch (UnauthorizedException e) {
+            authAuditLogger.failure(LOGIN_FAILURE, loginReqDto.getUsername(), request, e.getErrorCode().getCode());
+            throw e;
+        }
         addAuthCookies(response, newToken.accessToken(), newToken.refreshToken());
+        authAuditLogger.success(LOGIN_SUCCESS, loginReqDto.getUsername(), request);
         return ResponseEntity.ok().body(tokenMetaResponse());
     }
 
@@ -54,6 +66,7 @@ public class AuthController {
             refreshTokenService.revokeOnLogout(refreshTokenCookie.getValue());
         }
         cookieFactory.expireAuthCookies(response);
+        authAuditLogger.success(LOGOUT, request);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -64,7 +77,8 @@ public class AuthController {
             throw new InvalidateTokenException();
         }
         try {
-            return ResponseEntity.ok().body(authService.getTokenInfo(token).getRole());
+            String authority = authService.getTokenInfo(token).getRole();
+            return ResponseEntity.ok().body(Role.fromAuthority(authority).displayName());
         } catch (ExpiredTokenException | InvalidateTokenException | JwtException | IllegalArgumentException e) {
             throw new InvalidateTokenException();
         }
@@ -80,17 +94,12 @@ public class AuthController {
         try {
             ReissuedToken reissuedToken = authService.reissuingAccessToken(refreshTokenCookie.getValue());
             addAuthCookies(response, reissuedToken.accessToken(), reissuedToken.refreshToken());
+            authAuditLogger.success(TOKEN_REISSUE, request);
             return ResponseEntity.ok().body(tokenMetaResponse());
         } catch (InvalidateTokenException | ExpiredRefreshTokenException e) {
             cookieFactory.expireAuthCookies(response);
             throw e;
         }
-    }
-
-    @GetMapping("/api/v1/token-validation")
-    public ResponseEntity<Boolean> tokenValidate(HttpServletRequest request) {
-        String token = tokenResolver.resolve(request);
-        return ResponseEntity.ok().body(token != null && authService.isTokenValid(token));
     }
 
     private void addAuthCookies(HttpServletResponse response, String accessToken, String refreshToken) {

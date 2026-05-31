@@ -3,7 +3,9 @@ package com.moya.myblogboot.exception;
 import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
 import com.moya.myblogboot.exception.custom.TooManyLoginAttemptsException;
+import com.moya.myblogboot.utils.AuthAuditLogger;
 import com.moya.myblogboot.utils.CookieFactory;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,13 +21,27 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
+import java.util.Set;
+
+import static com.moya.myblogboot.utils.AuthAuditLogger.AuthAuditEvent.LOGIN_LOCKED;
+import static com.moya.myblogboot.utils.AuthAuditLogger.AuthAuditEvent.TOKEN_REISSUE_REUSE_DETECTED;
 
 @Slf4j
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
+    private static final Set<String> SENSITIVE_FIELDS = Set.of(
+            "password",
+            "oldpassword",
+            "newpassword",
+            "confirmpassword",
+            "token",
+            "secret"
+    );
+
     private final CookieFactory cookieFactory;
+    private final AuthAuditLogger authAuditLogger;
 
     // 비즈니스 예외 — 모든 커스텀 예외를 한 번에 처리
     @ExceptionHandler(BusinessException.class)
@@ -38,9 +54,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(TooManyLoginAttemptsException.class)
-    public ResponseEntity<ErrorResponse> handleTooManyLoginAttempts(TooManyLoginAttemptsException e) {
+    public ResponseEntity<ErrorResponse> handleTooManyLoginAttempts(TooManyLoginAttemptsException e,
+                                                                    HttpServletRequest request) {
         ErrorCode errorCode = e.getErrorCode();
         log.warn("Too many login attempts: retryAfterSeconds={}", e.getRetryAfterSeconds());
+        authAuditLogger.failure(LOGIN_LOCKED, request, errorCode.getCode());
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .header(HttpHeaders.RETRY_AFTER, String.valueOf(e.getRetryAfterSeconds()))
@@ -62,11 +80,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidateTokenException.class)
     public ResponseEntity<ErrorResponse> handleInvalidateTokenException(
+            HttpServletRequest request,
             HttpServletResponse response,
             InvalidateTokenException e) {
         cookieFactory.expireAuthCookies(response);
         ErrorCode errorCode = e.getErrorCode();
         log.warn("Invalid token: {}", errorCode.getCode());
+        if (errorCode == ErrorCode.REFRESH_TOKEN_REUSE_DETECTED) {
+            authAuditLogger.failure(TOKEN_REISSUE_REUSE_DETECTED, request, errorCode.getCode());
+        }
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ErrorResponse.of(errorCode));
@@ -88,8 +110,7 @@ public class GlobalExceptionHandler {
                 e.getBindingResult().getFieldErrors().stream()
                         .map(error -> ErrorResponse.FieldError.builder()
                                 .field(error.getField())
-                                .value(error.getRejectedValue() != null
-                                        ? error.getRejectedValue().toString() : "")
+                                .value(maskRejectedValue(error.getField(), error.getRejectedValue()))
                                 .reason(error.getDefaultMessage())
                                 .build())
                         .toList();
@@ -132,5 +153,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR));
+    }
+
+    private String maskRejectedValue(String field, Object rejectedValue) {
+        if (isSensitiveField(field)) {
+            return "[PROTECTED]";
+        }
+        return rejectedValue != null ? rejectedValue.toString() : "";
+    }
+
+    private boolean isSensitiveField(String field) {
+        if (field == null) {
+            return false;
+        }
+        String normalized = field.toLowerCase();
+        int nestedFieldSeparator = normalized.lastIndexOf('.');
+        if (nestedFieldSeparator >= 0) {
+            normalized = normalized.substring(nestedFieldSeparator + 1);
+        }
+        return SENSITIVE_FIELDS.contains(normalized);
     }
 }
