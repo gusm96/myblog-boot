@@ -5,17 +5,21 @@ import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.file.ImageFile;
 import com.moya.myblogboot.dto.file.ImageFileDto;
 import com.moya.myblogboot.domain.post.Post;
+import com.moya.myblogboot.domain.post.PostSlugHistory;
 import com.moya.myblogboot.domain.post.PostStatus;
 import com.moya.myblogboot.domain.post.SearchType;
 import com.moya.myblogboot.dto.post.*;
 import com.moya.myblogboot.exception.ErrorCode;
+import com.moya.myblogboot.exception.custom.DuplicateException;
 import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.exception.custom.PostGoneException;
+import com.moya.myblogboot.exception.custom.PostMovedPermanentlyException;
 import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.ImageFileRepository;
 import com.moya.myblogboot.repository.PostRedisRepository;
 import com.moya.myblogboot.repository.PostRepository;
+import com.moya.myblogboot.repository.PostSlugHistoryRepository;
 import com.moya.myblogboot.service.CategoryService;
 import com.moya.myblogboot.service.FileUploadService;
 import com.moya.myblogboot.service.PostCacheService;
@@ -47,6 +51,7 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final ImageFileRepository imageFileRepository;
     private final PostRedisRepository postRedisRepository;
+    private final PostSlugHistoryRepository postSlugHistoryRepository;
     private final FileUploadService fileUploadService;
     private final PostCacheService postCacheService;
     private final ApplicationEventPublisher eventPublisher;
@@ -85,14 +90,6 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostDetailResDto getPostDetailAndIncrementViews(Long postId) {
-        PostForRedis postForRedis = postCacheService.getPostFromCache(postId);
-        return PostDetailResDto.builder()
-                .postForRedis(postRedisRepository.incrementViews(postForRedis))
-                .build();
-    }
-
-    @Override
     public PostDetailResDto getPublicPostDetail(Long postId) {
         PostForRedis postForRedis = postCacheService.getPostFromCache(postId);
         assertPubliclyViewable(postForRedis);
@@ -102,12 +99,20 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostDetailResDto getPublicPostDetailAndIncrementViews(Long postId) {
+    public PostDetailResDto getPublicPostDetail(String identifier) {
+        return getPublicPostDetail(resolvePublicPostId(identifier));
+    }
+
+    @Override
+    public Long incrementPublicPostViews(Long postId) {
         PostForRedis postForRedis = postCacheService.getPostFromCache(postId);
         assertPubliclyViewable(postForRedis);
-        return PostDetailResDto.builder()
-                .postForRedis(postRedisRepository.incrementViews(postForRedis))
-                .build();
+        return postRedisRepository.incrementViews(postForRedis).totalViews();
+    }
+
+    @Override
+    public void assertPubliclyViewable(Long postId) {
+        assertPubliclyViewable(postCacheService.getPostFromCache(postId));
     }
 
     @Override
@@ -147,9 +152,11 @@ public class PostServiceImpl implements PostService {
         Post post = findById(postId);
         verifyPostAccessAuthorization(post.getAdmin().getId(), adminId);
         Category modifiedCategory = categoryService.retrieve(modifiedDto.getCategory());
-        String slug = resolveSlug(modifiedDto.getSlug(), modifiedDto.getTitle(), post.getSlug());
+        String oldSlug = post.getSlug();
+        String slug = resolveSlug(modifiedDto.getSlug(), modifiedDto.getTitle(), post);
         post.updatePost(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent(),
                 slug, resolveMetaDescription(modifiedDto), modifiedDto.getMetaKeywords(), modifiedDto.getThumbnailUrl());
+        recordSlugHistoryIfChanged(post, oldSlug, slug);
         postCacheService.updatePost(postCacheService.getPostFromCache(post.getId()), post);
         eventPublisher.publishEvent(new PostChangeEvent(this, "UPDATED", postId, post.getSlug()));
         return postId;
@@ -234,6 +241,23 @@ public class PostServiceImpl implements PostService {
         return postReqDto.getMetaDescription();
     }
 
+    private Long resolvePublicPostId(String identifier) {
+        try {
+            return Long.parseLong(identifier);
+        } catch (NumberFormatException e) {
+            return postRepository.findIdBySlug(identifier)
+                    .orElseGet(() -> resolveMovedPostByOldSlug(identifier));
+        }
+    }
+
+    private Long resolveMovedPostByOldSlug(String oldSlug) {
+        PostSlugHistory history = postSlugHistoryRepository.findByOldSlug(oldSlug)
+                .orElseThrow(() -> new EntityNotFoundException(ErrorCode.POST_NOT_FOUND));
+        PostForRedis target = postCacheService.getPostFromCache(history.getPost().getId());
+        assertPubliclyViewable(target);
+        throw new PostMovedPermanentlyException(target.getSlug());
+    }
+
     private void deletePosts(Post post) {
         PostForRedis postForRedis = postCacheService.getPostFromCache(post.getId());
         fileUploadService.deleteFiles(post.getImageFiles());
@@ -254,10 +278,13 @@ public class PostServiceImpl implements PostService {
      * 2. 기존 slug가 있으면 유지 (수정 시)
      * 3. 없으면 title에서 자동 생성
      */
-    private String resolveSlug(String requestedSlug, String title, String existingSlug) {
+    private String resolveSlug(String requestedSlug, String title, Post existingPost) {
+        String existingSlug = existingPost != null ? existingPost.getSlug() : null;
+        Long existingPostId = existingPost != null ? existingPost.getId() : null;
         if (requestedSlug != null && !requestedSlug.isBlank()) {
             if (requestedSlug.equals(existingSlug)) return existingSlug;
-            if (!postRepository.existsBySlug(requestedSlug)) return requestedSlug;
+            assertSlugAvailable(requestedSlug, existingPostId);
+            return requestedSlug;
         }
         if (existingSlug != null) return existingSlug;
         return generateUniqueSlug(title);
@@ -265,11 +292,39 @@ public class PostServiceImpl implements PostService {
 
     private String generateUniqueSlug(String title) {
         String base = SlugUtil.generate(title);
-        if (!postRepository.existsBySlug(base)) return base;
+        if (isSlugAvailable(base, null)) return base;
         for (int i = 2; i <= 10; i++) {
             String candidate = SlugUtil.withSuffix(base, i);
-            if (!postRepository.existsBySlug(candidate)) return candidate;
+            if (isSlugAvailable(candidate, null)) return candidate;
         }
         return base + "-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+    }
+
+    private void assertSlugAvailable(String slug, Long currentPostId) {
+        if (!isSlugAvailable(slug, currentPostId)) {
+            throw new DuplicateException(ErrorCode.DUPLICATE_POST_SLUG);
+        }
+    }
+
+    private boolean isSlugAvailable(String slug, Long currentPostId) {
+        boolean currentSlugAvailable = postRepository.findBySlug(slug)
+                .map(post -> post.getId().equals(currentPostId))
+                .orElse(true);
+        boolean oldSlugAvailable = postSlugHistoryRepository.findByOldSlug(slug)
+                .map(history -> history.getPost().getId().equals(currentPostId))
+                .orElse(true);
+        return currentSlugAvailable && oldSlugAvailable;
+    }
+
+    private void recordSlugHistoryIfChanged(Post post, String oldSlug, String newSlug) {
+        if (oldSlug == null || oldSlug.equals(newSlug)) {
+            return;
+        }
+        postSlugHistoryRepository.findByOldSlug(newSlug)
+                .filter(history -> history.getPost().getId().equals(post.getId()))
+                .ifPresent(postSlugHistoryRepository::delete);
+        if (!postSlugHistoryRepository.existsByOldSlug(oldSlug)) {
+            postSlugHistoryRepository.save(new PostSlugHistory(post, oldSlug));
+        }
     }
 }

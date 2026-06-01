@@ -22,11 +22,13 @@ public interface PostService {
 
     PostDetailResDto getPostDetail(Long postId);
 
-    PostDetailResDto getPostDetailAndIncrementViews(Long postId);
-
     PostDetailResDto getPublicPostDetail(Long postId);
 
-    PostDetailResDto getPublicPostDetailAndIncrementViews(Long postId);
+    PostDetailResDto getPublicPostDetail(String identifier);
+
+    Long incrementPublicPostViews(Long postId);
+
+    void assertPubliclyViewable(Long postId);
 
     Long getPublicPostViews(Long postId);
 

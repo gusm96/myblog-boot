@@ -36,6 +36,7 @@ public enum ErrorCode {
     DUPLICATE_POST_LIKE(HttpStatus.CONFLICT, "B003", "이미 좋아요한 게시글입니다."),
     POST_LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "B004", "좋아요하지 않은 게시글입니다."),
     POST_GONE(HttpStatus.GONE, "B005", "삭제된 게시글입니다."),
+    DUPLICATE_POST_SLUG(HttpStatus.CONFLICT, "B006", "이미 사용 중인 게시글 슬러그입니다."),
 
     // 댓글
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CM001", "해당 댓글이 존재하지 않습니다."),

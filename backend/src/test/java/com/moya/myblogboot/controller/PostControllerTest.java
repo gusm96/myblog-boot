@@ -248,15 +248,16 @@ class PostControllerTest extends AbstractContainerBaseTest {
     }
 
     @Test
-    @DisplayName("게시글 상세 조회 V1 (slug) — 최초 조회: 조회수 증가 + viewed_posts 쿠키 발급")
-    void getPostDetailV1BySlug_최초조회() throws Exception {
+    @DisplayName("게시글 상세 조회 V1 (slug) — GET은 조회수 증가 없이 순수 조회")
+    void getPostDetailV1BySlug_doesNotIncrementViews() throws Exception {
         ResultActions resultActions = mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(postId))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.slug").value(postSlug))
-                .andExpect(MockMvcResultMatchers.cookie().exists("viewed_posts"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.views").value(0))
+                .andExpect(MockMvcResultMatchers.cookie().doesNotExist("viewed_posts"))
                 .andDo(restDocs.document(
                         pathParameters(
                                 parameterWithName("identifier").description("게시글 슬러그 또는 숫자 ID")
@@ -278,42 +279,68 @@ class PostControllerTest extends AbstractContainerBaseTest {
     }
 
     @Test
-    @DisplayName("게시글 상세 조회 V1 (slug) — 중복 조회: viewed_posts 쿠키 포함 시 조회수 증가 없음")
-    void getPostDetailV1BySlug_중복조회() throws Exception {
-        // 1차 조회로 쿠키 발급
-        MvcResult firstResult = mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug))
+    @DisplayName("게시글 조회수 증가 — POST만 증가하고 쿠키 중복 호출은 증가하지 않음")
+    void incrementPostViewsByPostOnlyDeduplicatesWithCookie() throws Exception {
+        MvcResult firstResult = mockMvc.perform(post("/api/v1/posts/{postId}/views", postId))
                 .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string("1"))
                 .andReturn();
 
         Cookie viewedCookie = firstResult.getResponse().getCookie("viewed_posts");
         assertThat(viewedCookie).isNotNull();
 
-        long viewsAfterFirst = ((Number) new com.fasterxml.jackson.databind.ObjectMapper()
-                .readTree(firstResult.getResponse().getContentAsString())
-                .get("views").numberValue()).longValue();
-
-        // 2차 조회 (동일 쿠키 포함)
-        MvcResult secondResult = mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug)
+        mockMvc.perform(post("/api/v1/posts/{postId}/views", postId)
                         .cookie(viewedCookie))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andReturn();
+                .andExpect(MockMvcResultMatchers.content().string("1"));
 
-        long viewsAfterSecond = ((Number) new com.fasterxml.jackson.databind.ObjectMapper()
-                .readTree(secondResult.getResponse().getContentAsString())
-                .get("views").numberValue()).longValue();
-
-        assertThat(viewsAfterSecond).isEqualTo(viewsAfterFirst);
+        mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.views").value(1));
     }
 
     @Test
-    @DisplayName("게시글 상세 조회 V1 (ID) — 최초 조회: 조회수 증가 + viewed_posts 쿠키 발급")
-    void getPostDetailV1ById_최초조회() throws Exception {
+    @DisplayName("게시글 상세 조회 V1 (ID) — GET은 viewed_posts 쿠키를 발급하지 않음")
+    void getPostDetailV1ById_doesNotIssueViewedCookie() throws Exception {
         ResultActions resultActions = mockMvc.perform(get("/api/v1/posts/{identifier}", postId));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(postId))
-                .andExpect(MockMvcResultMatchers.cookie().exists("viewed_posts"));
+                .andExpect(MockMvcResultMatchers.cookie().doesNotExist("viewed_posts"));
+    }
+
+    @Test
+    @DisplayName("이전 slug 조회 — 현재 공개 slug로 301 Location 응답")
+    void getPostDetailByOldSlugReturns301ToCurrentSlug() throws Exception {
+        PostReqDto modifiedPostDto = PostReqDto.builder()
+                .title("modifiedTitle")
+                .content("modifiedContent")
+                .category(categoryId)
+                .slug("new-public-slug")
+                .build();
+
+        mockMvc.perform(put("/api/v1/posts/{postId}", postId)
+                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken))
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(modifiedPostDto)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug))
+                .andExpect(MockMvcResultMatchers.status().isMovedPermanently())
+                .andExpect(MockMvcResultMatchers.header().string(HttpHeaders.LOCATION,
+                        "http://localhost:8080/posts/new-public-slug"));
+    }
+
+    @Test
+    @DisplayName("조회수 증가 - HIDE 게시글은 404")
+    void incrementViewsHiddenPostReturns404() throws Exception {
+        Post post = postRepository.findById(postId).orElseThrow();
+        post.updatePostStatus(PostStatus.HIDE);
+
+        mockMvc.perform(post("/api/v1/posts/{postId}/views", postId))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
@@ -609,6 +636,16 @@ class PostControllerTest extends AbstractContainerBaseTest {
     }
 
     @Test
+    @DisplayName("게시글 좋아요 - HIDE 게시글은 404")
+    void addPostLikeHiddenPostReturns404() throws Exception {
+        Post post = postRepository.findById(postId).orElseThrow();
+        post.updatePostStatus(PostStatus.HIDE);
+
+        mockMvc.perform(post("/api/v2/likes/{postId}", postId))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
     @DisplayName("게시글 좋아요 여부 체크")
     void checkPostLike() throws Exception {
         // 좋아요 추가 후 발급된 쿠키 획득
@@ -748,5 +785,25 @@ class PostControllerTest extends AbstractContainerBaseTest {
                         ),
                         responseBody()
                 ));
+    }
+
+    @Test
+    @DisplayName("게시글 좋아요 취소 - 삭제 게시글은 410")
+    void cancelPostLikeDeletedPostReturns410() throws Exception {
+        MvcResult likeResult = mockMvc.perform(post("/api/v2/likes/{postId}", postId))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        Cookie likedCookie = likeResult.getResponse().getCookie(CookieName.LIKED_POSTS);
+        assertThat(likedCookie).isNotNull();
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/" + postId)
+                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        mockMvc.perform(delete("/api/v2/likes/{postId}", postId)
+                        .cookie(likedCookie))
+                .andExpect(MockMvcResultMatchers.status().isGone())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("B005"));
     }
 }
