@@ -69,26 +69,30 @@ public class PostController {
 
     // slug 또는 숫자 ID 모두 처리 — HMAC 쿠키로 중복 조회 방지
     @GetMapping("/api/v1/posts/{identifier}")
-    public ResponseEntity<PostDetailResDto> getPostDetail(@PathVariable("identifier") String identifier,
-                                                          HttpServletRequest request,
-                                                          HttpServletResponse response) {
-        Long postId = resolvePostId(identifier);
+    public ResponseEntity<PostDetailResDto> getPostDetail(@PathVariable("identifier") String identifier) {
+        PostDetailResDto dto = postService.getPublicPostDetail(identifier);
+        return ResponseEntity.ok()
+                .header("Cache-Control", "public, max-age=60")
+                .body(dto);
+    }
 
+    @PostMapping("/api/v1/posts/{postId}/views")
+    public ResponseEntity<Long> incrementPostViews(@PathVariable("postId") Long postId,
+                                                   HttpServletRequest request,
+                                                   HttpServletResponse response) {
         Cookie cookie = CookieUtil.findCookie(request, VIEWED_POSTS);
         String cookieValue = (cookie != null) ? cookie.getValue() : null;
         boolean valid = postViewCookieService.isValid(cookieValue);
 
+        Long totalViews;
         if (!valid || !postViewCookieService.isViewed(cookieValue, postId)) {
-            PostDetailResDto dto = postService.getPublicPostDetailAndIncrementViews(postId);
+            totalViews = postService.incrementPublicPostViews(postId);
             String newValue = postViewCookieService.addViewed(valid ? cookieValue : null, postId);
             response.addCookie(CookieUtil.addCookie(VIEWED_POSTS, newValue, postViewCookieService.secondsUntilMidnight()));
-            return ResponseEntity.ok(dto);
+        } else {
+            totalViews = postService.getPublicPostViews(postId);
         }
-
-        PostDetailResDto dto = postService.getPublicPostDetail(postId);
-        return ResponseEntity.ok()
-                .header("Cache-Control", "public, max-age=60")
-                .body(dto);
+        return ResponseEntity.ok(totalViews);
     }
 
     // v8 → v1 301 redirect (하위 호환)
@@ -129,14 +133,6 @@ public class PostController {
         Long memberId = PrincipalUtil.getMemberId(principal);
         postService.delete(postId, memberId);
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    private Long resolvePostId(String identifier) {
-        try {
-            return Long.parseLong(identifier);
-        } catch (NumberFormatException e) {
-            return postService.getPostIdBySlug(identifier);
-        }
     }
 
     private int getPage(int page) {

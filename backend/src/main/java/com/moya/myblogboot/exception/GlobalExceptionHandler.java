@@ -2,6 +2,7 @@ package com.moya.myblogboot.exception;
 
 import com.moya.myblogboot.exception.custom.ExpiredRefreshTokenException;
 import com.moya.myblogboot.exception.custom.InvalidateTokenException;
+import com.moya.myblogboot.exception.custom.PostMovedPermanentlyException;
 import com.moya.myblogboot.exception.custom.TooManyLoginAttemptsException;
 import com.moya.myblogboot.utils.AuthAuditLogger;
 import com.moya.myblogboot.utils.CookieFactory;
@@ -9,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +44,18 @@ public class GlobalExceptionHandler {
 
     private final CookieFactory cookieFactory;
     private final AuthAuditLogger authAuditLogger;
+
+    @Value("${app.base-url}")
+    private String appBaseUrl;
+
+    @ExceptionHandler(PostMovedPermanentlyException.class)
+    public ResponseEntity<Void> handlePostMovedPermanently(PostMovedPermanentlyException e) {
+        String baseUrl = appBaseUrl.endsWith("/") ? appBaseUrl.substring(0, appBaseUrl.length() - 1) : appBaseUrl;
+        return ResponseEntity
+                .status(HttpStatus.MOVED_PERMANENTLY)
+                .header(HttpHeaders.LOCATION, baseUrl + "/posts/" + e.getCurrentSlug())
+                .build();
+    }
 
     // 비즈니스 예외 — 모든 커스텀 예외를 한 번에 처리
     @ExceptionHandler(BusinessException.class)

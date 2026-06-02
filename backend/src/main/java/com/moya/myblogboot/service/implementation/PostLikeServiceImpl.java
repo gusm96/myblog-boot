@@ -4,6 +4,7 @@ import com.moya.myblogboot.dto.post.PostForRedis;
 import com.moya.myblogboot.repository.PostRedisRepository;
 import com.moya.myblogboot.service.PostCacheService;
 import com.moya.myblogboot.service.PostLikeService;
+import com.moya.myblogboot.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,15 +14,18 @@ public class PostLikeServiceImpl implements PostLikeService {
 
     private final PostCacheService postCacheService;
     private final PostRedisRepository postRedisRepository;
+    private final PostService postService;
 
     @Override
     public Long addLikes(Long postId) {
+        postService.assertPubliclyViewable(postId);
         PostForRedis post = postCacheService.getPostFromCache(postId);
         return postRedisRepository.incrementLikes(post).totalLikes();
     }
 
     @Override
     public Long cancelLikes(Long postId) {
+        postService.assertPubliclyViewable(postId);
         PostForRedis post = postCacheService.getPostFromCache(postId);
         return postRedisRepository.decrementLikes(post).totalLikes();
     }
