@@ -17,7 +17,7 @@ import java.util.Map;
 
 @Slf4j
 @Component
-@Profile({"dev", "local"})
+@Profile({"dev", "local", "migrate"})
 @RequiredArgsConstructor
 public class TagBackfillRunner {
 
@@ -48,6 +48,10 @@ public class TagBackfillRunner {
                 "SELECT post_id, category_id FROM post WHERE delete_date IS NULL").getResultList();
         for (Object[] row : posts) {
             Long postId = ((Number) row[0]).longValue();
+            if (row[1] == null) { // 고아 post(category_id NULL) 방어 — 백필 중 NPE→전체 롤백 방지
+                log.warn("[TagBackfill] post {} has null category_id, skipped.", postId);
+                continue;
+            }
             Long categoryId = ((Number) row[1]).longValue();
             Tag tag = categoryToTag.get(categoryId);
             if (tag == null) {
