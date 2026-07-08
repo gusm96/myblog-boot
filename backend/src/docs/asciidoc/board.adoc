@@ -1,33 +1,66 @@
 = BoardAPI
 
 == 게시글 작성/조회/수정/삭제
+
 === 게시글 등록
-operation::board-controller-test/write-board[snippets='request-headers,request-fields,request-body,http-request,http-response']
+`POST /api/v1/posts`
+
+요청 본문은 `title`, `content`, `tags`를 포함한다. `tags`는 1개 이상 5개 이하의 태그 이름 배열이다.
+
 === 전체 게시글 조회
-operation::board-controller-test/get-all-boards[snippets='query-parameters,http-request,http-response,response-fields']
-=== 카테고리별 게시글 조회
-operation::board-controller-test/get-category-boards[snippets='query-parameters,http-request,http-response,response-fields']
+`GET /api/v1/posts?p={page}`
+
+응답 게시글은 `tags` 배열을 포함한다.
+
+=== 태그별 게시글 조회
+`GET /api/v1/posts/tag?t={slug}&p={page}`
+
+`t`는 tag slug이다.
+
 === 검색 결과별 게시글 조회
-operation::board-controller-test/get-searched-boards[snippets='query-parameters,http-request,http-response,response-fields']
+`GET /api/v1/posts/search?type={TITLE|CONTENT}&contents={keyword}&p={page}`
+
 === 삭제 예정 게시글 조회
-operation::board-controller-test/get-deleted-boards[snippets='query-parameters,request-headers,http-request,http-response']
+`GET /api/v1/deleted-posts?p={page}`
+
+관리자 인증이 필요하다.
+
 === 게시글 상세 조회
-operation::board-controller-test/get-board-detail-v7[snippets='path-parameters,http-request,http-response,response-fields']
+`GET /api/v1/posts/{identifier}`
+
+`identifier`는 게시글 ID 또는 slug이다. 이전 slug는 현재 slug의 public URL로 301 응답한다.
+
 === 게시글 상세 조회 (관리자용)
-operation::board-controller-test/get-board-detail-for-admin[snippets='path-parameters,request-headers,http-request,http-response,response-fields']
+`GET /api/v1/management/posts/{postId}`
+
+관리자 인증이 필요하다.
+
 === 게시글 수정
-operation::board-controller-test/edit-board[snippets='path-parameters,request-headers,request-fields,request-body,http-request,http-response']
+`PUT /api/v1/posts/{postId}`
+
+요청 본문은 등록과 동일하게 `tags` 배열을 사용한다.
+
 === 게시글 삭제
-operation::board-controller-test/delete-board[snippets='path-parameters,request-headers,http-request,http-response']
+`DELETE /api/v1/posts/{postId}`
+
+관리자 인증이 필요하다.
+
 === 게시글 삭제 취소
-operation::board-controller-test/cancel-deleted-board[snippets='path-parameters,request-headers,http-request,http-response']
+`PUT /api/v1/deleted-posts/{postId}`
+
+관리자 인증이 필요하다.
+
 === 게시글 영구 삭제
-operation::board-controller-test/delete-board-permanently[snippets='path-parameters,request-headers,http-request,http-response']
+`DELETE /api/v1/deleted-posts/{postId}`
+
+관리자 인증이 필요하다.
 
 == 게시글 좋아요/확인/취소
 === 게시글 좋아요
-operation::board-controller-test/add-board-like[snippets='path-parameters,request-headers,http-request,http-response']
+`POST /api/v2/likes/{postId}`
+
 === 게시글 좋아요 확인
-operation::board-controller-test/check-board-like[snippets='path-parameters,request-headers,http-request,http-response']
+`GET /api/v2/likes/{postId}`
+
 === 게시글 좋아요 취소
-operation::board-controller-test/cancel-board-like[snippets='path-parameters,request-headers,http-request,http-response']
+`DELETE /api/v2/likes/{postId}`

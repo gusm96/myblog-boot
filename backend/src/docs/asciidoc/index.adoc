@@ -65,6 +65,6 @@ Authorization: Bearer {access_token}
 
 include::auth.adoc[]
 include::board.adoc[]
-include::category.adoc[]
+include::tag.adoc[]
 include::comment.adoc[]
 include::fileupload.adoc[]
