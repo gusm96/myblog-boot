@@ -14,8 +14,8 @@ import {
   deletePost,
   undeletePost,
   deletePermanently,
-  getCategoriesForAdmin,
 } from "@/lib/postApi";
+import { TagInput } from "./TagInput";
 import { queryKeys } from "@/lib/queryKeys";
 
 interface Props {
@@ -25,7 +25,7 @@ interface Props {
 export function PostEditFormClient({ postId }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [post, setPost] = useState({ title: "", category: "", deleteDate: "" });
+  const [post, setPost] = useState({ title: "", tags: [] as string[], deleteDate: "" });
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -39,22 +39,15 @@ export function PostEditFormClient({ postId }: Props) {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: categories = [] } = useQuery({
-    queryKey: queryKeys.categories.list(),
-    queryFn:  getCategoriesForAdmin,
-    staleTime: 30 * 60 * 1000,
-  });
-
   useEffect(() => {
-    if (postData && categories.length > 0) {
-      const matchedCat = categories.find((c) => c.name === postData.categoryName);
+    if (postData) {
       setPost({
         title:      postData.title,
-        category:   matchedCat ? String(matchedCat.id) : "",
+        tags:       postData.tags ? postData.tags.map((t) => t.name) : [],
         deleteDate: postData.deleteDate ?? "",
       });
     }
-  }, [postData, categories]);
+  }, [postData]);
 
   useEffect(() => {
     if (editor && postData?.content) {
@@ -75,6 +68,8 @@ export function PostEditFormClient({ postId }: Props) {
       alert("게시글이 수정되었습니다.");
       queryClient.invalidateQueries({ queryKey: queryKeys.posts.lists() });
       queryClient.invalidateQueries({ queryKey: queryKeys.posts.details() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.publicList() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.adminList() });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.postsAll() });
       router.push(`/management/posts/${data}`);
     },
@@ -109,6 +104,10 @@ export function PostEditFormClient({ postId }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editor) return;
+    if (post.tags.length === 0) {
+      alert("태그를 1개 이상 입력해주세요.");
+      return;
+    }
     editMutation.mutate({ p: post, html: editor.getHTML() });
   };
 
@@ -155,19 +154,11 @@ export function PostEditFormClient({ postId }: Props) {
           />
         </div>
 
-        <div className="editor-category-row">
-          <span className="editor-meta__label">category</span>
-          <Form.Select
-            className="editor-meta__category-select editor-meta__category-select--standalone"
-            name="category"
-            value={post.category}
-            onChange={handleChange}
-          >
-            <option value="">카테고리 선택</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </Form.Select>
+        <div className="editor-category-row" style={{ display: "block" }}>
+          <TagInput
+            value={post.tags}
+            onChange={(val) => setPost((prev) => ({ ...prev, tags: val }))}
+          />
         </div>
 
         <div className="tiptap-wrapper">

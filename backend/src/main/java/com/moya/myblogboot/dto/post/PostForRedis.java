@@ -1,16 +1,20 @@
 package com.moya.myblogboot.dto.post;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.post.PostStatus;
+import com.moya.myblogboot.dto.tag.TagSummary;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PostForRedis {
 
     private Long id;
@@ -27,7 +31,7 @@ public class PostForRedis {
     private String slug;
     private String metaDescription;
     private String thumbnailUrl;
-    private String categoryName;
+    private List<TagSummary> tags;
 
     @Builder
     public PostForRedis(Post post) {
@@ -45,7 +49,7 @@ public class PostForRedis {
         this.slug = post.getSlug();
         this.metaDescription = post.getMetaDescription();
         this.thumbnailUrl = post.getThumbnailUrl();
-        this.categoryName = post.getCategory() != null ? post.getCategory().getName() : null;
+        this.tags = post.getTags().stream().map(TagSummary::of).toList();
     }
 
     public void incrementViews() {
@@ -77,6 +81,6 @@ public class PostForRedis {
         this.slug = post.getSlug();
         this.metaDescription = post.getMetaDescription();
         this.thumbnailUrl = post.getThumbnailUrl();
-        this.categoryName = post.getCategory() != null ? post.getCategory().getName() : null;
+        this.tags = post.getTags().stream().map(TagSummary::of).toList();
     }
 }

@@ -46,29 +46,39 @@ export function buildBreadcrumbSchema(
   post: Post,
   siteUrl: string
 ): Record<string, unknown> {
+  const items = [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "홈",
+      item: siteUrl,
+    },
+  ];
+
+  let nextPos = 2;
+
+  if (post.tags && post.tags.length > 0) {
+    const firstTag = post.tags[0];
+    items.push({
+      "@type": "ListItem",
+      position: nextPos,
+      name: firstTag.name,
+      item: `${siteUrl}/tag/${encodeURIComponent(firstTag.slug)}`,
+    });
+    nextPos++;
+  }
+
+  items.push({
+    "@type": "ListItem",
+    position: nextPos,
+    name: post.title,
+    item: `${siteUrl}/posts/${post.slug}`,
+  });
+
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "홈",
-        item: siteUrl,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: post.categoryName,
-        item: `${siteUrl}/category/${encodeURIComponent(post.categoryName)}`,
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: post.title,
-        item: `${siteUrl}/posts/${post.slug}`,
-      },
-    ],
+    itemListElement: items,
   };
 }
 

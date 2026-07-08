@@ -46,3 +46,9 @@ docker-compose.override.yaml
 
 ### Claude Code 로컬 설정 ###
 .claude/
+
+### 작업 문서 (민감 내용 포함 가능 — 저장소 업로드 금지) ###
+/docs/
+
+### AI 도구 산출물 (브라우저 스냅샷 등) ###
+.playwright-mcp/

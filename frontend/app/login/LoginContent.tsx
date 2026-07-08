@@ -23,8 +23,8 @@ export default function LoginContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const data = await login(formData);
-      dispatch(userLogin(data));
+      await login(formData);
+      dispatch(userLogin());
       router.push(from);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };

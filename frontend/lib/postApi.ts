@@ -32,20 +32,20 @@ export const getPostLikeCount = (postId: number) =>
 
 // ── 게시글 목록 (클라이언트 사이드) ──────────────────────────
 
-import type { PostListResponse } from "@/types";
+import type { PostListResponse, Tag, TagSummary } from "@/types";
 
-export const getPostList = (page = 1): Promise<PostListResponse> =>
+export const clientGetPostList = (page = 1): Promise<PostListResponse> =>
   apiClient.get(`/api/v1/posts?p=${page}`).then((res) => res.data);
 
-export const getCategoryPostList = (
-  categoryName: string,
+export const clientGetTagPostList = (
+  slug: string,
   page = 1
 ): Promise<PostListResponse> =>
   apiClient
-    .get(`/api/v1/posts/category?c=${encodeURIComponent(categoryName)}&p=${page}`)
+    .get(`/api/v1/posts/tag?t=${encodeURIComponent(slug)}&p=${page}`)
     .then((res) => res.data);
 
-export const getSearchedPostList = (
+export const clientGetSearchedPostList = (
   type: string,
   contents: string,
   page: number | string
@@ -53,6 +53,9 @@ export const getSearchedPostList = (
   apiClient
     .get(`/api/v1/posts/search?type=${type}&contents=${contents}&p=${page}`)
     .then((res) => res.data);
+
+export const clientGetPublicTags = (): Promise<Tag[]> =>
+  apiClient.get("/api/v2/tags").then((res) => res.data);
 
 // ── 댓글 ─────────────────────────────────────────────────────
 
@@ -99,7 +102,7 @@ export interface PostForAdmin {
   id: number;
   title: string;
   content: string;
-  categoryName: string;
+  tags: TagSummary[];
   deleteDate?: string;
   updateDate?: string;
   metaDescription?: string;
@@ -111,7 +114,7 @@ export const getPostForAdmin = (postId: number | string): Promise<PostForAdmin> 
   apiClient.get(`/api/v1/management/posts/${postId}`).then((res) => res.data);
 
 export const uploadPost = (
-  formData: { title: string; category: string; images: unknown[] },
+  formData: { title: string; tags: string[]; images: unknown[] },
   htmlString: string
 ) =>
   apiClient.post(
@@ -119,7 +122,7 @@ export const uploadPost = (
     {
       title:    formData.title,
       content:  htmlString,
-      category: Number(formData.category),
+      tags:     formData.tags,
       images:   formData.images,
     },
     { withCredentials: true }
@@ -127,14 +130,14 @@ export const uploadPost = (
 
 export const editPost = (
   postId: number | string,
-  post: { title: string; category: string },
+  post: { title: string; tags: string[] },
   htmlString: string
 ): Promise<number> =>
   apiClient
     .put(`/api/v1/posts/${postId}`, {
       title:    post.title,
       content:  htmlString,
-      category: Number(post.category),
+      tags:     post.tags,
     })
     .then((res) => res.data);
 
@@ -157,19 +160,19 @@ export const uploadImageFile = (formData: FormData): Promise<{ filePath: string 
     })
     .then((res) => res.data);
 
-// ── 관리자: 카테고리 ──────────────────────────────────────────
+// ── 관리자: 태그 ──────────────────────────────────────────────
 
-export interface CategoryForAdmin {
-  id: number;
-  name: string;
-  postsCount: number;
-}
+export const getTagsForAdmin = (): Promise<Tag[]> =>
+  apiClient.get(`/api/v1/tags`).then((res) => res.data);
 
-export const getCategoriesForAdmin = (): Promise<CategoryForAdmin[]> =>
-  apiClient.get(`/api/v1/categories-management`).then((res) => res.data);
+export const createTag = (name: string) =>
+  apiClient.post(`/api/v1/tags`, { name }, { withCredentials: true });
 
-export const addNewCategory = (categoryName: string) =>
-  apiClient.post(`/api/v1/categories`, { categoryName }, { withCredentials: true });
+export const renameTag = (tagId: number, name: string) =>
+  apiClient.put(`/api/v1/tags/${tagId}`, { name }, { withCredentials: true });
 
-export const deleteCategoryById = (categoryId: number) =>
-  apiClient.delete(`/api/v1/categories/${categoryId}`);
+export const deleteTag = (tagId: number) =>
+  apiClient.delete(`/api/v1/tags/${tagId}`);
+
+export const mergeTags = (srcId: number, dstId: number) =>
+  apiClient.post(`/api/v1/tags/merge`, { srcId, dstId }, { withCredentials: true });

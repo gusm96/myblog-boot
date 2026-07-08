@@ -9,7 +9,7 @@ export interface Post {
   likes: number;
   createDate: string;
   updateDate?: string;
-  categoryName: string;
+  tags: TagSummary[];
   slug: string;
   metaDescription?: string;
   thumbnailUrl?: string;
@@ -24,6 +24,7 @@ export interface PostSummary {
   updateDate?: string;
   slug: string;
   thumbnailUrl?: string;
+  tags?: TagSummary[];
 }
 
 /** GET /api/v1/posts/slugs — SSG slug 목록 */
@@ -37,19 +38,18 @@ export interface PostListResponse {
   totalPage: number;
 }
 
-// ── 카테고리 ──────────────────────────────────────────────────
+// ── 태그 ──────────────────────────────────────────────────────
 
-/** /api/v1/categories — 관리자용 */
-export interface Category {
-  id: number;
-  categoryName: string;
+export interface TagSummary {
+  name: string;
+  slug: string;
 }
 
-/** /api/v2/categories — 일반 사용자용 (게시글 있는 카테고리 + 게시글 수) */
-export interface CategoryV2 {
+export interface Tag {
   id: number;
   name: string;
-  postsCount: number;
+  slug: string;
+  postCount: number;
 }
 
 // ── 댓글 ──────────────────────────────────────────────────────
@@ -87,7 +87,8 @@ export interface LoginRequest {
 }
 
 export interface TokenResponse {
-  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
 }
 
 // ── 공통 API 응답 ─────────────────────────────────────────────

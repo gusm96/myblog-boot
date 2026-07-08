@@ -14,19 +14,16 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    login: (state, action: PayloadAction<{ accessToken: string }>) => {
+    login: (state) => {
       state.isLoggedIn = true;
-      state.accessToken = action.payload.accessToken;
+      state.accessToken = null;
     },
     logout: (state) => {
       state.isLoggedIn = false;
       state.accessToken = null;
     },
-    updateAccessToken: (
-      state,
-      action: PayloadAction<{ accessToken: string }>
-    ) => {
-      state.accessToken = action.payload.accessToken;
+    updateAccessToken: (state) => {
+      state.accessToken = null;
     },
   },
 });

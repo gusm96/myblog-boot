@@ -1,0 +1,57 @@
+= TagAPI
+
+== 태그 조회
+
+=== 관리자 태그 목록
+`GET /api/v1/tags`
+
+관리자 인증이 필요하다. post 수가 0인 태그까지 포함한 전체 태그 목록을 반환한다.
+
+=== 공개 태그 목록
+`GET /api/v2/tags`
+
+활성 게시글이 연결된 태그만 반환한다.
+
+=== 인기 태그 목록
+`GET /api/v2/tags/popular?limit={limit}`
+
+`postCount` 내림차순으로 태그를 반환한다.
+
+=== 태그 상세
+`GET /api/v2/tags/{slug}`
+
+활성 slug는 200으로 반환한다. merge된 과거 slug는 `/api/v2/tags/{currentSlug}`로 301 응답한다.
+
+operation::tag-controller-test/get-public-tag-alias-redirect[snippets='http-request,http-response']
+
+operation::tag-controller-test/get-public-tag-not-found[snippets='http-request,http-response']
+
+== 태그 관리
+
+=== 태그 생성
+`POST /api/v1/tags`
+
+관리자 인증이 필요하다. 요청 본문은 `name`을 포함한다.
+
+operation::tag-controller-test/create-normal[snippets='http-request,http-response']
+
+=== 태그 이름 변경
+`PUT /api/v1/tags/{tagId}`
+
+관리자 인증이 필요하다. `name`만 변경하며 slug는 변경되지 않는다.
+
+operation::tag-controller-test/rename-normal[snippets='http-request,http-response']
+
+=== 태그 삭제
+`DELETE /api/v1/tags/{tagId}`
+
+관리자 인증이 필요하다. PostTag 연결이 0건이고 inbound alias가 0건일 때만 hard delete한다.
+
+operation::tag-controller-test/delete-unused-tag[snippets='http-request,http-response']
+
+=== 태그 병합
+`POST /api/v1/tags/merge`
+
+관리자 인증이 필요하다. source tag의 게시글 연결과 inbound alias를 destination tag로 이전하고 source slug를 alias로 보존한다.
+
+operation::tag-controller-test/merge-repoints-aliases[snippets='http-request,http-response']

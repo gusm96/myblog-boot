@@ -5,7 +5,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { SearchBar } from "./SearchBar";
 import { PostList } from "./PostList";
 import { PageButton } from "./PageButton";
-import { getSearchedPostList } from "@/lib/postApi";
+import { clientGetSearchedPostList } from "@/lib/postApi";
 import { queryKeys } from "@/lib/queryKeys";
 
 export function SearchContent() {
@@ -16,7 +16,7 @@ export function SearchContent() {
 
   const { data, isPlaceholderData } = useQuery({
     queryKey: queryKeys.search.results(type ?? "", contents ?? "", page),
-    queryFn: () => getSearchedPostList(type!, contents!, page),
+    queryFn: () => clientGetSearchedPostList(type!, contents!, page),
     enabled: !!(type && contents),
     placeholderData: keepPreviousData,
   });

@@ -1,7 +1,7 @@
 package com.moya.myblogboot.service;
 
-import com.moya.myblogboot.domain.event.CategoryChangeEvent;
 import com.moya.myblogboot.domain.event.PostChangeEvent;
+import com.moya.myblogboot.domain.event.TagChangeEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -41,13 +41,17 @@ public class RevalidateWebhookListener {
             tags.add("slugs");
             paths.add("/sitemap.xml");
         }
+        event.getTagSlugs().forEach(tagSlug -> tags.add("tag:" + tagSlug));
 
         client.send(tags, paths);
     }
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onCategoryChange(CategoryChangeEvent event) {
-        client.send(List.of("categories"), List.of());
+    public void onTagChange(TagChangeEvent event) {
+        List<String> tags = new ArrayList<>();
+        tags.add("taglist");
+        event.getAffectedSlugs().forEach(slug -> tags.add("tag:" + slug));
+        client.send(tags, List.of());
     }
 }

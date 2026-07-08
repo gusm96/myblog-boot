@@ -1,6 +1,6 @@
 import { Container, Row, Col } from "react-bootstrap";
 import { Header } from "@/components/layout/Header";
-import { CategoryNav } from "@/components/layout/CategoryNav";
+import { TagNav } from "@/components/layout/TagNav";
 import { VisitorCount } from "@/components/layout/VisitorCount";
 import { PostEventListener } from "@/components/layout/PostEventListener";
 
@@ -23,7 +23,7 @@ export default function PublicLayout({
             {/* Sidebar */}
             <Col xs={12} md={3} className="order-2">
               <div className="sidebar-sticky">
-                <CategoryNav />
+                <TagNav />
                 <VisitorCount />
               </div>
             </Col>

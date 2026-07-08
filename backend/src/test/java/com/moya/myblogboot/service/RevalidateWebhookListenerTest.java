@@ -3,8 +3,8 @@ package com.moya.myblogboot.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moya.myblogboot.configuration.RevalidateWebhookConfig;
 import com.moya.myblogboot.configuration.RevalidateWebhookProperties;
-import com.moya.myblogboot.domain.event.CategoryChangeEvent;
 import com.moya.myblogboot.domain.event.PostChangeEvent;
+import com.moya.myblogboot.domain.event.TagChangeEvent;
 import com.moya.myblogboot.dto.revalidate.RevalidateRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,18 +44,18 @@ class RevalidateWebhookListenerTest {
     }
 
     @Test
-    @DisplayName("Post CREATED — tags: [posts, slugs], paths: [/sitemap.xml]")
+    @DisplayName("Post CREATED — tags: [posts, slugs, tag:{slug}], paths: [/sitemap.xml]")
     void postCreated() throws Exception {
         mockServer.expect(requestTo(WEBHOOK_URL))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header("x-revalidate-secret", SECRET))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(content().json(toJson(new RevalidateRequest(
-                        List.of("posts", "slugs"), List.of("/sitemap.xml")
+                        List.of("posts", "slugs", "tag:spring"), List.of("/sitemap.xml")
                 ))))
                 .andRespond(withSuccess("{\"ok\":true}", MediaType.APPLICATION_JSON));
 
-        listener.onPostChange(new PostChangeEvent(this, "CREATED", 1L, "my-post"));
+        listener.onPostChange(new PostChangeEvent(this, "CREATED", 1L, "my-post", List.of("spring")));
 
         mockServer.verify();
     }
@@ -77,6 +77,39 @@ class RevalidateWebhookListenerTest {
     }
 
     @Test
+    @DisplayName("Post UPDATED with tagSlugs — tags: [posts, post:{slug}, tag:{slug}*], paths: []")
+    void postUpdatedWithTagSlugs() throws Exception {
+        mockServer.expect(requestTo(WEBHOOK_URL))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("x-revalidate-secret", SECRET))
+                .andExpect(content().json(toJson(new RevalidateRequest(
+                        List.of("posts", "post:my-post", "tag:spring", "tag:jpa"), List.of()
+                ))))
+                .andRespond(withSuccess("{\"ok\":true}", MediaType.APPLICATION_JSON));
+
+        listener.onPostChange(new PostChangeEvent(this, "UPDATED", 1L, "my-post",
+                List.of("spring", "jpa")));
+
+        mockServer.verify();
+    }
+
+    @Test
+    @DisplayName("Post UNDELETED via CREATED type — tags: [posts, slugs, tag:{slug}], paths: [/sitemap.xml]")
+    void postUndeletedRevalidates() throws Exception {
+        mockServer.expect(requestTo(WEBHOOK_URL))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header("x-revalidate-secret", SECRET))
+                .andExpect(content().json(toJson(new RevalidateRequest(
+                        List.of("posts", "slugs", "tag:spring"), List.of("/sitemap.xml")
+                ))))
+                .andRespond(withSuccess("{\"ok\":true}", MediaType.APPLICATION_JSON));
+
+        listener.onPostChange(new PostChangeEvent(this, "CREATED", 1L, "my-post", List.of("spring")));
+
+        mockServer.verify();
+    }
+
+    @Test
     @DisplayName("Post DELETED — tags: [posts, post:{slug}, slugs], paths: [/sitemap.xml]")
     void postDeleted() throws Exception {
         mockServer.expect(requestTo(WEBHOOK_URL))
@@ -93,17 +126,17 @@ class RevalidateWebhookListenerTest {
     }
 
     @Test
-    @DisplayName("Category CREATED — tags: [categories], paths: []")
-    void categoryCreated() throws Exception {
+    @DisplayName("Tag CREATED — tags: [taglist, tag:{slug}], paths: []")
+    void tagCreated() throws Exception {
         mockServer.expect(requestTo(WEBHOOK_URL))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header("x-revalidate-secret", SECRET))
                 .andExpect(content().json(toJson(new RevalidateRequest(
-                        List.of("categories"), List.of()
+                        List.of("taglist", "tag:spring"), List.of()
                 ))))
                 .andRespond(withSuccess("{\"ok\":true}", MediaType.APPLICATION_JSON));
 
-        listener.onCategoryChange(new CategoryChangeEvent(this, "CREATED", 5L));
+        listener.onTagChange(new TagChangeEvent(this, "CREATED", 5L, List.of("spring")));
 
         mockServer.verify();
     }

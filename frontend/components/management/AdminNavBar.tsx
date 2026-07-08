@@ -11,7 +11,7 @@ import type { AppDispatch } from "@/store";
 const navItems = [
   { href: "/management", label: "게시글 목록", icon: "fa-list" },
   { href: "/management/new-post", label: "새 게시글", icon: "fa-pen-to-square" },
-  { href: "/management/categories", label: "카테고리 관리", icon: "fa-folder" },
+  { href: "/management/tags", label: "태그 관리", icon: "fa-tags" },
   { href: "/management/temporary-storage", label: "휴지통", icon: "fa-trash" },
 ];
 

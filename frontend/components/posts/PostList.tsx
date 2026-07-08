@@ -28,13 +28,24 @@ export function PostList({ posts }: PostListProps) {
     <div className="post-list">
       {posts.map((post) => (
         <div key={post.id} className="mb-3 post-item">
-          <Link href={`/posts/${post.slug}`} style={{ textDecoration: "none" }}>
+          <Link href={`/posts/${post.slug}`} style={{ textDecoration: "none", display: "block" }}>
             <span className="post-title">{post.title}</span>
             <p className="post-content">{stripHtml(post.content)}</p>
+          </Link>
+          <div className="post-meta-container" style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "4px" }}>
             <span className="text-muted post-date">
               {dayjs(post.createDate).format("YYYY-MM-DD")}
             </span>
-          </Link>
+            {post.tags && post.tags.length > 0 && (
+              <div className="post-tags-list" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                {post.tags.map((tag) => (
+                  <Link key={tag.slug} href={`/tag/${tag.slug}`} className="badge bg-secondary text-decoration-none" style={{ fontSize: "0.75rem" }}>
+                    #{tag.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       ))}
       <hr />

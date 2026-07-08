@@ -2,21 +2,21 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { marked } from "marked";
 import { Form } from "react-bootstrap";
 import { EditorToolbar } from "./EditorToolbar";
-import { CategorySelectInline } from "./CategorySelectInline";
+import { TagInput } from "./TagInput";
 import { uploadPost, uploadImageFile } from "@/lib/postApi";
 import { queryKeys } from "@/lib/queryKeys";
 
 export function PostEditorClient() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState({ title: "", category: "", images: [] as { filePath: string }[] });
+  const [formData, setFormData] = useState({ title: "", tags: [] as string[], images: [] as { filePath: string }[] });
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -62,20 +62,28 @@ export function PostEditorClient() {
     reader.readAsText(file);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editor) return;
-    try {
-      const res = await uploadPost(formData, editor.getHTML());
-      if (res.status === 200) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.posts.lists() });
-        queryClient.invalidateQueries({ queryKey: queryKeys.categories.all() });
-        alert("게시글을 등록하였습니다.");
-        router.push(`/management/posts/${res.data}`);
-      }
-    } catch {
+  const submitMutation = useMutation({
+    mutationFn: (html: string) => uploadPost(formData, html),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.posts.lists() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.publicList() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.adminList() });
+      alert("게시글을 등록하였습니다.");
+      router.push(`/management/posts/${res.data}`);
+    },
+    onError: () => {
       alert("게시글 등록에 실패했습니다.");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editor || submitMutation.isPending) return;
+    if (formData.tags.length === 0) {
+      alert("태그를 1개 이상 입력해주세요.");
+      return;
     }
+    submitMutation.mutate(editor.getHTML());
   };
 
   return (
@@ -98,11 +106,10 @@ export function PostEditorClient() {
           />
         </div>
 
-        <div className="editor-category-row">
-          <span className="editor-meta__label">category</span>
-          <CategorySelectInline
-            value={formData.category}
-            onChange={(val) => setFormData((prev) => ({ ...prev, category: val }))}
+        <div className="editor-category-row" style={{ display: "block" }}>
+          <TagInput
+            value={formData.tags}
+            onChange={(val) => setFormData((prev) => ({ ...prev, tags: val }))}
           />
         </div>
 
@@ -136,9 +143,9 @@ export function PostEditorClient() {
             </button>
           </div>
           <div className="editor-actions__right">
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary" disabled={submitMutation.isPending}>
               <i className="fa-solid fa-floppy-disk" style={{ marginRight: 6 }} />
-              작성하기
+              {submitMutation.isPending ? "등록 중..." : "작성하기"}
             </button>
           </div>
         </div>

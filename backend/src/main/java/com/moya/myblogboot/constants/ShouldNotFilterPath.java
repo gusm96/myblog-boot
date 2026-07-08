@@ -15,7 +15,7 @@ public class ShouldNotFilterPath {
             "/api/v1/reissuing-token",  // POST — RefreshToken 회전 및 AccessToken 재발급
             "/api/v2/likes",            // GET/POST/DELETE — 쿠키 기반, JWT 불필요
             "/api/v2/visitor-count",    // GET   — 방문자 수 조회
-            "/api/v2/categories",       // GET   — 공개 카테고리 목록 (V2)
+            "/api/v2/tags",             // GET   — 공개 태그 목록 (V2)
             "/api/v8/posts",            // GET   — 레거시 게시글 조회
             "/api/v1/sse",              // GET   — SSE 스트림
             "/rss.xml"                  // GET   — RSS 피드
@@ -26,9 +26,7 @@ public class ShouldNotFilterPath {
      * GET은 공개이지만 POST/PUT/DELETE는 인증 정보가 필요한 엔드포인트.
      */
     private static final List<String> EXCLUDE_GET_ONLY = Arrays.asList(
-            "/api/v1/posts",            // GET 목록/상세/slugs/category/search/views/likes — 공개
-                                        // POST/PUT/DELETE — ADMIN 전용
-            "/api/v1/categories",       // GET 목록 — 공개
+            "/api/v1/posts",            // GET 목록/상세/slugs/tag/search/views/likes — 공개
                                         // POST/PUT/DELETE — ADMIN 전용
             "/api/v1/comments"          // GET 목록 — 공개
                                         // POST/PUT/DELETE — Principal로 어드민/비회원 구분
@@ -37,7 +35,7 @@ public class ShouldNotFilterPath {
     /**
      * 요청 경로와 HTTP 메서드를 기반으로 JWT 필터 제외 여부를 판단한다.
      * 경로 매칭은 정확히 일치하거나, excludePath + "/" 로 시작하는 하위 경로만 매칭한다.
-     * (예: "/api/v1/categories" 는 "/api/v1/categories-management" 에 매칭되지 않음)
+     * (예: "/api/v1/tags" 는 "/api/v1/tags-management" 에 매칭되지 않음)
      */
     public static boolean shouldExclude(String path, String method) {
         if (EXCLUDE_ALL_METHODS.stream().anyMatch(p -> matchesPath(path, p))) {

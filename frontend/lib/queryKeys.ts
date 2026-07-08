@@ -5,7 +5,7 @@
 export const queryKeys = {
   // ── 게시글 ──────────────────────────────────────────────────
   posts: {
-    all: (): string[] => ["posts"],
+    all: () => ["posts"] as const,
     lists: () => [...queryKeys.posts.all(), "list"] as const,
     list: (page: number) =>
       [...queryKeys.posts.lists(), { page: String(page) }] as const,
@@ -18,17 +18,20 @@ export const queryKeys = {
       [...queryKeys.posts.detail(id), "likeStatus"] as const,
   },
 
-  // ── 카테고리 ────────────────────────────────────────────────
-  categories: {
-    all: (): string[] => ["categories"],
-    list: () => [...queryKeys.categories.all(), "list"] as const,
-    posts: (name: string) =>
-      [...queryKeys.categories.all(), name, "posts"] as const,
+  // ── 태그 ────────────────────────────────────────────────────
+  tags: {
+    all: () => ["tags"] as const,
+    /** 공개 사이드바용 (Tag[]) */
+    publicList: () => [...queryKeys.tags.all(), "public"] as const,
+    /** 관리자 페이지용 (Tag[]) */
+    adminList: () => [...queryKeys.tags.all(), "admin"] as const,
+    posts: (slug: string) =>
+      [...queryKeys.tags.all(), slug, "posts"] as const,
   },
 
   // ── 댓글 ────────────────────────────────────────────────────
   comments: {
-    all: (): string[] => ["comments"],
+    all: () => ["comments"] as const,
     list: (postId: number | string) =>
       [...queryKeys.comments.all(), postId] as const,
     children: (parentId: number | string) =>
@@ -37,7 +40,7 @@ export const queryKeys = {
 
   // ── 검색 ────────────────────────────────────────────────────
   search: {
-    all: (): string[] => ["search"],
+    all: () => ["search"] as const,
     results: (type: string, contents: string, page: number) =>
       [
         ...queryKeys.search.all(),
@@ -47,7 +50,7 @@ export const queryKeys = {
 
   // ── 관리자 ──────────────────────────────────────────────────
   admin: {
-    all: (): string[] => ["admin"],
+    all: () => ["admin"] as const,
     postsAll: () => [...queryKeys.admin.all(), "posts"] as const,
     posts: (page: number) =>
       [...queryKeys.admin.postsAll(), { page: String(page) }] as const,

@@ -4,10 +4,10 @@ import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.post.Post;
-import com.moya.myblogboot.domain.category.Category;
+import com.moya.myblogboot.domain.tag.Tag;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.PostRepository;
-import com.moya.myblogboot.repository.CategoryRepository;
+import com.moya.myblogboot.repository.TagRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +26,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
+
+import java.util.List;
 
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -47,7 +49,7 @@ class RssFeedControllerTest extends AbstractContainerBaseTest {
     @Autowired
     private AdminRepository adminRepository;
     @Autowired
-    private CategoryRepository categoryRepository;
+    private TagRepository tagRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
@@ -70,18 +72,17 @@ class RssFeedControllerTest extends AbstractContainerBaseTest {
                 .build();
         Admin savedAdmin = adminRepository.save(admin);
 
-        Category category = Category.builder().name("RssTest").build();
-        Category savedCategory = categoryRepository.save(category);
+        Tag tag = tagRepository.save(Tag.builder().name("RssTest").slug("rss-test").build());
 
         for (int i = 0; i < 3; i++) {
             Post post = Post.builder()
                     .admin(savedAdmin)
-                    .category(savedCategory)
                     .title("RSS Test Post " + i)
                     .content("<p>This is <strong>HTML</strong> content " + i + "</p>")
                     .slug("rss-test-post-" + i)
                     .metaDescription(i == 0 ? "Custom meta description" : null)
                     .build();
+            post.replaceTags(List.of(tag));
             postRepository.save(post);
         }
     }

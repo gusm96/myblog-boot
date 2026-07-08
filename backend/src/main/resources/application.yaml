@@ -48,6 +48,11 @@ post:
     hmac:
       secret: ${POST_LIKE_HMAC_SECRET}
 
+blog:
+  tag:
+    min-per-post: ${BLOG_TAG_MIN_PER_POST:1}
+    max-per-post: ${BLOG_TAG_MAX_PER_POST:5}
+
 # Next.js on-demand revalidation webhook
 revalidate:
   webhook:

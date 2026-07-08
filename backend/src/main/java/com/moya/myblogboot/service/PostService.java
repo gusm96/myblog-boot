@@ -14,7 +14,7 @@ public interface PostService {
 
     PostListResDto retrieveAll(int page);
 
-    PostListResDto retrieveAllByCategory(String categoryName, int page);
+    PostListResDto retrieveAllByTag(String tagSlug, int page);
 
     PostListResDto retrieveAllBySearched(SearchType searchType, String searchContents, int page);
 

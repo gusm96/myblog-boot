@@ -2,16 +2,19 @@ package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.admin.Admin;
-import com.moya.myblogboot.domain.category.Category;
+import com.moya.myblogboot.domain.event.PostChangeEvent;
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.post.PostStatus;
+import com.moya.myblogboot.domain.tag.Tag;
 import com.moya.myblogboot.dto.post.PostListResDto;
 import com.moya.myblogboot.dto.post.PostReqDto;
+import com.moya.myblogboot.exception.BusinessException;
 import com.moya.myblogboot.exception.custom.EntityNotFoundException;
 import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.AdminRepository;
-import com.moya.myblogboot.repository.CategoryRepository;
+import com.moya.myblogboot.repository.PostTagRepository;
 import com.moya.myblogboot.repository.PostRepository;
+import com.moya.myblogboot.repository.TagRepository;
 import com.moya.myblogboot.service.PostService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,25 +23,33 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Transactional
 @SpringBootTest
 @ActiveProfiles("test")
+@RecordApplicationEvents
 class PostServiceImplTest extends AbstractContainerBaseTest {
 
     @Autowired private PostService postService;
     @Autowired private AdminRepository adminRepository;
-    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private TagRepository tagRepository;
     @Autowired private PostRepository postRepository;
+    @Autowired private PostTagRepository postTagRepository;
     @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private ApplicationEvents applicationEvents;
 
     private Admin testAdmin;
     private Admin anotherAdmin;
-    private Category testCategory;
+    private Tag testTag;
     private Post testPost;
 
     @BeforeEach
@@ -53,16 +64,19 @@ class PostServiceImplTest extends AbstractContainerBaseTest {
                 .password(passwordEncoder.encode("testPw"))
                 .build());
 
-        testCategory = categoryRepository.save(Category.builder()
-                .name("게시글테스트카테고리")
+        testTag = tagRepository.save(Tag.builder()
+                .name("게시글테스트태그")
+                .slug("post-test-tag")
                 .build());
 
-        testPost = postRepository.save(Post.builder()
+        testPost = Post.builder()
                 .title("테스트 게시글")
                 .content("테스트 내용")
-                .category(testCategory)
                 .admin(testAdmin)
-                .build());
+                .build();
+        testPost.replaceTags(List.of(testTag));
+        testTag.incrementPostCount();
+        testPost = postRepository.save(testPost);
     }
 
     @Test
@@ -75,9 +89,9 @@ class PostServiceImplTest extends AbstractContainerBaseTest {
     }
 
     @Test
-    @DisplayName("카테고리별 게시글 목록 조회")
-    void retrieveAllByCategory() {
-        PostListResDto result = postService.retrieveAllByCategory(testCategory.getName(), 0);
+    @DisplayName("태그별 게시글 목록 조회")
+    void retrieveAllByTag() {
+        PostListResDto result = postService.retrieveAllByTag(testTag.getSlug(), 0);
 
         assertThat(result).isNotNull();
         assertThat(result.getList()).isNotEmpty();
@@ -89,13 +103,29 @@ class PostServiceImplTest extends AbstractContainerBaseTest {
         PostReqDto reqDto = PostReqDto.builder()
                 .title("새 게시글")
                 .content("새 게시글 내용")
-                .category(testCategory.getId())
+                .tags(List.of("Spring", "JPA"))
                 .build();
 
         Long postId = postService.write(reqDto, testAdmin.getId());
 
-        assertThat(postId).isNotNull();
-        assertThat(postRepository.findById(postId)).isPresent();
+        Post savedPost = postRepository.findById(postId).orElseThrow();
+        assertThat(savedPost.getTags()).extracting(Tag::getSlug).containsExactly("spring", "jpa");
+    }
+
+    @Test
+    @DisplayName("write assigns tag sort order in input order")
+    void write_assignsSortOrderInInputOrder() {
+        PostReqDto reqDto = PostReqDto.builder()
+                .title("ordered tags")
+                .content("content")
+                .tags(List.of("Alpha", "Beta", "Gamma"))
+                .build();
+
+        Long postId = postService.write(reqDto, testAdmin.getId());
+
+        Post savedPost = postRepository.findById(postId).orElseThrow();
+        assertThat(savedPost.getPostTags()).extracting("sortOrder").containsExactly(0, 1, 2);
+        assertThat(savedPost.getTags()).extracting(Tag::getSlug).containsExactly("alpha", "beta", "gamma");
     }
 
     @Test
@@ -104,7 +134,7 @@ class PostServiceImplTest extends AbstractContainerBaseTest {
         PostReqDto reqDto = PostReqDto.builder()
                 .title("새 게시글")
                 .content("<p>Hello <strong>SEO</strong> &amp; blog</p><script>alert('x')</script>")
-                .category(testCategory.getId())
+                .tags(List.of("SEO"))
                 .metaDescription(" ")
                 .build();
 
@@ -120,7 +150,7 @@ class PostServiceImplTest extends AbstractContainerBaseTest {
         PostReqDto modifiedDto = PostReqDto.builder()
                 .title("수정된 제목")
                 .content("<h1>Updated</h1><p>description text</p>")
-                .category(testCategory.getId())
+                .tags(List.of(testTag.getName()))
                 .metaDescription("")
                 .build();
 
@@ -130,15 +160,15 @@ class PostServiceImplTest extends AbstractContainerBaseTest {
     }
 
     @Test
-    @DisplayName("게시글 작성 실패 - 존재하지 않는 카테고리")
-    void write_invalidCategory() {
+    @DisplayName("게시글 작성 실패 - 태그 없음")
+    void write_withoutTags() {
         PostReqDto reqDto = PostReqDto.builder()
                 .title("새 게시글")
                 .content("새 게시글 내용")
-                .category(999L)
+                .tags(List.of())
                 .build();
 
-        assertThrows(EntityNotFoundException.class,
+        assertThrows(BusinessException.class,
                 () -> postService.write(reqDto, testAdmin.getId()));
     }
 
@@ -148,7 +178,7 @@ class PostServiceImplTest extends AbstractContainerBaseTest {
         PostReqDto modifiedDto = PostReqDto.builder()
                 .title("수정된 제목")
                 .content("수정된 내용")
-                .category(testCategory.getId())
+                .tags(List.of("수정태그"))
                 .build();
 
         Long result = postService.edit(testAdmin.getId(), testPost.getId(), modifiedDto);
@@ -156,6 +186,50 @@ class PostServiceImplTest extends AbstractContainerBaseTest {
         assertThat(result).isEqualTo(testPost.getId());
         assertThat(testPost.getTitle()).isEqualTo("수정된 제목");
         assertThat(testPost.getContent()).isEqualTo("수정된 내용");
+        assertThat(testPost.getTags()).extracting(Tag::getName).containsExactly("수정태그");
+    }
+
+    @Test
+    @DisplayName("edit increments and decrements changed tags only")
+    void edit_diffIncrementsDecrements() {
+        Long postId = postService.write(PostReqDto.builder()
+                .title("tag count post")
+                .content("content")
+                .tags(List.of("Alpha", "Beta"))
+                .build(), testAdmin.getId());
+        Tag alpha = tagRepository.findBySlug("alpha").orElseThrow();
+        Tag beta = tagRepository.findBySlug("beta").orElseThrow();
+
+        postService.edit(testAdmin.getId(), postId, PostReqDto.builder()
+                .title("tag count post edited")
+                .content("content")
+                .tags(List.of("Beta", "Gamma"))
+                .build());
+
+        Tag gamma = tagRepository.findBySlug("gamma").orElseThrow();
+        assertThat(alpha.getPostCount()).isZero();
+        assertThat(beta.getPostCount()).isOne();
+        assertThat(gamma.getPostCount()).isOne();
+    }
+
+    @Test
+    @DisplayName("edit keeps overlapping tag without unique constraint violation")
+    void edit_keepsExistingTagWithoutUniqueViolation() {
+        Long postId = postService.write(PostReqDto.builder()
+                .title("overlap post")
+                .content("content")
+                .tags(List.of("Alpha", "Beta"))
+                .build(), testAdmin.getId());
+
+        assertThatCode(() -> postService.edit(testAdmin.getId(), postId, PostReqDto.builder()
+                .title("overlap post edited")
+                .content("content")
+                .tags(List.of("Alpha", "Gamma"))
+                .build())).doesNotThrowAnyException();
+
+        Post editedPost = postRepository.findById(postId).orElseThrow();
+        assertThat(editedPost.getPostTags()).hasSize(2);
+        assertThat(editedPost.getTags()).extracting(Tag::getSlug).containsExactly("alpha", "gamma");
     }
 
     @Test
@@ -164,7 +238,7 @@ class PostServiceImplTest extends AbstractContainerBaseTest {
         PostReqDto modifiedDto = PostReqDto.builder()
                 .title("수정된 제목")
                 .content("수정된 내용")
-                .category(testCategory.getId())
+                .tags(List.of(testTag.getName()))
                 .build();
 
         assertThrows(UnauthorizedAccessException.class,
@@ -178,6 +252,7 @@ class PostServiceImplTest extends AbstractContainerBaseTest {
 
         assertThat(testPost.getPostStatus()).isEqualTo(PostStatus.HIDE);
         assertThat(testPost.getDeleteDate()).isNotNull();
+        assertThat(testTag.getPostCount()).isZero();
     }
 
     @Test
@@ -195,6 +270,30 @@ class PostServiceImplTest extends AbstractContainerBaseTest {
 
         assertThat(testPost.getPostStatus()).isEqualTo(PostStatus.VIEW);
         assertThat(testPost.getDeleteDate()).isNull();
+        assertThat(testTag.getPostCount()).isOne();
+    }
+
+    @Test
+    @DisplayName("undelete publishes CREATED event with tag slugs")
+    void undelete_incrementsAndPublishesCreatedEvent() {
+        postService.delete(testPost.getId(), testAdmin.getId());
+
+        postService.undelete(testPost.getId(), testAdmin.getId());
+
+        assertThat(applicationEvents.stream(PostChangeEvent.class)
+                .filter(event -> "CREATED".equals(event.getChangeType()))
+                .filter(event -> testPost.getId().equals(event.getPostId()))
+                .filter(event -> event.getTagSlugs().contains(testTag.getSlug()))
+                .count()).isOne();
+    }
+
+    @Test
+    @DisplayName("soft delete decrements count but preserves post tags")
+    void softDelete_decrementsButPreservesPostTag() {
+        postService.delete(testPost.getId(), testAdmin.getId());
+
+        assertThat(testTag.getPostCount()).isZero();
+        assertThat(postTagRepository.findAllByTagId(testTag.getId())).hasSize(1);
     }
 
     @Test

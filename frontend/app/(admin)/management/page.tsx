@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { getPostList } from "@/lib/postApi";
+import { clientGetPostList } from "@/lib/postApi";
 import { AdminPostList } from "@/components/management/AdminPostList";
 import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "react-bootstrap";
@@ -14,7 +14,7 @@ export default function ManagementPage() {
 
   const { data, isPending, isPlaceholderData } = useQuery({
     queryKey: queryKeys.admin.posts(page),
-    queryFn:  () => getPostList(page),
+    queryFn:  () => clientGetPostList(page),
     staleTime: 3 * 60 * 1000,
     gcTime:    10 * 60 * 1000,
     placeholderData: keepPreviousData,

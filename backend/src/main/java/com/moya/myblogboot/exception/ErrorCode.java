@@ -42,10 +42,18 @@ public enum ErrorCode {
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CM001", "해당 댓글이 존재하지 않습니다."),
     COMMENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CM002", "댓글 수정/삭제 권한이 없습니다."),
 
-    // 카테고리
-    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "CT001", "해당 카테고리를 찾을 수 없습니다."),
-    DUPLICATE_CATEGORY(HttpStatus.CONFLICT, "CT002", "이미 존재하는 카테고리입니다."),
-    CATEGORY_HAS_POSTS(HttpStatus.BAD_REQUEST, "CT003", "등록된 게시글이 존재해 삭제할 수 없습니다."),
+    // 태그
+    TAG_NOT_FOUND(HttpStatus.NOT_FOUND, "TG001", "해당 태그를 찾을 수 없습니다."),
+    DUPLICATE_TAG(HttpStatus.CONFLICT, "TG002", "이미 존재하는 태그입니다."),
+    INVALID_TAG_NAME(HttpStatus.BAD_REQUEST, "TG003", "유효하지 않은 태그 이름입니다."),
+    INVALID_TAG_SLUG(HttpStatus.BAD_REQUEST, "TG004", "유효하지 않은 태그 슬러그입니다."),
+    TAG_COUNT_BELOW_MIN(HttpStatus.BAD_REQUEST, "TG005", "태그를 1개 이상 입력해야 합니다."),
+    TAG_COUNT_ABOVE_MAX(HttpStatus.BAD_REQUEST, "TG006", "태그는 최대 5개까지 입력할 수 있습니다."),
+    TAG_MERGE_SAME_TARGET(HttpStatus.BAD_REQUEST, "TG007", "같은 태그로 병합할 수 없습니다."),
+    TAG_HAS_POSTS(HttpStatus.CONFLICT, "TG008", "게시글에 사용 중인 태그는 삭제할 수 없습니다."),
+    TAG_HAS_SOFT_DELETED_POSTS(HttpStatus.CONFLICT, "TG009", "삭제된 게시글에 연결된 태그는 삭제할 수 없습니다."),
+    TAG_HAS_INBOUND_ALIASES(HttpStatus.CONFLICT, "TG010", "리다이렉트 별칭이 연결된 태그는 삭제할 수 없습니다."),
+    TAG_MERGE_CYCLE(HttpStatus.CONFLICT, "TG011", "태그 병합 리다이렉트 순환이 발생할 수 있습니다."),
 
     // 파일
     IMAGE_UPLOAD_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "F001", "이미지 업로드를 실패했습니다."),

@@ -73,9 +73,8 @@ public class RssFeedController {
             sb.append("      <description>").append(escapeXml(description)).append("</description>\n");
             sb.append("      <pubDate>").append(post.getCreateDate().format(RFC822)).append("</pubDate>\n");
             sb.append("      <guid isPermaLink=\"true\">").append(escapeXml(link)).append("</guid>\n");
-            if (post.getCategory() != null) {
-                sb.append("      <category>").append(escapeXml(post.getCategory().getName())).append("</category>\n");
-            }
+            post.getTags().forEach(tag ->
+                    sb.append("      <category>").append(escapeXml(tag.getName())).append("</category>\n"));
             sb.append("    </item>\n");
         }
 
