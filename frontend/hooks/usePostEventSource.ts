@@ -16,12 +16,12 @@ export function usePostEventSource() {
 
     es.addEventListener("POST_CHANGED", () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.posts.all() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.categories.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all() });
     });
 
     es.addEventListener("CONNECTED", () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.posts.all() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.categories.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all() });
     });
 
     return () => es.close();

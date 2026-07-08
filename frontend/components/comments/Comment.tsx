@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { selectIsLoggedIn } from "@/store/userSlice";
 import { getChildComments, editComment, deleteComment } from "@/lib/postApi";
 import { queryKeys } from "@/lib/queryKeys";
+import { getApiErrorMessage } from "@/lib/apiError";
 import { formatTimeAgo } from "@/lib/formatTimeAgo";
 import { CommentForm } from "./CommentForm";
 import type { Comment as CommentType } from "@/types";
@@ -63,10 +64,7 @@ function CommentActionForm({
       onClose();
     },
     onError: (err: unknown) => {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "수정에 실패했습니다.";
-      setError(msg);
+      setError(getApiErrorMessage(err, "수정에 실패했습니다."));
     },
   });
 
@@ -80,10 +78,7 @@ function CommentActionForm({
       onClose();
     },
     onError: (err: unknown) => {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "삭제에 실패했습니다.";
-      setError(msg);
+      setError(getApiErrorMessage(err, "삭제에 실패했습니다."));
     },
   });
 

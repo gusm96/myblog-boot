@@ -5,35 +5,32 @@ import { ListGroup, ListGroupItem } from "react-bootstrap";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { queryKeys } from "@/lib/queryKeys";
-import type { CategoryV2 } from "@/types";
-import apiClient from "@/lib/apiClient";
+import { clientGetPublicTags } from "@/lib/postApi";
+import type { Tag } from "@/types";
 
-const fetchCategoriesV2 = (): Promise<CategoryV2[]> =>
-  apiClient.get("/api/v2/categories").then((res) => res.data);
-
-export function CategoryNav() {
+export function TagNav() {
   const pathname = usePathname();
   const params = useParams();
-  const categoryName = params?.name as string | undefined;
+  const tagSlug = params?.slug as string | undefined;
 
-  const { isPending, isError, data } = useQuery<CategoryV2[]>({
-    queryKey: queryKeys.categories.all(),
-    queryFn: fetchCategoriesV2,
+  const { isPending, isError, data } = useQuery<Tag[]>({
+    queryKey: queryKeys.tags.publicList(),
+    queryFn: clientGetPublicTags,
     staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
   });
 
-  const isActive = (name: string | null) => {
-    if (name === null) {
-      return pathname === "/" && !categoryName;
+  const isActive = (slug: string | null) => {
+    if (slug === null) {
+      return pathname === "/" && !tagSlug;
     }
-    return categoryName === name;
+    return tagSlug === slug;
   };
 
   if (isPending) {
     return (
       <div className="sidebar-section">
-        <span className="sidebar-label">// categories</span>
+        <span className="sidebar-label">// tags</span>
         <div
           style={{
             padding: "8px 6px",
@@ -50,17 +47,17 @@ export function CategoryNav() {
   if (isError || !data) {
     return (
       <div className="sidebar-section">
-        <span className="sidebar-label">// categories</span>
+        <span className="sidebar-label">// tags</span>
       </div>
     );
   }
 
-  const totalCount = data.reduce((sum, c) => sum + (c.postsCount || 0), 0);
+  const totalCount = data.reduce((sum, t) => sum + (t.postCount || 0), 0);
 
   return (
     <div className="sidebar-section">
-      <span className="sidebar-label">// categories</span>
-      <ListGroup id="category-list-group">
+      <span className="sidebar-label">// tags</span>
+      <ListGroup id="tag-list-group">
         <ListGroupItem className="category-list-item">
           <Link
             className={`category-link${isActive(null) ? " active-category" : ""}`}
@@ -70,14 +67,14 @@ export function CategoryNav() {
             <span className="category-count">{totalCount}</span>
           </Link>
         </ListGroupItem>
-        {data.map((c) => (
-          <ListGroupItem key={c.id} className="category-list-item">
+        {data.map((t) => (
+          <ListGroupItem key={t.id} className="category-list-item">
             <Link
-              className={`category-link${isActive(c.name) ? " active-category" : ""}`}
-              href={`/category/${c.name}`}
+              className={`category-link${isActive(t.slug) ? " active-category" : ""}`}
+              href={`/tag/${t.slug}`}
             >
-              <span>{c.name}</span>
-              <span className="category-count">{c.postsCount}</span>
+              <span>{t.name}</span>
+              <span className="category-count">{t.postCount}</span>
             </Link>
           </ListGroupItem>
         ))}

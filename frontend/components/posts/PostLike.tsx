@@ -38,17 +38,45 @@ export function PostLike({ postId, initialLikes = 0 }: PostLikeProps) {
 
   const addLikeMutation = useMutation({
     mutationFn: () => addPostLike(postId),
-    onSuccess: (newCount) => {
-      queryClient.setQueryData(queryKeys.posts.likes(postId), newCount);
-      queryClient.setQueryData(queryKeys.posts.likeStatus(postId), true);
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.posts.likes(postId) });
+      await queryClient.cancelQueries({ queryKey: queryKeys.posts.likeStatus(postId) });
+      const prevCount = queryClient.getQueryData<number>(queryKeys.posts.likes(postId));
+      const prevStatus = queryClient.getQueryData<boolean>(queryKeys.posts.likeStatus(postId));
+      queryClient.setQueryData<number>(queryKeys.posts.likes(postId), (n = 0) => n + 1);
+      queryClient.setQueryData<boolean>(queryKeys.posts.likeStatus(postId), true);
+      return { prevCount, prevStatus };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx) {
+        queryClient.setQueryData(queryKeys.posts.likes(postId), ctx.prevCount);
+        queryClient.setQueryData(queryKeys.posts.likeStatus(postId), ctx.prevStatus);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.posts.likes(postId) });
     },
   });
 
   const cancelLikeMutation = useMutation({
     mutationFn: () => cancelPostLike(postId),
-    onSuccess: (newCount) => {
-      queryClient.setQueryData(queryKeys.posts.likes(postId), newCount);
-      queryClient.setQueryData(queryKeys.posts.likeStatus(postId), false);
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.posts.likes(postId) });
+      await queryClient.cancelQueries({ queryKey: queryKeys.posts.likeStatus(postId) });
+      const prevCount = queryClient.getQueryData<number>(queryKeys.posts.likes(postId));
+      const prevStatus = queryClient.getQueryData<boolean>(queryKeys.posts.likeStatus(postId));
+      queryClient.setQueryData<number>(queryKeys.posts.likes(postId), (n = 0) => Math.max(0, n - 1));
+      queryClient.setQueryData<boolean>(queryKeys.posts.likeStatus(postId), false);
+      return { prevCount, prevStatus };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx) {
+        queryClient.setQueryData(queryKeys.posts.likes(postId), ctx.prevCount);
+        queryClient.setQueryData(queryKeys.posts.likeStatus(postId), ctx.prevStatus);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.posts.likes(postId) });
     },
   });
 

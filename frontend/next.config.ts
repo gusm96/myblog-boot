@@ -39,13 +39,19 @@ const nextConfig: NextConfig = {
         destination: "/posts/:boardId",
         permanent: true,
       },
-      // 구 카테고리 URL /:name → /category/:name (예약어 제외)
-      // 주의: /about, /tags 같은 신규 최상위 정적 경로 추가 시
+      // 구 카테고리 URL /category/:name → /tag/:name (SEO 보존)
+      {
+        source: "/category/:name",
+        destination: "/tag/:name",
+        permanent: true,
+      },
+      // 구 카테고리 URL /:name → /tag/:name (예약어 제외)
+      // 주의: /about, /tag 같은 신규 최상위 정적 경로 추가 시
       // 부정 lookahead 목록에 반드시 해당 이름을 추가할 것.
       {
         source:
-          "/:name((?!category|posts|search|login|management|boards|api|_next|favicon\\.ico|robots\\.txt|sitemap\\.xml).+)",
-        destination: "/category/:name",
+          "/:name((?!tag|category|posts|search|login|management|boards|api|_next|favicon\\.ico|robots\\.txt|sitemap\\.xml).+)",
+        destination: "/tag/:name",
         permanent: true,
       },
     ];

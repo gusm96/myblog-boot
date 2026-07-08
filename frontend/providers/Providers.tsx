@@ -14,11 +14,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 1000 * 60 * 10, // 10분
-            gcTime: 1000 * 60 * 60 * 24, // 24시간
-            retry: 1,
+            staleTime: 1000 * 60 * 10,
+            gcTime: 1000 * 60 * 30,
+            retry: (failureCount, err) => {
+              const status = (err as { response?: { status?: number } })?.response?.status;
+              if (status && status >= 400 && status < 500) return false;
+              return failureCount < 1;
+            },
             refetchOnWindowFocus: false,
             refetchOnReconnect: true,
+          },
+          mutations: {
+            onError: (err) => console.error("[mutation]", err),
           },
         },
       })

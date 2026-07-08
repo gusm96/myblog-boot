@@ -6,7 +6,7 @@
  * Revalidate policy:
  *   posts    : 60s  — on-demand 도입 후 600s로 완화 예정 (revalidateTag("posts"))
  *   slugs    : 3600s — sitemap 안정성 우선 (on-demand로 /sitemap.xml 즉시 무효화)
- *   categories: 300s — 카테고리 변경은 sitemap 영향 없음
+ *   tags     : 300s — 태그 변경은 sitemap 영향 없음
  */
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -55,14 +55,14 @@ export function getPostBySlug(
   });
 }
 
-/** 카테고리별 게시글 목록 */
-export function getCategoryPostList(
-  categoryName: string,
+/** 태그별 게시글 목록 */
+export function getTagPostList(
+  slug: string,
   page = 1,
   revalidate = 60
 ): Promise<PostListResponse> {
   return apiFetch<PostListResponse>(
-    `/api/v1/posts/category?c=${encodeURIComponent(categoryName)}&p=${page}`,
+    `/api/v1/posts/tag?t=${encodeURIComponent(slug)}&p=${page}`,
     { next: { revalidate, tags: ["posts"] } }
   );
 }
@@ -74,20 +74,20 @@ export function getAllSlugs(revalidate = 3600): Promise<PostSlug[]> {
   });
 }
 
-// ── 카테고리 ─────────────────────────────────────────────────────
+// ── 태그 ─────────────────────────────────────────────────────────
 
-import type { Category, CategoryV2 } from "@/types";
+import type { Tag } from "@/types";
 
-/** 카테고리 목록 (게시글 있는 것만, 일반 사용자용 — V2) */
-export function getCategoriesV2(revalidate = 300): Promise<CategoryV2[]> {
-  return apiFetch<CategoryV2[]>(`/api/v2/categories`, {
-    next: { revalidate, tags: ["categories"] },
+/** 태그 목록 (게시글 있는 것만, 일반 사용자용 — V2) */
+export function getPublicTags(revalidate = 300): Promise<Tag[]> {
+  return apiFetch<Tag[]>(`/api/v2/tags`, {
+    next: { revalidate, tags: ["tags"] },
   });
 }
 
-/** 카테고리 목록 — 관리자용 V1 */
-export function getCategories(revalidate = 300): Promise<Category[]> {
-  return apiFetch<Category[]>(`/api/v1/categories`, {
-    next: { revalidate, tags: ["categories"] },
+/** slug로 태그 조회 */
+export function getTagBySlug(slug: string, revalidate = 300): Promise<Tag> {
+  return apiFetch<Tag>(`/api/v2/tags/${encodeURIComponent(slug)}`, {
+    next: { revalidate, tags: ["tags", `tag:${slug}`] },
   });
 }
