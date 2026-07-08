@@ -5,7 +5,7 @@ import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.config.RestDocsConfiguration;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.post.Post;
-import com.moya.myblogboot.domain.category.Category;
+import com.moya.myblogboot.domain.tag.Tag;
 import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.dto.comment.CommentDeleteReqDto;
 import com.moya.myblogboot.dto.comment.CommentReqDto;
@@ -13,7 +13,7 @@ import com.moya.myblogboot.dto.comment.CommentUpdateReqDto;
 import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.PostRepository;
-import com.moya.myblogboot.repository.CategoryRepository;
+import com.moya.myblogboot.repository.TagRepository;
 import com.moya.myblogboot.repository.CommentRepository;
 import com.moya.myblogboot.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +38,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import jakarta.servlet.http.Cookie;
 
+import java.util.List;
+
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
@@ -59,7 +61,7 @@ class CommentControllerTest extends AbstractContainerBaseTest {
     @Autowired private AdminRepository adminRepository;
     @Autowired private AuthService authService;
     @Autowired private CommentRepository commentRepository;
-    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private TagRepository tagRepository;
     @Autowired private PostRepository postRepository;
     @Autowired private RestDocumentationResultHandler restDocs;
     @Autowired private ObjectMapper objectMapper;
@@ -92,15 +94,14 @@ class CommentControllerTest extends AbstractContainerBaseTest {
 
         accessToken = authService.adminLogin(loginReqDto).accessToken();
 
-        Category category = Category.builder().name("category").build();
-        Category saveCategory = categoryRepository.save(category);
+        Tag tag = tagRepository.save(Tag.builder().name("category").slug("category").build());
 
         Post post = Post.builder()
                 .admin(saveAdmin)
-                .category(saveCategory)
                 .title("title")
                 .content("content")
                 .build();
+        post.replaceTags(List.of(tag));
         Post savePost = postRepository.save(post);
         postId = savePost.getId();
 

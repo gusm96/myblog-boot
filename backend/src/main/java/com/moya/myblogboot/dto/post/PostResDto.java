@@ -3,9 +3,11 @@ package com.moya.myblogboot.dto.post;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.post.PostStatus;
+import com.moya.myblogboot.dto.tag.TagSummary;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -20,6 +22,7 @@ public class PostResDto {
     private LocalDateTime updateDate;
     private LocalDateTime deleteDate;
     private PostStatus postStatus;
+    private List<TagSummary> tags;
 
     @Builder
     public PostResDto(Post post) {
@@ -32,6 +35,7 @@ public class PostResDto {
         this.updateDate = post.getUpdateDate();
         this.deleteDate = post.getDeleteDate();
         this.postStatus = post.getPostStatus();
+        this.tags = post.getTags().stream().map(TagSummary::of).toList();
     }
 
     public static PostResDto of(Post post) {

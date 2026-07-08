@@ -2,11 +2,13 @@ package com.moya.myblogboot.domain.post;
 
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.base.BaseTimeEntity;
-import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.comment.Comment;
 import com.moya.myblogboot.domain.file.ImageFile;
+import com.moya.myblogboot.domain.tag.PostTag;
+import com.moya.myblogboot.domain.tag.Tag;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,19 +53,19 @@ public class Post extends BaseTimeEntity {
     @JoinColumn(name = "admin_id", nullable = false)
     private Admin admin;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
+    @BatchSize(size = 50)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    private List<PostTag> postTags = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
     @Builder
-    public Post(String title, String content, Category category, Admin admin,
+    public Post(String title, String content, Admin admin,
                 String slug, String metaDescription, String metaKeywords, String thumbnailUrl) {
         this.title = title;
         this.content = content;
-        this.category = category;
         this.admin = admin;
         this.slug = slug;
         this.metaDescription = metaDescription;
@@ -71,9 +73,8 @@ public class Post extends BaseTimeEntity {
         this.thumbnailUrl = thumbnailUrl;
     }
 
-    public void updatePost(Category category, String title, String content,
-                           String slug, String metaDescription, String metaKeywords, String thumbnailUrl) {
-        this.category = category;
+    public void updatePost(String title, String content, String slug,
+                           String metaDescription, String metaKeywords, String thumbnailUrl) {
         this.title = title;
         this.content = content;
         this.slug = slug;
@@ -102,8 +103,29 @@ public class Post extends BaseTimeEntity {
         this.imageFiles.remove(file);
     }
 
-    public void removeCategory() {
-        this.category = null;
+    public void replaceTags(List<Tag> orderedTags) {
+        List<PostTag> currentPostTags = new ArrayList<>(this.postTags);
+        this.postTags.clear();
+        for (int i = 0; i < orderedTags.size(); i++) {
+            int sortOrder = i;
+            Tag tag = orderedTags.get(i);
+            PostTag postTag = currentPostTags.stream()
+                    .filter(current -> current.getTag().getId().equals(tag.getId()))
+                    .findFirst()
+                    .orElseGet(() -> PostTag.builder()
+                            .post(this)
+                            .tag(tag)
+                            .sortOrder(sortOrder)
+                            .build());
+            postTag.changeSortOrder(sortOrder);
+            this.postTags.add(postTag);
+        }
+    }
+
+    public List<Tag> getTags() {
+        return this.postTags.stream()
+                .map(PostTag::getTag)
+                .toList();
     }
 
     public void updateViews(Long views) {

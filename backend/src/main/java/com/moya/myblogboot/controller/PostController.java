@@ -49,14 +49,14 @@ public class PostController {
                 .body(postService.retrieveAll(getPage(page)));
     }
 
-    @GetMapping("/api/v1/posts/category")
-    public ResponseEntity<PostListResDto> getCategoryPosts(
-            @RequestParam("c") String category,
+    @GetMapping("/api/v1/posts/tag")
+    public ResponseEntity<PostListResDto> getTagPosts(
+            @RequestParam("t") String tag,
             @RequestParam(name = "p", defaultValue = "1") int page
     ) {
         return ResponseEntity.ok()
                 .header("Cache-Control", "public, max-age=60")
-                .body(postService.retrieveAllByCategory(category, getPage(page)));
+                .body(postService.retrieveAllByTag(tag, getPage(page)));
     }
 
     @GetMapping("/api/v1/posts/search")

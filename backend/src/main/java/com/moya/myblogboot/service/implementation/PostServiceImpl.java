@@ -1,8 +1,8 @@
 package com.moya.myblogboot.service.implementation;
 
 import com.moya.myblogboot.domain.admin.Admin;
-import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.file.ImageFile;
+import com.moya.myblogboot.domain.tag.Tag;
 import com.moya.myblogboot.dto.file.ImageFileDto;
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.post.PostSlugHistory;
@@ -20,10 +20,10 @@ import com.moya.myblogboot.repository.ImageFileRepository;
 import com.moya.myblogboot.repository.PostRedisRepository;
 import com.moya.myblogboot.repository.PostRepository;
 import com.moya.myblogboot.repository.PostSlugHistoryRepository;
-import com.moya.myblogboot.service.CategoryService;
 import com.moya.myblogboot.service.FileUploadService;
 import com.moya.myblogboot.service.PostCacheService;
 import com.moya.myblogboot.service.PostService;
+import com.moya.myblogboot.service.TagService;
 import com.moya.myblogboot.domain.event.PostChangeEvent;
 import com.moya.myblogboot.utils.SlugUtil;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
 
-    private final CategoryService categoryService;
+    private final TagService tagService;
     private final AdminRepository adminRepository;
     private final PostRepository postRepository;
     private final ImageFileRepository imageFileRepository;
@@ -65,9 +65,9 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostListResDto retrieveAllByCategory(String categoryName, int page) {
+    public PostListResDto retrieveAllByTag(String tagSlug, int page) {
         PageRequest pageRequest = PageRequest.of(page, LIMIT, Sort.by(Sort.Direction.DESC, "createDate"));
-        return convertToPostListResDto(postRepository.findAllByCategoryName(categoryName, pageRequest));
+        return convertToPostListResDto(postRepository.findAllByTagSlug(tagSlug, pageRequest));
     }
 
     @Override
@@ -134,15 +134,17 @@ public class PostServiceImpl implements PostService {
     public Long write(PostReqDto postReqDto, Long adminId) {
         Admin admin = adminRepository.findById(adminId)
                 .orElseThrow(() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-        Category category = categoryService.retrieve(postReqDto.getCategory());
+        List<Tag> tags = tagService.resolveOrCreate(postReqDto.getTags());
         String slug = resolveSlug(postReqDto.getSlug(), postReqDto.getTitle(), null);
-        Post newPost = postReqDto.toEntity(category, admin, slug, resolveMetaDescription(postReqDto));
+        Post newPost = postReqDto.toEntity(admin, slug, resolveMetaDescription(postReqDto));
+        newPost.replaceTags(tags);
         if (postReqDto.getImages() != null && !postReqDto.getImages().isEmpty()) {
             saveImageFile(postReqDto.getImages(), newPost);
         }
         Post result = postRepository.save(newPost);
-        category.addPost(result);
-        eventPublisher.publishEvent(new PostChangeEvent(this, "CREATED", result.getId(), result.getSlug()));
+        tags.forEach(Tag::incrementPostCount);
+        eventPublisher.publishEvent(new PostChangeEvent(this, "CREATED", result.getId(), result.getSlug(),
+                tags.stream().map(Tag::getSlug).toList()));
         return result.getId();
     }
 
@@ -151,14 +153,18 @@ public class PostServiceImpl implements PostService {
     public Long edit(Long adminId, Long postId, PostReqDto modifiedDto) {
         Post post = findById(postId);
         verifyPostAccessAuthorization(post.getAdmin().getId(), adminId);
-        Category modifiedCategory = categoryService.retrieve(modifiedDto.getCategory());
+        List<Tag> oldTags = post.getTags();
+        List<Tag> newTags = tagService.resolveOrCreate(modifiedDto.getTags());
         String oldSlug = post.getSlug();
         String slug = resolveSlug(modifiedDto.getSlug(), modifiedDto.getTitle(), post);
-        post.updatePost(modifiedCategory, modifiedDto.getTitle(), modifiedDto.getContent(),
-                slug, resolveMetaDescription(modifiedDto), modifiedDto.getMetaKeywords(), modifiedDto.getThumbnailUrl());
+        post.updatePost(modifiedDto.getTitle(), modifiedDto.getContent(), slug,
+                resolveMetaDescription(modifiedDto), modifiedDto.getMetaKeywords(), modifiedDto.getThumbnailUrl());
+        updatePostCounts(oldTags, newTags, false);
+        post.replaceTags(newTags);
         recordSlugHistoryIfChanged(post, oldSlug, slug);
         postCacheService.updatePost(postCacheService.getPostFromCache(post.getId()), post);
-        eventPublisher.publishEvent(new PostChangeEvent(this, "UPDATED", postId, post.getSlug()));
+        eventPublisher.publishEvent(new PostChangeEvent(this, "UPDATED", postId, post.getSlug(),
+                mergeTagSlugs(oldTags, newTags)));
         return postId;
     }
 
@@ -168,8 +174,10 @@ public class PostServiceImpl implements PostService {
         Post post = findById(postId);
         verifyPostAccessAuthorization(post.getAdmin().getId(), adminId);
         post.deletePost();
+        post.getTags().forEach(Tag::decrementPostCount);
         postCacheService.updatePost(postCacheService.getPostFromCache(post.getId()), post);
-        eventPublisher.publishEvent(new PostChangeEvent(this, "DELETED", postId, post.getSlug()));
+        eventPublisher.publishEvent(new PostChangeEvent(this, "DELETED", postId, post.getSlug(),
+                post.getTags().stream().map(Tag::getSlug).toList()));
     }
 
     @Override
@@ -178,7 +186,10 @@ public class PostServiceImpl implements PostService {
         Post post = findById(postId);
         verifyPostAccessAuthorization(post.getAdmin().getId(), adminId);
         post.undeletePost();
+        post.getTags().forEach(Tag::incrementPostCount);
         postCacheService.updatePost(postCacheService.getPostFromCache(post.getId()), post);
+        eventPublisher.publishEvent(new PostChangeEvent(this, "CREATED", postId, post.getSlug(),
+                post.getTags().stream().map(Tag::getSlug).toList()));
     }
 
     @Override
@@ -270,6 +281,25 @@ public class PostServiceImpl implements PostService {
                 .map(image -> imageFileRepository.save(image.toEntity(post)))
                 .collect(Collectors.toList());
         imageFiles.forEach(post::addImageFile);
+    }
+
+    private void updatePostCounts(List<Tag> oldTags, List<Tag> newTags, boolean postDeleted) {
+        if (postDeleted) {
+            return;
+        }
+        oldTags.stream()
+                .filter(oldTag -> newTags.stream().noneMatch(newTag -> newTag.getId().equals(oldTag.getId())))
+                .forEach(Tag::decrementPostCount);
+        newTags.stream()
+                .filter(newTag -> oldTags.stream().noneMatch(oldTag -> oldTag.getId().equals(newTag.getId())))
+                .forEach(Tag::incrementPostCount);
+    }
+
+    private List<String> mergeTagSlugs(List<Tag> oldTags, List<Tag> newTags) {
+        return java.util.stream.Stream.concat(oldTags.stream(), newTags.stream())
+                .map(Tag::getSlug)
+                .distinct()
+                .toList();
     }
 
     /**

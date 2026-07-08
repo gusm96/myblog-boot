@@ -2,8 +2,8 @@ package com.moya.myblogboot.repository;
 
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.admin.Admin;
-import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.post.Post;
+import com.moya.myblogboot.domain.tag.Tag;
 import com.moya.myblogboot.dto.post.PostForRedis;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +14,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -27,7 +29,7 @@ public class PostRedisRepositoryTest extends AbstractContainerBaseTest {
     @Autowired
     PostRepository postRepository;
     @Autowired
-    CategoryRepository categoryRepository;
+    TagRepository tagRepository;
     @Autowired
     RedisTemplate<String, Object> redisTemplate;
 
@@ -41,15 +43,14 @@ public class PostRedisRepositoryTest extends AbstractContainerBaseTest {
                 .build();
         Admin savedAdmin = adminRepository.save(admin);
 
-        Category newCategory = Category.builder().name("Category").build();
-        Category category = categoryRepository.save(newCategory);
+        Tag tag = tagRepository.save(Tag.builder().name("Redis").slug("redis").build());
 
         Post newPost = Post.builder()
                 .title("제목")
                 .content("내용")
-                .category(category)
                 .admin(savedAdmin)
                 .build();
+        newPost.replaceTags(List.of(tag));
         Post post = postRepository.save(newPost);
         postId = post.getId();
     }

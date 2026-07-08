@@ -3,8 +3,8 @@ package com.moya.myblogboot.service.implementation;
 import com.moya.myblogboot.AbstractContainerBaseTest;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.post.Post;
-import com.moya.myblogboot.domain.category.Category;
 import com.moya.myblogboot.domain.comment.Comment;
+import com.moya.myblogboot.domain.tag.Tag;
 import com.moya.myblogboot.dto.comment.CommentDeleteReqDto;
 import com.moya.myblogboot.dto.comment.CommentReqDto;
 import com.moya.myblogboot.dto.comment.CommentResDto;
@@ -13,7 +13,7 @@ import com.moya.myblogboot.domain.post.ModificationStatus;
 import com.moya.myblogboot.exception.custom.UnauthorizedAccessException;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.PostRepository;
-import com.moya.myblogboot.repository.CategoryRepository;
+import com.moya.myblogboot.repository.TagRepository;
 import com.moya.myblogboot.repository.CommentRepository;
 import com.moya.myblogboot.service.CommentService;
 import com.moya.myblogboot.exception.custom.EntityNotFoundException;
@@ -38,7 +38,7 @@ class CommentServiceImplTest extends AbstractContainerBaseTest {
 
     @Autowired private CommentService commentService;
     @Autowired private AdminRepository adminRepository;
-    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private TagRepository tagRepository;
     @Autowired private PostRepository postRepository;
     @Autowired private CommentRepository commentRepository;
     @Autowired private PasswordEncoder passwordEncoder;
@@ -54,16 +54,18 @@ class CommentServiceImplTest extends AbstractContainerBaseTest {
                 .password(passwordEncoder.encode("adminPw"))
                 .build());
 
-        Category category = categoryRepository.save(Category.builder()
-                .name("댓글테스트카테고리")
+        Tag tag = tagRepository.save(Tag.builder()
+                .name("댓글테스트태그")
+                .slug("comment-test-tag")
                 .build());
 
-        testPost = postRepository.save(Post.builder()
+        Post post = Post.builder()
                 .title("댓글테스트게시글")
                 .content("내용")
-                .category(category)
                 .admin(admin)
-                .build());
+                .build();
+        post.replaceTags(List.of(tag));
+        testPost = postRepository.save(post);
 
         testComment = commentRepository.save(Comment.builder()
                 .comment("기존 댓글")

@@ -23,20 +23,22 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostQuerydslR
 
     @Query("select p from Post p " +
             "join fetch p.admin " +
-            "join fetch p.category where p.id = :postId")
+            "where p.id = :postId")
     Optional<Post> findById(@Param("postId") Long postId);
 
-    @Query(value = "select p from Post p join fetch p.admin join fetch p.category " +
+    @Query(value = "select p from Post p join fetch p.admin " +
             "where p.postStatus = :postStatus and p.deleteDate is null",
             countQuery = "select count(p) from Post p where p.postStatus = :postStatus and p.deleteDate is null")
     Page<Post> findAll(@Param("postStatus") PostStatus postStatus, Pageable pageable);
 
-    @Query(value = "select p from Post p join fetch p.admin join fetch p.category " +
-            "where p.category.name = :categoryName and p.postStatus = 'VIEW' and p.deleteDate is null",
-            countQuery = "select count(p) from Post p where p.category.name = :categoryName and p.postStatus = 'VIEW' and p.deleteDate is null")
-    Page<Post> findAllByCategoryName(@Param("categoryName") String categoryName, PageRequest pageRequest);
+    @Query(value = "select distinct p from Post p join fetch p.admin " +
+            "join p.postTags pt join pt.tag t " +
+            "where t.slug = :tagSlug and p.postStatus = 'VIEW' and p.deleteDate is null",
+            countQuery = "select count(distinct p) from Post p join p.postTags pt join pt.tag t " +
+                    "where t.slug = :tagSlug and p.postStatus = 'VIEW' and p.deleteDate is null")
+    Page<Post> findAllByTagSlug(@Param("tagSlug") String tagSlug, PageRequest pageRequest);
 
-    @Query(value = "select p from Post p join fetch p.admin join fetch p.category " +
+    @Query(value = "select p from Post p join fetch p.admin " +
             "where p.deleteDate is not null",
             countQuery = "select count(p) from Post p where p.deleteDate is not null")
     Page<Post> findByDeletionStatus(PageRequest pageRequest);
@@ -48,9 +50,8 @@ public interface PostRepository extends JpaRepository<Post, Long>, PostQuerydslR
             "order by p.updateDate desc")
     List<PostSlugDto> findAllSlugs();
 
-    // RSS 피드 전용: 최근 VIEW 게시글 (category fetch join)
+    // RSS 피드 전용: 최근 VIEW 게시글
     @Query(value = "select p from Post p " +
-            "join fetch p.category " +
             "where p.postStatus = 'VIEW' and p.deleteDate is null and p.slug is not null " +
             "order by p.createDate desc",
             countQuery = "select count(p) from Post p where p.postStatus = 'VIEW' and p.deleteDate is null")

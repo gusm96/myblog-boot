@@ -41,7 +41,6 @@ public class PostQuerydslRepositoryImpl implements PostQuerydslRepository {
 
         List<Post> posts = queryFactory.selectFrom(post)
                 .join(post.admin).fetchJoin()
-                .join(post.category).fetchJoin()
                 .where(condition)
                 .orderBy(post.updateDate.desc())
                 .offset(pageable.getOffset())

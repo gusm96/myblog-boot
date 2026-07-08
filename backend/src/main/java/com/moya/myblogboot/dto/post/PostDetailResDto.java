@@ -2,9 +2,11 @@ package com.moya.myblogboot.dto.post;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.moya.myblogboot.domain.post.PostStatus;
+import com.moya.myblogboot.dto.tag.TagSummary;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,7 +26,7 @@ public class PostDetailResDto {
     private String slug;
     private String metaDescription;
     private String thumbnailUrl;
-    private String categoryName;
+    private List<TagSummary> tags;
 
     @Builder
     public PostDetailResDto(PostForRedis postForRedis) {
@@ -40,6 +42,6 @@ public class PostDetailResDto {
         this.slug = postForRedis.getSlug();
         this.metaDescription = postForRedis.getMetaDescription();
         this.thumbnailUrl = postForRedis.getThumbnailUrl();
-        this.categoryName = postForRedis.getCategoryName();
+        this.tags = postForRedis.getTags();
     }
 }

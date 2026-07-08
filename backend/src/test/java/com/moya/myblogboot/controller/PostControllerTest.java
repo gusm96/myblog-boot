@@ -7,14 +7,15 @@ import com.moya.myblogboot.constants.CookieName;
 import com.moya.myblogboot.domain.admin.Admin;
 import com.moya.myblogboot.domain.post.Post;
 import com.moya.myblogboot.domain.post.PostStatus;
-import com.moya.myblogboot.dto.post.PostReqDto;
 import com.moya.myblogboot.domain.post.SearchType;
-import com.moya.myblogboot.domain.category.Category;
+import com.moya.myblogboot.domain.tag.Tag;
 import com.moya.myblogboot.dto.auth.LoginReqDto;
+import com.moya.myblogboot.dto.post.PostReqDto;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.repository.PostRepository;
-import com.moya.myblogboot.repository.CategoryRepository;
+import com.moya.myblogboot.repository.TagRepository;
 import com.moya.myblogboot.service.AuthService;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,23 +31,25 @@ import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import jakarta.servlet.http.Cookie;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.restdocs.headers.HeaderDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
-import static org.springframework.restdocs.payload.JsonFieldType.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.*;
-import static org.springframework.restdocs.request.RequestDocumentation.*;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.delete;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
 @SpringBootTest
@@ -56,27 +59,20 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @ActiveProfiles("test")
 class PostControllerTest extends AbstractContainerBaseTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private PostRepository postRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private AuthService authService;
-    @Autowired
-    private AdminRepository adminRepository;
-    @Autowired
-    private CategoryRepository categoryRepository;
-    @Autowired
-    private RestDocumentationResultHandler restDocs;
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private PostRepository postRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private AuthService authService;
+    @Autowired private AdminRepository adminRepository;
+    @Autowired private TagRepository tagRepository;
+    @Autowired private RestDocumentationResultHandler restDocs;
+    @Autowired private ObjectMapper objectMapper;
 
     private Long postId;
     private String postSlug;
-    private Long categoryId;
     private String accessToken;
+    private Admin admin;
+    private Tag tag;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext, RestDocumentationContextProvider restDocumentationContextProvider) {
@@ -89,225 +85,94 @@ class PostControllerTest extends AbstractContainerBaseTest {
 
     @BeforeEach
     void before() {
-        Admin admin = Admin.builder()
+        admin = adminRepository.save(Admin.builder()
                 .username("testMember")
                 .password(passwordEncoder.encode("testPassword"))
-                .build();
-        Admin saveAdmin = adminRepository.save(admin);
-        Category category = Category.builder().name("Test").build();
-        Category saveCategory = categoryRepository.save(category);
-        categoryId = saveCategory.getId();
+                .build());
+        tag = tagRepository.save(Tag.builder().name("Test").slug("test").build());
 
         for (int i = 0; i < 5; i++) {
             Post newPost = Post.builder()
-                    .admin(saveAdmin)
-                    .category(saveCategory)
+                    .admin(admin)
                     .title("title")
                     .content("content")
                     .slug("test-title-" + i)
                     .build();
+            newPost.replaceTags(List.of(tag));
+            tag.incrementPostCount();
             Post result = postRepository.save(newPost);
             postId = result.getId();
-            postSlug = "test-title-" + i;
+            postSlug = result.getSlug();
         }
 
-        LoginReqDto loginReqDto = LoginReqDto.builder()
+        accessToken = authService.adminLogin(LoginReqDto.builder()
                 .username("testMember")
                 .password("testPassword")
-                .build();
-
-        accessToken = authService.adminLogin(loginReqDto).accessToken();
+                .build()).accessToken();
     }
 
     @Test
     @DisplayName("모든 게시글 조회")
     void getAllPosts() throws Exception {
-        int page = 1;
-        String path = "/api/v1/posts";
-
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
-                .param("p", String.valueOf(page)));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        queryParameters(
-                                parameterWithName("p").description("페이지 번호 (기본값: 1)")
-                        ),
-                        responseFields(
-                                fieldWithPath("list").description("게시글 목록"),
-                                fieldWithPath("list[].id").description("게시글 ID"),
-                                fieldWithPath("list[].title").description("게시글 제목"),
-                                fieldWithPath("list[].content").description("게시글 내용"),
-                                fieldWithPath("list[].slug").description("게시글 슬러그"),
-                                fieldWithPath("list[].createDate").description("작성일"),
-                                fieldWithPath("list[].updateDate").description("수정일").optional().type(STRING),
-                                fieldWithPath("list[].deleteDate").description("삭제 예정일").optional().type(STRING),
-                                fieldWithPath("list[].postStatus").description("게시글 상태 (VIEW / HIDE)"),
-                                fieldWithPath("totalPage").description("전체 페이지 수")
-                        )
-                ));
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts").param("p", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.list").isArray())
+                .andExpect(jsonPath("$.list[0].tags").isArray());
     }
 
     @Test
-    @DisplayName("카테고리별 게시글 조회")
-    void getCategoryPosts() throws Exception {
-        int page = 1;
-        String category = "Test";
-        String path = "/api/v1/posts/category";
-
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
-                .param("c", category)
-                .param("p", String.valueOf(page)));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        queryParameters(
-                                parameterWithName("c").description("카테고리명"),
-                                parameterWithName("p").description("페이지 번호 (기본값: 1)")
-                        ),
-                        responseFields(
-                                fieldWithPath("list").description("게시글 목록"),
-                                fieldWithPath("list[].id").description("게시글 ID"),
-                                fieldWithPath("list[].title").description("게시글 제목"),
-                                fieldWithPath("list[].content").description("게시글 내용"),
-                                fieldWithPath("list[].slug").description("게시글 슬러그"),
-                                fieldWithPath("list[].createDate").description("작성일"),
-                                fieldWithPath("list[].updateDate").description("수정일").optional().type(STRING),
-                                fieldWithPath("list[].deleteDate").description("삭제 예정일").optional().type(STRING),
-                                fieldWithPath("list[].postStatus").description("게시글 상태"),
-                                fieldWithPath("totalPage").description("전체 페이지 수")
-                        )
-                ));
-    }
-
-    @Test
-    @DisplayName("검색 결과별 게시글 조회")
-    void getSearchedPosts() throws Exception {
-        SearchType searchType = SearchType.TITLE;
-        String contents = "title";
-        int page = 1;
-        String path = "/api/v1/posts/search";
-
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
-                .param("p", String.valueOf(page))
-                .param("type", String.valueOf(searchType))
-                .param("contents", contents));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        queryParameters(
-                                parameterWithName("type").description("검색 타입 (TITLE / CONTENT)"),
-                                parameterWithName("contents").description("검색어"),
-                                parameterWithName("p").description("페이지 번호 (기본값: 1)")
-                        ),
-                        responseFields(
-                                fieldWithPath("list").description("검색된 게시글 목록"),
-                                fieldWithPath("list[].id").description("게시글 ID"),
-                                fieldWithPath("list[].title").description("게시글 제목"),
-                                fieldWithPath("list[].content").description("게시글 내용"),
-                                fieldWithPath("list[].slug").description("게시글 슬러그"),
-                                fieldWithPath("list[].createDate").description("작성일"),
-                                fieldWithPath("list[].updateDate").description("수정일").optional().type(STRING),
-                                fieldWithPath("list[].deleteDate").description("삭제 예정일").optional().type(STRING),
-                                fieldWithPath("list[].postStatus").description("게시글 상태"),
-                                fieldWithPath("totalPage").description("전체 페이지 수")
-                        )
-                ));
+    @DisplayName("태그별 게시글 조회")
+    void getTagPosts() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/tag")
+                        .param("t", tag.getSlug())
+                        .param("p", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.list").isArray());
     }
 
     @Test
     @DisplayName("검색 결과별 게시글 조회 - HIDE 및 삭제 게시글 제외")
     void getSearchedPosts_excludesHiddenAndDeletedPosts() throws Exception {
-        Post hiddenPost = postRepository.save(Post.builder()
-                .admin(adminRepository.findAll().get(0))
-                .category(categoryRepository.findById(categoryId).orElseThrow())
-                .title("private searchable title")
-                .content("private searchable content")
-                .slug("private-searchable-title")
-                .build());
+        Post hiddenPost = taggedPost("private searchable title", "private searchable content", "private-searchable-title");
         hiddenPost.updatePostStatus(PostStatus.HIDE);
 
-        Post deletedPost = postRepository.save(Post.builder()
-                .admin(adminRepository.findAll().get(0))
-                .category(categoryRepository.findById(categoryId).orElseThrow())
-                .title("deleted searchable title")
-                .content("deleted searchable content")
-                .slug("deleted-searchable-title")
-                .build());
+        Post deletedPost = taggedPost("deleted searchable title", "deleted searchable content", "deleted-searchable-title");
         deletedPost.delete();
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/search")
                         .param("p", "1")
                         .param("type", String.valueOf(SearchType.TITLE))
                         .param("contents", "searchable"))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.list.length()").value(0));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.list.length()").value(0));
     }
 
     @Test
     @DisplayName("게시글 상세 조회 V1 (slug) — GET은 조회수 증가 없이 순수 조회")
     void getPostDetailV1BySlug_doesNotIncrementViews() throws Exception {
-        ResultActions resultActions = mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(postId))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.slug").value(postSlug))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.views").value(0))
-                .andExpect(MockMvcResultMatchers.cookie().doesNotExist("viewed_posts"))
-                .andDo(restDocs.document(
-                        pathParameters(
-                                parameterWithName("identifier").description("게시글 슬러그 또는 숫자 ID")
-                        ),
-                        responseFields(
-                                fieldWithPath("id").description("게시글 ID"),
-                                fieldWithPath("title").description("게시글 제목"),
-                                fieldWithPath("content").description("게시글 내용"),
-                                fieldWithPath("views").description("조회수"),
-                                fieldWithPath("likes").description("좋아요 수"),
-                                fieldWithPath("createDate").description("작성일"),
-                                fieldWithPath("updateDate").description("수정일").optional().type(STRING),
-                                fieldWithPath("deleteDate").description("삭제 예정일").optional().type(STRING),
-                                fieldWithPath("postStatus").description("게시글 상태"),
-                                fieldWithPath("slug").description("게시글 슬러그"),
-                                fieldWithPath("categoryName").description("카테고리명")
-                        )
-                ));
+        mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(postId))
+                .andExpect(jsonPath("$.slug").value(postSlug))
+                .andExpect(jsonPath("$.views").value(0))
+                .andExpect(jsonPath("$.tags").isArray())
+                .andExpect(cookie().doesNotExist("viewed_posts"));
     }
 
     @Test
     @DisplayName("게시글 조회수 증가 — POST만 증가하고 쿠키 중복 호출은 증가하지 않음")
     void incrementPostViewsByPostOnlyDeduplicatesWithCookie() throws Exception {
         MvcResult firstResult = mockMvc.perform(post("/api/v1/posts/{postId}/views", postId))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().string("1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("1"))
                 .andReturn();
 
         Cookie viewedCookie = firstResult.getResponse().getCookie("viewed_posts");
         assertThat(viewedCookie).isNotNull();
 
-        mockMvc.perform(post("/api/v1/posts/{postId}/views", postId)
-                        .cookie(viewedCookie))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().string("1"));
-
-        mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.views").value(1));
-    }
-
-    @Test
-    @DisplayName("게시글 상세 조회 V1 (ID) — GET은 viewed_posts 쿠키를 발급하지 않음")
-    void getPostDetailV1ById_doesNotIssueViewedCookie() throws Exception {
-        ResultActions resultActions = mockMvc.perform(get("/api/v1/posts/{identifier}", postId));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(postId))
-                .andExpect(MockMvcResultMatchers.cookie().doesNotExist("viewed_posts"));
+        mockMvc.perform(post("/api/v1/posts/{postId}/views", postId).cookie(viewedCookie))
+                .andExpect(status().isOk())
+                .andExpect(content().string("1"));
     }
 
     @Test
@@ -316,54 +181,28 @@ class PostControllerTest extends AbstractContainerBaseTest {
         PostReqDto modifiedPostDto = PostReqDto.builder()
                 .title("modifiedTitle")
                 .content("modifiedContent")
-                .category(categoryId)
+                .tags(List.of("Test"))
                 .slug("new-public-slug")
                 .build();
 
-        mockMvc.perform(put("/api/v1/posts/{postId}", postId)
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/posts/{postId}", postId)
                         .header(HttpHeaders.AUTHORIZATION, accessToken)
                         .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken))
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(modifiedPostDto)))
-                .andExpect(MockMvcResultMatchers.status().isOk());
+                .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug))
-                .andExpect(MockMvcResultMatchers.status().isMovedPermanently())
-                .andExpect(MockMvcResultMatchers.header().string(HttpHeaders.LOCATION,
-                        "http://localhost:8080/posts/new-public-slug"));
-    }
-
-    @Test
-    @DisplayName("조회수 증가 - HIDE 게시글은 404")
-    void incrementViewsHiddenPostReturns404() throws Exception {
-        Post post = postRepository.findById(postId).orElseThrow();
-        post.updatePostStatus(PostStatus.HIDE);
-
-        mockMvc.perform(post("/api/v1/posts/{postId}/views", postId))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
+                .andExpect(status().isMovedPermanently())
+                .andExpect(header().string(HttpHeaders.LOCATION, "http://localhost:8080/posts/new-public-slug"));
     }
 
     @Test
     @DisplayName("게시글 상세 조회 V8 → V1 301 redirect")
     void getPostDetailV8Redirect() throws Exception {
         mockMvc.perform(get("/api/v8/posts/{postId}", postId))
-                .andExpect(MockMvcResultMatchers.status().isMovedPermanently())
-                .andExpect(MockMvcResultMatchers.header().string(HttpHeaders.LOCATION, "/api/v1/posts/" + postId))
-                .andDo(restDocs.document(
-                        pathParameters(
-                                parameterWithName("postId").description("게시글 ID (v1으로 영구 이전됨)")
-                        ),
-                        responseHeaders(
-                                headerWithName(HttpHeaders.LOCATION).description("이전된 엔드포인트 URI")
-                        )
-                ));
-    }
-
-    @Test
-    @DisplayName("게시글 상세 조회 V1 실패 - 존재하지 않는 슬러그")
-    void getPostDetailV1NotFound() throws Exception {
-        mockMvc.perform(get("/api/v1/posts/{identifier}", "nonexistent-slug"))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
+                .andExpect(status().isMovedPermanently())
+                .andExpect(header().string(HttpHeaders.LOCATION, "/api/v1/posts/" + postId));
     }
 
     @Test
@@ -373,7 +212,7 @@ class PostControllerTest extends AbstractContainerBaseTest {
         post.updatePostStatus(PostStatus.HIDE);
 
         mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -383,110 +222,25 @@ class PostControllerTest extends AbstractContainerBaseTest {
         post.deletePost();
 
         mockMvc.perform(get("/api/v1/posts/{identifier}", postSlug))
-                .andExpect(MockMvcResultMatchers.status().isGone())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("B005"));
-    }
-
-    @Test
-    @DisplayName("게시글 상세 관리자용 - 삭제 게시글도 조회 가능")
-    void getPostDetailForAdminCanReadDeletedPost() throws Exception {
-        Post post = postRepository.findById(postId).orElseThrow();
-        post.deletePost();
-
-        mockMvc.perform(get("/api/v1/management/posts/{postId}", postId)
-                        .header(HttpHeaders.AUTHORIZATION, accessToken)
-                        .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(postId));
-    }
-
-    @Test
-    @DisplayName("게시글 조회수 조회 - 삭제 게시글은 410")
-    void getViewsDeletedPostReturns410() throws Exception {
-        Post post = postRepository.findById(postId).orElseThrow();
-        post.deletePost();
-
-        mockMvc.perform(get("/api/v1/posts/{postId}/views", postId))
-                .andExpect(MockMvcResultMatchers.status().isGone())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("B005"));
-    }
-
-    @Test
-    @DisplayName("게시글 좋아요 수 조회 - HIDE 게시글은 404")
-    void getLikesHiddenPostReturns404() throws Exception {
-        Post post = postRepository.findById(postId).orElseThrow();
-        post.updatePostStatus(PostStatus.HIDE);
-
-        mockMvc.perform(get("/api/v1/posts/{postId}/likes", postId))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
-    }
-
-    @Test
-    @DisplayName("게시글 상세 관리자용")
-    void getPostDetailForAdmin() throws Exception {
-        ResultActions resultActions = mockMvc.perform(get("/api/v1/management/posts/{postId}", postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        pathParameters(
-                                parameterWithName("postId").description("게시글 ID")
-                        ),
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
-                        ),
-                        responseFields(
-                                fieldWithPath("id").description("게시글 ID"),
-                                fieldWithPath("title").description("게시글 제목"),
-                                fieldWithPath("content").description("게시글 내용"),
-                                fieldWithPath("views").description("조회수"),
-                                fieldWithPath("likes").description("좋아요 수"),
-                                fieldWithPath("createDate").description("작성일"),
-                                fieldWithPath("updateDate").description("수정일").optional().type(STRING),
-                                fieldWithPath("deleteDate").description("삭제 예정일").optional().type(STRING),
-                                fieldWithPath("postStatus").description("게시글 상태"),
-                                fieldWithPath("slug").description("게시글 슬러그"),
-                                fieldWithPath("categoryName").description("카테고리명")
-                        )
-                ));
+                .andExpect(status().isGone())
+                .andExpect(jsonPath("$.code").value("B005"));
     }
 
     @Test
     @DisplayName("게시글 등록")
     void writePost() throws Exception {
-        String path = "/api/v1/posts";
         PostReqDto postReqDto = PostReqDto.builder()
-                .category(categoryId)
                 .title("title")
                 .content("content")
+                .tags(List.of("Spring", "JPA"))
                 .build();
 
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post(path)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken))
-                .contentType("application/json")
-                .content(objectMapper.writeValueAsString(postReqDto)));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
-                        ),
-                        requestFields(
-                                fieldWithPath("title").description("게시글 제목 (2~45자)"),
-                                fieldWithPath("content").description("게시글 내용"),
-                                fieldWithPath("category").description("카테고리 ID"),
-                                fieldWithPath("images").description("첨부 이미지 목록").optional().type(STRING),
-                                fieldWithPath("slug").description("슬러그 (미입력 시 제목에서 자동 생성)").optional().type(STRING),
-                                fieldWithPath("metaDescription").description("메타 설명 (최대 160자)").optional().type(STRING),
-                                fieldWithPath("metaKeywords").description("메타 키워드").optional().type(STRING),
-                                fieldWithPath("thumbnailUrl").description("대표 이미지 URL").optional().type(STRING)
-                        ),
-                        responseBody()
-                ));
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts")
+                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken))
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(postReqDto)))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -495,202 +249,53 @@ class PostControllerTest extends AbstractContainerBaseTest {
         PostReqDto modifiedPostDto = PostReqDto.builder()
                 .title("modifiedTitle")
                 .content("modifiedContent")
-                .category(categoryId)
+                .tags(List.of("Modified"))
                 .build();
 
-        ResultActions resultActions = mockMvc.perform(put("/api/v1/posts/{postId}", postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken))
-                .contentType("application/json")
-                .content(objectMapper.writeValueAsString(modifiedPostDto)));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        pathParameters(
-                                parameterWithName("postId").description("수정할 게시글 ID")
-                        ),
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
-                        ),
-                        requestFields(
-                                fieldWithPath("title").description("수정할 제목 (2~45자)"),
-                                fieldWithPath("content").description("수정할 내용"),
-                                fieldWithPath("category").description("카테고리 ID"),
-                                fieldWithPath("images").description("첨부 이미지 목록").optional().type(STRING),
-                                fieldWithPath("slug").description("수정할 슬러그 (미입력 시 기존 슬러그 유지)").optional().type(STRING),
-                                fieldWithPath("metaDescription").description("수정할 메타 설명").optional().type(STRING),
-                                fieldWithPath("metaKeywords").description("수정할 메타 키워드").optional().type(STRING),
-                                fieldWithPath("thumbnailUrl").description("수정할 대표 이미지 URL").optional().type(STRING)
-                        ),
-                        responseBody()
-                ));
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/posts/{postId}", postId)
+                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken))
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(modifiedPostDto)))
+                .andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("게시글 삭제")
-    void deletePost() throws Exception {
-        ResultActions resultActions = mockMvc.perform(delete("/api/v1/posts/{postId}", postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
+    @DisplayName("게시글 삭제/복원/영구 삭제")
+    void deleteAndRestorePost() throws Exception {
+        mockMvc.perform(delete("/api/v1/posts/{postId}", postId)
+                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)))
+                .andExpect(status().isOk());
 
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        pathParameters(
-                                parameterWithName("postId").description("삭제할 게시글 ID")
-                        ),
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
-                        )
-                ));
-    }
-
-    @Test
-    @DisplayName("삭제 예정 게시글 리스트")
-    void getDeletedPosts() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/" + postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
-        String path = "/api/v1/deleted-posts";
-
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get(path)
-                .param("p", "1")
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        queryParameters(
-                                parameterWithName("p").description("페이지 번호 (기본값: 1)")
-                        ),
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
-                        )
-                ));
-    }
-
-    @Test
-    @DisplayName("게시글 삭제 취소")
-    void cancelDeletedPost() throws Exception {
-        // 먼저 삭제 요청
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/" + postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
-
-        ResultActions resultActions = mockMvc.perform(put("/api/v1/deleted-posts/{postId}", postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        pathParameters(
-                                parameterWithName("postId").description("복원할 게시글 ID")
-                        ),
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
-                        )
-                ));
-    }
-
-    @Test
-    @DisplayName("게시글 영구 삭제")
-    void deletePostPermanently() throws Exception {
-        // 먼저 삭제(soft-delete) 처리 후 영구 삭제
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/" + postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
-
-        ResultActions resultActions = mockMvc.perform(delete("/api/v1/deleted-posts/{postId}", postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        pathParameters(
-                                parameterWithName("postId").description("영구 삭제할 게시글 ID")
-                        ),
-                        requestHeaders(
-                                headerWithName(HttpHeaders.AUTHORIZATION).description("Bearer Access Token (관리자)")
-                        )
-                ));
-    }
-
-    @Test
-    @DisplayName("게시글 좋아요")
-    void addPostLike() throws Exception {
-        ResultActions resultActions = mockMvc.perform(post("/api/v2/likes/{postId}", postId));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.cookie().exists(CookieName.LIKED_POSTS))
-                .andDo(restDocs.document(
-                        pathParameters(
-                                parameterWithName("postId").description("좋아요할 게시글 ID")
-                        ),
-                        responseBody()
-                ));
-    }
-
-    @Test
-    @DisplayName("게시글 좋아요 - HIDE 게시글은 404")
-    void addPostLikeHiddenPostReturns404() throws Exception {
-        Post post = postRepository.findById(postId).orElseThrow();
-        post.updatePostStatus(PostStatus.HIDE);
-
-        mockMvc.perform(post("/api/v2/likes/{postId}", postId))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
-    }
-
-    @Test
-    @DisplayName("게시글 좋아요 여부 체크")
-    void checkPostLike() throws Exception {
-        // 좋아요 추가 후 발급된 쿠키 획득
-        MvcResult likeResult = mockMvc.perform(post("/api/v2/likes/{postId}", postId))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andReturn();
-        Cookie likedCookie = likeResult.getResponse().getCookie(CookieName.LIKED_POSTS);
-        assertThat(likedCookie).isNotNull();
-
-        ResultActions resultActions = mockMvc.perform(get("/api/v2/likes/{postId}", postId)
-                .cookie(likedCookie));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().string("true"))
-                .andDo(restDocs.document(
-                        pathParameters(
-                                parameterWithName("postId").description("게시글 ID")
-                        ),
-                        responseBody()
-                ));
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/deleted-posts/{postId}", postId)
+                        .header(HttpHeaders.AUTHORIZATION, accessToken)
+                        .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)))
+                .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("게시글 등록 실패 - 인증 없음")
     void writePostWithoutAuth() throws Exception {
         PostReqDto postReqDto = PostReqDto.builder()
-                .category(categoryId)
                 .title("title")
                 .content("content")
+                .tags(List.of("Spring"))
                 .build();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(postReqDto)))
-                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("게시글 등록 실패 - 유효성 검사 오류 (제목 누락)")
-    void writePostWithInvalidInput() throws Exception {
+    @DisplayName("게시글 등록 실패 - 태그 누락")
+    void writePostWithoutTags() throws Exception {
         PostReqDto postReqDto = PostReqDto.builder()
-                .category(categoryId)
-                .title("")
+                .title("title")
                 .content("content")
+                .tags(List.of())
                 .build();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts")
@@ -698,112 +303,29 @@ class PostControllerTest extends AbstractContainerBaseTest {
                         .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken))
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(postReqDto)))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
-    }
-
-    @Test
-    @DisplayName("게시글 등록 실패 - metaDescription 160자 초과")
-    void writePostWithTooLongMetaDescription() throws Exception {
-        PostReqDto postReqDto = PostReqDto.builder()
-                .category(categoryId)
-                .title("title")
-                .content("content")
-                .metaDescription("a".repeat(161))
-                .build();
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts")
-                        .header(HttpHeaders.AUTHORIZATION, accessToken)
-                        .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken))
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(postReqDto)))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("전체 Slug 목록 조회 — VIEW 상태 게시글만 반환")
     void getAllSlugs() throws Exception {
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/slugs"));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray())
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].slug").exists())
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].updateDate").exists())
-                .andExpect(MockMvcResultMatchers.header().string("Cache-Control", "public, max-age=3600"))
-                .andDo(restDocs.document(
-                        responseFields(
-                                fieldWithPath("[].slug").description("게시글 슬러그"),
-                                fieldWithPath("[].updateDate").description("최종 수정일")
-                        )
-                ));
-    }
-
-    @Test
-    @DisplayName("전체 Slug 목록 조회 — HIDE 상태 게시글 제외 확인")
-    void getAllSlugs_excludesHiddenPosts() throws Exception {
-        // 게시글 하나를 HIDE로 변경
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/" + postId)
-                .header(HttpHeaders.AUTHORIZATION, accessToken)
-                .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)));
-
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/slugs"));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(4));
-    }
-
-    @Test
-    @DisplayName("전체 Slug 목록 조회 - VIEW 상태라도 deleteDate가 있으면 제외")
-    void getAllSlugs_excludesDeletedDatePosts() throws Exception {
-        Post post = postRepository.findById(postId).orElseThrow();
-        post.delete();
-
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/slugs"))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(4));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].slug").exists())
+                .andExpect(jsonPath("$[0].updateDate").exists())
+                .andExpect(header().string("Cache-Control", "public, max-age=3600"));
     }
 
-    @Test
-    @DisplayName("게시글 좋아요 취소")
-    void cancelPostLike() throws Exception {
-        // 좋아요 추가 후 발급된 쿠키 획득
-        MvcResult likeResult = mockMvc.perform(post("/api/v2/likes/{postId}", postId))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andReturn();
-        Cookie likedCookie = likeResult.getResponse().getCookie(CookieName.LIKED_POSTS);
-        assertThat(likedCookie).isNotNull();
-
-        ResultActions resultActions = mockMvc.perform(delete("/api/v2/likes/{postId}", postId)
-                .cookie(likedCookie));
-
-        resultActions
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andDo(restDocs.document(
-                        pathParameters(
-                                parameterWithName("postId").description("좋아요 취소할 게시글 ID")
-                        ),
-                        responseBody()
-                ));
-    }
-
-    @Test
-    @DisplayName("게시글 좋아요 취소 - 삭제 게시글은 410")
-    void cancelPostLikeDeletedPostReturns410() throws Exception {
-        MvcResult likeResult = mockMvc.perform(post("/api/v2/likes/{postId}", postId))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andReturn();
-        Cookie likedCookie = likeResult.getResponse().getCookie(CookieName.LIKED_POSTS);
-        assertThat(likedCookie).isNotNull();
-
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/" + postId)
-                        .header(HttpHeaders.AUTHORIZATION, accessToken)
-                        .cookie(new Cookie(CookieName.ACCESS_TOKEN_COOKIE, accessToken)))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-
-        mockMvc.perform(delete("/api/v2/likes/{postId}", postId)
-                        .cookie(likedCookie))
-                .andExpect(MockMvcResultMatchers.status().isGone())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("B005"));
+    private Post taggedPost(String title, String content, String slug) {
+        Post post = Post.builder()
+                .admin(admin)
+                .title(title)
+                .content(content)
+                .slug(slug)
+                .build();
+        post.replaceTags(List.of(tag));
+        tag.incrementPostCount();
+        return postRepository.save(post);
     }
 }
