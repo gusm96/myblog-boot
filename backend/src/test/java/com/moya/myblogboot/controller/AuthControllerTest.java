@@ -195,10 +195,10 @@ class AuthControllerTest extends AbstractContainerBaseTest {
     void authorizationHeaderOnlyCannotAccessProtectedApi() throws Exception {
         String accessToken = "Bearer " + getToken().accessToken();
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/categories")
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/tags")
                         .header(HttpHeaders.AUTHORIZATION, accessToken)
                         .contentType("application/json")
-                        .content("{\"categoryName\":\"new-category\"}"))
+                        .content("{\"name\":\"new-tag\"}"))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
     }
 
