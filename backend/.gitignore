@@ -43,3 +43,9 @@ src/main/generated/
 
 # 배치 파일
 run-dev.bat
+
+# IDE(Eclipse 계열) 컴파일 산출물 — Gradle build/ 와 별개 경로
+/bin/
+
+# 작업 문서 (민감 내용 포함 가능 — 저장소 업로드 금지)
+/docs/
