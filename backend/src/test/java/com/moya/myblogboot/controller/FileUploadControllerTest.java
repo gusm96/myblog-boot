@@ -11,6 +11,7 @@ import com.moya.myblogboot.dto.file.ImageFileDto;
 import com.moya.myblogboot.dto.auth.LoginReqDto;
 import com.moya.myblogboot.repository.AdminRepository;
 import com.moya.myblogboot.service.AuthService;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,7 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static com.moya.myblogboot.constants.CookieName.ACCESS_TOKEN_COOKIE;
 
 @SpringBootTest
 @Transactional
@@ -95,7 +97,7 @@ class FileUploadControllerTest extends AbstractContainerBaseTest {
                 .username("adminUser")
                 .password("adminPassword")
                 .build();
-        accessToken = "bearer " + authService.adminLogin(loginReqDto).accessToken();
+        accessToken = authService.adminLogin(loginReqDto).accessToken();
     }
 
     @BeforeEach
@@ -116,7 +118,8 @@ class FileUploadControllerTest extends AbstractContainerBaseTest {
 
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.multipart(HttpMethod.POST, path)
                 .file(multipartFile)
-                .header(HttpHeaders.AUTHORIZATION, accessToken));
+                .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(ACCESS_TOKEN_COOKIE, accessToken)));
 
         resultActions
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -145,6 +148,7 @@ class FileUploadControllerTest extends AbstractContainerBaseTest {
 
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.delete(path)
                 .header(HttpHeaders.AUTHORIZATION, accessToken)
+                .cookie(new Cookie(ACCESS_TOKEN_COOKIE, accessToken))
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(imageFileDto)));
 

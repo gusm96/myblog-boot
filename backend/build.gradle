@@ -87,6 +87,7 @@ asciidoctor {
 
 asciidoctor.doFirst {
     delete file('src/main/resources/static/docs')
+    delete file('build/docs/asciidoc')
 }
 
 tasks.named('test') {
